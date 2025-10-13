@@ -23,33 +23,13 @@ const Header = () => {
       top: 0,
       zIndex: 50
     }}>
-      {/* Full Color Background with Curve */}
+      {/* Full Color Background with Rounded Bottom */}
       <div style={{
         background: `linear-gradient(135deg, ${currentNav.color} 0%, ${currentNav.color}dd 100%)`,
-        position: 'relative',
-        paddingBottom: '32px'
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px'
       }}>
-        {/* Curved Bottom Border */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          width: '100%',
-          overflow: 'hidden',
-          lineHeight: 0
-        }}>
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style={{
-            position: 'relative',
-            display: 'block',
-            width: 'calc(100% + 1.3px)',
-            height: '32px'
-          }}>
-            <path d="M0,0 C150,80 350,80 600,50 C850,20 1050,20 1200,50 L1200,00 L0,0 Z" 
-                  style={{ fill: '#ffffff' }}></path>
-          </svg>
-        </div>
-
-        <div style={{ padding: '16px', position: 'relative', zIndex: 1 }}>
+        <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
           <div className="fade-in stagger-1" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
