@@ -1,4 +1,4 @@
-import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBag, Settings } from 'lucide-react'
+import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBag } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -9,10 +9,9 @@ const Header = () => {
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
 
   const navItems = [
-    { path: '/', name: 'FoodLabs', icon: UtensilsCrossed, color: '#f97316' },
+    { path: '/', name: 'FoodLab', icon: UtensilsCrossed, color: '#f97316' },
     { path: '/fitlabs', name: 'FitLabs', icon: Dumbbell, color: '#10b981' },
-    { path: '/sportsshop', name: 'SportsShop', icon: ShoppingBag, color: '#3b82f6' },
-    { path: '/admin', name: 'Admin', icon: Settings, color: '#1f2937' }
+    { path: '/sportsshop', name: 'SportsShop', icon: ShoppingBag, color: '#3b82f6' }
   ]
 
   const currentNav = navItems.find(item => item.path === location.pathname) || navItems[0]
