@@ -1,0 +1,673 @@
+// 1. Estructura de Datos (Igual)
+// Lista de restaurantes, cada uno con sus ítems.
+
+// 2. Función de Renderizado Principal (renderRestaurantsAndItems)
+function renderRestaurantsAndItems() {
+    // 2.1. Limpiar la vista.
+    // 2.2. Iterar sobre restaurantsData.
+    
+    // 2.3. Por cada Restaurante:
+        // Crear una TARJETA DE RESTAURANTE grande y llamativa.
+        // Incluir: Nombre, Categoría, Tag PRIME (si aplica).
+        // Añadir un listener para expandir/colapsar el menú.
+
+        // 2.4. Contenedor de Menú (Inicialmente oculto):
+            // Crear una lista de platos para ese restaurante.
+            // Cada plato tendrá su botón de "Añadir".
+
+    // 2.5. Insertar la Tarjeta y el Menú en el contenedor principal del HTML.
+}
+
+// 3. Función de Toggle (toggleMenu)
+function toggleMenu(restaurantId) {
+    // Busca el contenedor de platos asociado a restaurantId.
+    // Cambia la clase CSS para mostrarlo u ocultarlo (e.g., hidden <-> block).
+}
+
+// 4. Lógica de Carrito y Checkout (Igual)
+// La lógica de añadir, calcular y generar el mensaje de WhatsApp se mantiene,
+// ya que funciona perfectamente con el flujo logístico de FoodLabs.
+
+// ===== BACKEND ARCHITECTURE =====
+
+// 5. Base de Datos (Firestore/PostgreSQL)
+// 5.1. Colección: restaurants
+//     - id: string (UUID)
+//     - name: string
+//     - category: string (mexicana, italiana, asiática, etc.)
+//     - tier: enum ['local', 'premium', 'enterprise'] // Para diferenciar tipos de negocio
+//     - isPrime: boolean (FoodLabs Select)
+//     - contactInfo: {
+//         phone: string,
+//         whatsapp: string,
+//         email: string
+//       }
+//     - address: {
+//         street: string,
+//         city: string,
+//         coordinates: {lat: number, lng: number}
+//       }
+//     - businessHours: {
+//         monday: {open: string, close: string, isOpen: boolean},
+//         // ... resto de días
+//       }
+//     - deliverySettings: {
+//         radius: number, // km de cobertura
+//         minOrder: number, // pedido mínimo
+//         deliveryFee: number,
+//         estimatedTime: number // minutos
+//       }
+//     - paymentMethods: ['cash', 'transfer', 'card']
+//     - rating: number (1-5)
+//     - totalOrders: number
+//     - isActive: boolean
+//     - createdAt: timestamp
+//     - updatedAt: timestamp
+
+// 5.2. Colección: menuItems
+//     - id: string (UUID)
+//     - restaurantId: string (referencia a restaurants)
+//     - name: string
+//     - description: string
+//     - price: number
+//     - category: string (entrada, plato principal, postre, bebida)
+//     - isAvailable: boolean
+//     - imageUrl: string
+//     - allergens: string[] // para cumplir normativas
+//     - preparationTime: number // minutos
+//     - isPopular: boolean // para destacar en la UI
+//     - createdAt: timestamp
+//     - updatedAt: timestamp
+
+// 5.3. Colección: orders
+//     - id: string (UUID)
+//     - customerInfo: {
+//         name: string,
+//         phone: string,
+//         address: string,
+//         coordinates: {lat: number, lng: number}
+//       }
+//     - items: [{
+//         menuItemId: string,
+//         restaurantId: string,
+//         quantity: number,
+//         price: number,
+//         specialInstructions: string
+//       }]
+//     - status: enum ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']
+//     - totalAmount: number
+//     - deliveryFee: number
+//     - paymentMethod: string
+//     - whatsappMessageId: string // para tracking
+//     - estimatedDelivery: timestamp
+//     - createdAt: timestamp
+//     - updatedAt: timestamp
+
+// 5.4. Colección: customers
+//     - id: string (UUID)
+//     - phone: string (único)
+//     - name: string
+//     - address: string
+//     - orderHistory: string[] // IDs de órdenes
+//     - preferences: {
+//         favoriteRestaurants: string[],
+//         dietaryRestrictions: string[]
+//       }
+//     - createdAt: timestamp
+//     - lastOrderAt: timestamp
+
+// 6. API Endpoints (Node.js/Express o Python/FastAPI)
+// 6.1. GET /api/restaurants
+//     - Query params: category, tier, isPrime, location (lat,lng), radius
+//     - Retorna lista paginada de restaurantes con filtros aplicados
+//     - Incluye información de delivery y disponibilidad
+
+// 6.2. GET /api/restaurants/:id/menu
+//     - Retorna menú completo del restaurante
+//     - Incluye disponibilidad en tiempo real
+
+// 6.3. POST /api/orders
+//     - Crea nueva orden
+//     - Valida disponibilidad de items
+//     - Calcula totales y fees
+//     - Envía notificación WhatsApp
+//     - Retorna orderId para tracking
+
+// 6.4. GET /api/orders/:id
+//     - Retorna estado actual de la orden
+//     - Para tracking en tiempo real
+
+// 6.5. PUT /api/orders/:id/status
+//     - Actualiza estado de la orden (solo restaurantes)
+//     - Envía notificaciones automáticas al cliente
+
+// 6.6. POST /api/restaurants/register
+//     - Registro de nuevos restaurantes
+//     - Validación de datos y verificación
+
+// 6.7. PUT /api/restaurants/:id/menu
+//     - Actualización de menú (solo restaurantes)
+//     - Control de versiones para auditoría
+
+// 7. Sistema de Notificaciones
+// 7.1. WhatsApp Business API Integration
+//     - Templates pre-aprobados para diferentes tipos de mensajes
+//     - Envío automático de confirmaciones y updates
+//     - Webhook para recibir respuestas de clientes
+
+// 7.2. Notificaciones Push (opcional)
+//     - Para app móvil futura
+//     - Updates de estado de órdenes
+
+// 8. Sistema de Pagos (Escalable)
+// 8.1. Para Restaurantes Locales:
+//     - Efectivo (principal)
+//     - Transferencia bancaria
+//     - QR codes para pagos móviles
+
+// 8.2. Para Restaurantes Premium/Enterprise:
+//     - Integración con Stripe/PayPal
+//     - Tarjetas de crédito/débito
+//     - Pagos corporativos
+//     - Facturación electrónica
+
+// 9. Panel de Administración
+// 9.1. Dashboard para FoodLabs
+//     - Métricas de órdenes en tiempo real
+//     - Gestión de restaurantes
+//     - Análisis de performance
+//     - Gestión de comisiones
+
+// 9.2. Dashboard para Restaurantes
+//     - Gestión de menú
+//     - Órdenes pendientes
+//     - Estadísticas de ventas
+//     - Configuración de delivery
+
+// 10. Sistema de Rating y Reviews
+// 10.1. Rating de restaurantes por clientes
+// 10.2. Rating de clientes por restaurantes
+// 10.3. Sistema de reportes y moderación
+
+// 11. Geolocalización y Delivery
+// 11.1. Cálculo de distancias y fees
+// 11.2. Optimización de rutas
+// 11.3. Tracking en tiempo real
+// 11.4. Zonas de cobertura dinámicas
+
+// 12. Seguridad y Compliance
+// 12.1. Autenticación JWT
+// 12.2. Rate limiting
+// 12.3. Validación de datos
+// 12.4. Logs de auditoría
+// 12.5. GDPR compliance para datos de clientes
+
+// ===== CONSIDERACIONES DE ESCALABILIDAD =====
+
+// 13. Diferenciación por Tipo de Restaurante
+// 13.1. Restaurantes Locales (tier: 'local'):
+//     - Interfaz simplificada
+//     - Menús básicos con fotos opcionales
+//     - Pagos principalmente en efectivo
+//     - Delivery por FoodLabs o el mismo restaurante
+//     - Comisiones más bajas (5-10%)
+//     - Soporte vía WhatsApp directo
+
+// 13.2. Restaurantes Premium (tier: 'premium'):
+//     - Interfaz completa con fotos profesionales
+//     - Menús detallados con descripciones
+//     - Múltiples métodos de pago
+//     - Delivery propio o FoodLabs
+//     - Comisiones estándar (15-20%)
+//     - Soporte multicanal (WhatsApp, email, teléfono)
+
+// 13.3. Restaurantes Enterprise (tier: 'enterprise'):
+//     - API personalizada para integración
+//     - Dashboard avanzado con analytics
+//     - Integración con sistemas POS existentes
+//     - Pagos corporativos y facturación
+//     - Delivery especializado
+//     - Comisiones negociadas (10-15%)
+//     - Soporte dedicado 24/7
+
+// 14. Sistema de Comisiones y Fees
+// 14.1. Fee Base de FoodLabs (OBLIGATORIO en todas las transacciones):
+//     - Fee mínimo: 5% del valor total de la orden
+//     - Fee por delivery: $2-5 USD adicionales (según distancia)
+//     - Fee por procesamiento de pago: 2.9% + $0.30 (si usa tarjeta)
+
+// 14.2. Comisiones por volumen (adicionales al fee base):
+//     - 0-100 órdenes/mes: +15% (total 20%)
+//     - 101-500 órdenes/mes: +10% (total 15%)
+//     - 500+ órdenes/mes: +5% (total 10%)
+//     - Enterprise: Negociado (mínimo 8%)
+
+// 14.3. Comisiones por tipo de servicio:
+//     - Solo catálogo: Fee base 5%
+//     - Catálogo + WhatsApp: Fee base 5% + 5% = 10%
+//     - Catálogo + WhatsApp + Delivery: Fee base 5% + 10% = 15%
+//     - Servicio completo: Fee base 5% + 15% = 20%
+
+// 14.4. Comparación con competencia:
+//     - UberEats: 15-30% + fees de delivery
+//     - DoorDash: 15-30% + fees de delivery
+//     - PedidosYa: 12-25% + fees de delivery
+//     - Rappi: 15-35% + fees de delivery
+//     - FoodLabs: 5-20% + fees de delivery (MÁS COMPETITIVO)
+
+// 14.5. Estructura de Fees Detallada:
+//     - Fee de plataforma: 5% (fijo, no negociable)
+//     - Fee de servicio: 0-15% (según tier y volumen)
+//     - Fee de delivery: $2-5 USD (según distancia y zona)
+//     - Fee de pago: 2.9% + $0.30 (solo si usa tarjeta)
+//     - Fee de WhatsApp: $0.05 por mensaje (para restaurantes que no tienen WhatsApp Business)
+
+// 14.6. Cálculo de Fees en el Sistema:
+//     Ejemplo de orden de $20:
+//     - Subtotal: $20.00
+//     - Fee de plataforma (5%): $1.00
+//     - Fee de servicio (10%): $2.00
+//     - Fee de delivery: $3.00
+//     - Fee de pago (si usa tarjeta): $0.88
+//     - Total para el cliente: $26.88
+//     - FoodLabs recibe: $6.88
+//     - Restaurante recibe: $17.00
+
+// 15. Sistema de Inventario (Opcional para Premium/Enterprise)
+// 15.1. Control de stock en tiempo real
+// 15.2. Alertas de productos agotados
+// 15.3. Sincronización con sistemas POS
+// 15.4. Predicción de demanda
+
+// 16. Marketing y Promociones
+// 16.1. Sistema de cupones y descuentos
+// 16.2. Programas de fidelidad
+// 16.3. Promociones por tiempo limitado
+// 16.4. Marketing dirigido por ubicación
+
+// 17. Analytics y Business Intelligence
+// 17.1. Dashboard para restaurantes:
+//     - Ventas por día/semana/mes
+//     - Productos más vendidos
+//     - Horarios pico
+//     - Análisis de clientes
+//     - ROI de promociones
+
+// 17.2. Dashboard para FoodLabs:
+//     - Métricas de plataforma
+//     - Performance por zona
+//     - Análisis de competencia
+//     - Predicción de demanda
+
+// 18. Integración con Servicios Externos
+// 18.1. Google Maps API para delivery
+// 18.2. Stripe/PayPal para pagos
+// 18.3. Twilio para SMS/WhatsApp
+// 18.4. Cloudinary para imágenes
+// 18.5. SendGrid para emails
+
+// 19. Monitoreo y Logs
+// 19.1. Logs de todas las transacciones
+// 19.2. Monitoreo de performance
+// 19.3. Alertas automáticas
+// 19.4. Backup automático de datos
+
+// 20. Plan de Escalamiento
+// 20.1. Fase 1: MVP con restaurantes locales
+// 20.2. Fase 2: Integración de restaurantes premium
+// 20.3. Fase 3: API para restaurantes enterprise
+// 20.4. Fase 4: Expansión a otras ciudades
+// 20.5. Fase 5: App móvil nativa
+
+// ===== PLATAFORMAS DE ADMINISTRACIÓN =====
+
+// 21. Plataforma de Administración FoodLabs (Super Admin)
+// 21.1. Dashboard Principal:
+//     - Métricas en tiempo real: órdenes activas, ingresos del día
+//     - Gráficos de crecimiento: órdenes por mes, restaurantes activos
+//     - Mapa de calor de zonas con más demanda
+//     - Alertas de sistema y notificaciones importantes
+
+// 21.2. Gestión de Restaurantes:
+//     - Lista de todos los restaurantes con filtros (tier, status, ubicación)
+//     - Aprobación de nuevos restaurantes
+//     - Edición de información de restaurantes
+//     - Suspensión/activación de restaurantes
+//     - Historial de cambios y auditoría
+
+// 21.3. Gestión de Órdenes:
+//     - Vista de todas las órdenes en tiempo real
+//     - Filtros por estado, fecha, restaurante, zona
+//     - Intervención manual en órdenes problemáticas
+//     - Reasignación de delivery
+//     - Resolución de disputas
+
+// 21.4. Gestión Financiera:
+//     - Cálculo automático de comisiones
+//     - Reportes de ingresos por restaurante
+//     - Pagos a restaurantes (programados/automáticos)
+//     - Análisis de rentabilidad por zona
+//     - Gestión de reembolsos
+
+// 21.5. Gestión de Delivery:
+//     - Asignación de repartidores
+//     - Optimización de rutas
+//     - Tracking en tiempo real
+//     - Gestión de zonas de cobertura
+//     - Performance de repartidores
+
+// 21.6. Marketing y Promociones:
+//     - Creación de campañas promocionales
+//     - Gestión de cupones y descuentos
+//     - Análisis de efectividad de marketing
+//     - Segmentación de clientes
+//     - Programas de fidelidad
+
+// 21.7. Analytics Avanzados:
+//     - Análisis de tendencias de mercado
+//     - Predicción de demanda
+//     - Análisis de competencia
+//     - ROI de diferentes estrategias
+//     - Reportes personalizados
+
+// 21.8. Configuración del Sistema:
+//     - Parámetros de comisiones
+//     - Configuración de zonas de delivery
+//     - Templates de WhatsApp
+//     - Configuración de notificaciones
+//     - Mantenimiento del sistema
+
+// 22. Plataforma de Comerciante (Restaurant Dashboard)
+// 22.1. Dashboard del Restaurante:
+//     - Resumen del día: órdenes recibidas, ingresos, rating promedio
+//     - Gráficos de ventas por día/semana/mes
+//     - Productos más vendidos
+//     - Horarios pico de demanda
+//     - Comparación con períodos anteriores
+
+// 22.2. Gestión de Menú:
+//     - CRUD completo de productos
+//     - Upload de imágenes (drag & drop)
+//     - Categorización de productos
+//     - Control de disponibilidad en tiempo real
+//     - Precios y descripciones
+//     - Tiempo de preparación por producto
+//     - Alérgenos e información nutricional
+
+// 22.3. Gestión de Órdenes:
+//     - Órdenes pendientes en tiempo real
+//     - Notificaciones de nuevas órdenes
+//     - Actualización de estado de órdenes
+//     - Comunicación directa con clientes
+//     - Historial de órdenes con filtros
+//     - Reimpresión de tickets de cocina
+
+// 22.4. Configuración del Restaurante:
+//     - Información básica (nombre, dirección, teléfono)
+//     - Horarios de operación
+//     - Zona de cobertura de delivery
+//     - Métodos de pago aceptados
+//     - Tiempo estimado de preparación
+//     - Pedido mínimo
+//     - Tarifa de delivery
+
+// 22.5. Gestión Financiera:
+//     - Ingresos por período
+//     - Comisiones pagadas a FoodLabs
+//     - Pagos pendientes
+//     - Historial de transacciones
+//     - Reportes de ventas exportables
+//     - Análisis de rentabilidad por producto
+
+// 22.6. Gestión de Inventario (Premium/Enterprise):
+//     - Control de stock en tiempo real
+//     - Alertas de productos agotados
+//     - Historial de movimientos
+//     - Predicción de demanda
+//     - Integración con sistemas POS
+//     - Reportes de inventario
+
+// 22.7. Marketing y Promociones:
+//     - Creación de promociones propias
+//     - Gestión de descuentos
+//     - Análisis de efectividad
+//     - Programas de fidelidad
+//     - Comunicación con clientes
+
+// 22.8. Analytics del Restaurante:
+//     - Análisis de clientes
+//     - Productos más/menos vendidos
+//     - Horarios de mayor demanda
+//     - Análisis de cancelaciones
+//     - Comparación con competencia
+//     - Tendencias de mercado
+
+// 22.9. Soporte y Comunicación:
+//     - Chat directo con soporte FoodLabs
+//     - Centro de ayuda y FAQ
+//     - Reporte de problemas
+//     - Sugerencias y feedback
+//     - Notificaciones del sistema
+
+// 23. Plataforma de Repartidor (Delivery Dashboard)
+// 23.1. Dashboard del Repartidor:
+//     - Órdenes asignadas
+//     - Mapa de rutas optimizadas
+//     - Estado de entrega
+//     - Ingresos del día
+//     - Rating promedio
+
+// 23.2. Gestión de Entregas:
+//     - Aceptar/rechazar órdenes
+//     - Navegación GPS integrada
+//     - Comunicación con clientes
+//     - Actualización de estado
+//     - Foto de confirmación de entrega
+
+// 23.3. Gestión Financiera:
+//     - Ingresos por entrega
+//     - Pagos semanales
+//     - Historial de transacciones
+//     - Bonificaciones por performance
+
+// 24. Plataforma de Cliente (Customer Portal)
+// 24.1. Perfil del Cliente:
+//     - Información personal
+//     - Direcciones guardadas
+//     - Métodos de pago
+//     - Preferencias alimentarias
+//     - Historial de órdenes
+
+// 24.2. Seguimiento de Órdenes:
+//     - Estado en tiempo real
+//     - Tracking del repartidor
+//     - Tiempo estimado de entrega
+//     - Comunicación con restaurante
+//     - Calificación y reseñas
+
+// 24.3. Favoritos y Recomendaciones:
+//     - Restaurantes favoritos
+//     - Productos favoritos
+//     - Recomendaciones personalizadas
+//     - Historial de búsquedas
+//     - Listas de compras guardadas
+
+// 25. Arquitectura de las Plataformas
+// 25.1. Frontend:
+//     - React/Vue.js para interfaces web
+//     - React Native/Flutter para apps móviles
+//     - PWA para acceso desde móvil
+//     - Diseño responsive
+
+// 25.2. Autenticación y Autorización:
+//     - JWT tokens
+//     - Roles y permisos granulares
+//     - 2FA para administradores
+//     - SSO para empresas
+
+// 25.3. Real-time Features:
+//     - WebSockets para updates en tiempo real
+//     - Notificaciones push
+//     - Chat en vivo
+//     - Tracking de órdenes
+
+// 25.4. Seguridad:
+//     - HTTPS obligatorio
+//     - Rate limiting
+//     - Validación de datos
+//     - Logs de auditoría
+//     - Backup automático
+
+// ===== PROGRESSIVE WEB APP (PWA) =====
+
+// 26. Configuración PWA para App Nativa
+// 26.1. Manifest.json (app.json):
+//     {
+//       "name": "FoodLabs",
+//       "short_name": "FoodLabs",
+//       "description": "Catálogo y logística centralizada de comida",
+//       "start_url": "/",
+//       "display": "standalone",
+//       "background_color": "#ffffff",
+//       "theme_color": "#ff6b35",
+//       "orientation": "portrait",
+//       "icons": [
+//         {
+//           "src": "/icons/icon-192x192.png",
+//           "sizes": "192x192",
+//           "type": "image/png"
+//         },
+//         {
+//           "src": "/icons/icon-512x512.png",
+//           "sizes": "512x512",
+//           "type": "image/png"
+//         }
+//       ]
+//     }
+
+// 26.2. Service Worker (sw.js):
+//     - Cache de recursos estáticos
+//     - Cache de API responses
+//     - Funcionamiento offline básico
+//     - Push notifications
+//     - Background sync
+
+// 26.3. Características de App Nativa:
+//     - Instalable desde el navegador
+//     - Icono en la pantalla de inicio
+//     - Funciona offline (modo básico)
+//     - Notificaciones push
+//     - Acceso a cámara y geolocalización
+//     - Pantalla completa sin barra del navegador
+//     - Splash screen personalizado
+
+// 26.4. Optimizaciones Móviles:
+//     - Touch gestures (swipe, pinch, etc.)
+//     - Responsive design para todas las pantallas
+//     - Lazy loading de imágenes
+//     - Compresión de assets
+//     - Optimización de performance
+
+// 27. Estructura de Archivos para PWA
+// 27.1. Frontend (React/Vue.js):
+//     /src
+//       /components
+//         /RestaurantCard.jsx
+//         /MenuItems.jsx
+//         /ShoppingCart.jsx
+//         /Checkout.jsx
+//       /pages
+//         /Home.jsx
+//         /Restaurant.jsx
+//         /Cart.jsx
+//         /OrderTracking.jsx
+//       /hooks
+//         /useGeolocation.js
+//         /useLocalStorage.js
+//         /useWhatsApp.js
+//       /utils
+//         /api.js
+//         /fees.js
+//         /validation.js
+//       /styles
+//         /globals.css
+//         /components.css
+
+// 27.2. PWA Files:
+//     /public
+//       /manifest.json
+//       /sw.js
+//       /icons/
+//         /icon-192x192.png
+//         /icon-512x512.png
+//         /apple-touch-icon.png
+//       /splash/
+//         /splash-640x1136.png
+//         /splash-750x1334.png
+//         /splash-1242x2208.png
+
+// 28. Funcionalidades Móviles Específicas
+// 28.1. Geolocalización:
+//     - Detección automática de ubicación
+//     - Cálculo de distancias
+//     - Filtrado por proximidad
+//     - Mapa de restaurantes cercanos
+
+// 28.2. Cámara y Fotos:
+//     - Upload de fotos de perfil
+//     - Fotos de productos (para restaurantes)
+//     - QR code scanner para pagos
+//     - Foto de confirmación de entrega
+
+// 28.3. Notificaciones:
+//     - Push notifications para nuevas órdenes
+//     - Notificaciones de estado de entrega
+//     - Promociones y ofertas
+//     - Recordatorios de pedidos
+
+// 28.4. Offline Support:
+//     - Cache de menús básicos
+//     - Funcionamiento básico sin internet
+//     - Sincronización cuando vuelve la conexión
+//     - Mensajes de estado de conexión
+
+// 29. Tecnologías para PWA
+// 29.1. Frontend Framework:
+//     - React + Vite (recomendado para PWA)
+//     - Vue.js + Vite
+//     - Next.js (si necesitas SSR)
+
+// 29.2. PWA Libraries:
+//     - Workbox (Google) para service workers
+//     - React PWA (si usas React)
+//     - Vue PWA (si usas Vue)
+
+// 29.3. UI Framework:
+//     - Tailwind CSS (recomendado para móvil)
+//     - Material-UI
+//     - Chakra UI
+
+// 29.4. State Management:
+//     - Zustand (simple y eficiente)
+//     - Redux Toolkit
+//     - Pinia (si usas Vue)
+
+// 30. Pasos para Implementar PWA
+// 30.1. Setup inicial:
+//     1. Crear proyecto con Vite
+//     2. Instalar dependencias PWA
+//     3. Configurar manifest.json
+//     4. Implementar service worker
+//     5. Agregar iconos y splash screens
+
+// 30.2. Desarrollo:
+//     1. Implementar componentes básicos
+//     2. Agregar funcionalidades móviles
+//     3. Optimizar performance
+//     4. Testing en dispositivos reales
+
+// 30.3. Deployment:
+//     1. Build para producción
+//     2. Deploy en Vercel/Netlify
+//     3. Configurar HTTPS
+//     4. Registrar en app stores (opcional)
