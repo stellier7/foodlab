@@ -18,17 +18,38 @@ const Header = () => {
   const isAdminPage = location.pathname.startsWith('/admin')
 
   return (
-    <header className="glass fade-in" style={{
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+    <header className="fade-in" style={{
       position: 'sticky',
       top: 0,
       zIndex: 50
     }}>
-      <div style={{ padding: '16px' }}>
+      {/* Gradient Background with Curve */}
+      <div style={{
+        background: `linear-gradient(135deg, ${currentNav.color}15 0%, ${currentNav.color}08 100%)`,
+        position: 'relative',
+        paddingBottom: '32px'
+      }}>
+        {/* Curved Bottom Border */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '100%',
+          overflow: 'hidden',
+          lineHeight: 0
+        }}>
+          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style={{
+            position: 'relative',
+            display: 'block',
+            width: 'calc(100% + 1.3px)',
+            height: '32px'
+          }}>
+            <path d="M0,0 C150,80 350,80 600,50 C850,20 1050,20 1200,50 L1200,00 L0,0 Z" 
+                  style={{ fill: '#ffffff' }}></path>
+          </svg>
+        </div>
+
+        <div style={{ padding: '16px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
           <div className="fade-in stagger-1" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -48,7 +69,7 @@ const Header = () => {
             <h1 style={{ 
               fontSize: '22px', 
               fontWeight: '800', 
-              color: '#111827',
+              color: currentNav.color,
               letterSpacing: '-0.5px'
             }}>
               {currentNav.name}
@@ -61,12 +82,13 @@ const Header = () => {
               <button className="tap-effect" style={{
                 position: 'relative',
                 padding: '10px',
-                color: '#6b7280',
-                border: 'none',
-                background: '#f9fafb',
+                color: currentNav.color,
+                border: `2px solid ${currentNav.color}20`,
+                background: 'rgba(255, 255, 255, 0.9)',
                 borderRadius: '12px',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
               }}>
                 <ShoppingCartIcon size={22} strokeWidth={2} />
                 {cartItemsCount > 0 && (
@@ -111,15 +133,15 @@ const Header = () => {
               style={{
                 flex: 1,
                 padding: '12px 16px',
-                border: 'none',
+                border: location.pathname === item.path ? 'none' : `2px solid ${item.color}15`,
                 borderRadius: '12px',
                 background: location.pathname === item.path 
                   ? `linear-gradient(135deg, ${item.color} 0%, ${item.color}dd 100%)` 
-                  : '#f9fafb',
-                color: location.pathname === item.path ? 'white' : '#6b7280',
+                  : 'rgba(255, 255, 255, 0.9)',
+                color: location.pathname === item.path ? 'white' : item.color,
                 cursor: 'pointer',
                 fontSize: '14px',
-                fontWeight: location.pathname === item.path ? '700' : '500',
+                fontWeight: location.pathname === item.path ? '700' : '600',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -128,7 +150,7 @@ const Header = () => {
                 whiteSpace: 'nowrap',
                 boxShadow: location.pathname === item.path 
                   ? `0 4px 12px ${item.color}40` 
-                  : 'none',
+                  : '0 2px 6px rgba(0, 0, 0, 0.06)',
                 animationDelay: `${0.1 + index * 0.05}s`,
                 opacity: 0,
                 animation: 'fadeInScale 0.4s ease-out forwards'
@@ -138,6 +160,7 @@ const Header = () => {
               <span>{item.name}</span>
             </button>
           ))}
+        </div>
         </div>
       </div>
     </header>
