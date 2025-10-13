@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '../stores/useAppStore'
 import { ShoppingBag, Plus } from 'lucide-react'
 import ProductModal from '../components/ProductModal'
@@ -90,6 +90,20 @@ const SportsShopPage = () => {
     ? products 
     : products.filter(p => p.category === selectedCategory)
 
+  // Detectar parámetro de producto en la URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const productId = urlParams.get('product')
+    
+    if (productId) {
+      const product = products.find(p => p.id === productId)
+      if (product) {
+        setSelectedProduct(product)
+        setIsModalOpen(true)
+      }
+    }
+  }, [products])
+
   const handleAddToCart = (product) => {
     addToCart({
       id: product.id,
@@ -113,7 +127,7 @@ const SportsShopPage = () => {
     <main style={{ paddingBottom: '80px' }}>
       {/* Hero Section */}
       <div className="fade-in" style={{
-        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        background: '#3b82f6',
         color: 'white',
         padding: '32px 24px',
         textAlign: 'center',

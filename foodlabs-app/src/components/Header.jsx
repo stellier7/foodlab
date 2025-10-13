@@ -25,7 +25,7 @@ const Header = () => {
     }}>
       {/* Full Color Background */}
       <div style={{
-        background: `linear-gradient(135deg, ${currentNav.color} 0%, ${currentNav.color}dd 100%)`
+        background: currentNav.color
       }}>
         <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

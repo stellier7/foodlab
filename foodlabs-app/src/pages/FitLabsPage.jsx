@@ -5,7 +5,7 @@ const FitLabsPage = () => {
     <main style={{ paddingBottom: '80px' }}>
       {/* Hero Section */}
       <div className="fade-in" style={{
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        background: '#10b981',
         color: 'white',
         padding: '32px 24px',
         textAlign: 'center',

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '../stores/useAppStore'
-import { X, Plus, Minus, Star, Shield, Truck, CheckCircle } from 'lucide-react'
+import { X, Plus, Minus, Star, Shield, Truck, CheckCircle, Share2 } from 'lucide-react'
 
 const ProductModal = ({ product, isOpen, onClose }) => {
   const { addToCart } = useAppStore()
@@ -18,6 +18,29 @@ const ProductModal = ({ product, isOpen, onClose }) => {
       }, 'sportsshop')
     }
     onClose()
+  }
+
+  const handleShare = async () => {
+    const productUrl = `${window.location.origin}/sportsshop?product=${product.id}`
+    const shareText = `¡Mira este producto: ${product.name} por $${product.price}! ${productUrl}`
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: shareText,
+          url: productUrl
+        })
+      } catch (err) {
+        // Fallback to clipboard
+        navigator.clipboard.writeText(shareText)
+        alert('¡Link copiado al portapapeles!')
+      }
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(shareText)
+      alert('¡Link copiado al portapapeles!')
+    }
   }
 
   return (
@@ -51,30 +74,60 @@ const ProductModal = ({ product, isOpen, onClose }) => {
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}>
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="tap-effect"
-            style={{
-              position: 'absolute',
-              top: '16px',
-              right: '16px',
-              width: '40px',
-              height: '40px',
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)'
-            }}
-          >
-            <X size={24} strokeWidth={2} />
-          </button>
+          {/* Action Buttons */}
+          <div style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            display: 'flex',
+            gap: '8px'
+          }}>
+            {/* Share Button */}
+            <button
+              onClick={handleShare}
+              className="tap-effect"
+              style={{
+                width: '36px',
+                height: '36px',
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                transition: 'all 0.3s ease'
+              }}
+              title="Compartir producto"
+            >
+              <Share2 size={18} strokeWidth={2} />
+            </button>
+            
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="tap-effect"
+              style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)'
+              }}
+            >
+              <X size={24} strokeWidth={2} />
+            </button>
+          </div>
 
           {/* Badges */}
           <div style={{

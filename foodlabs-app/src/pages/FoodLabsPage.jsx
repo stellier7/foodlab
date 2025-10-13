@@ -71,7 +71,7 @@ const FoodLabsPage = () => {
     <main style={{ paddingBottom: '80px' }}>
       {/* Hero Section */}
       <div className="fade-in" style={{
-        background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+        background: '#f97316',
         color: 'white',
         padding: '32px 24px',
         textAlign: 'center',
