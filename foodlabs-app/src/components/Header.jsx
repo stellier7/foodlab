@@ -23,9 +23,9 @@ const Header = () => {
       top: 0,
       zIndex: 50
     }}>
-      {/* Gradient Background with Curve */}
+      {/* Full Color Background with Curve */}
       <div style={{
-        background: `linear-gradient(135deg, ${currentNav.color}15 0%, ${currentNav.color}08 100%)`,
+        background: `linear-gradient(135deg, ${currentNav.color} 0%, ${currentNav.color}dd 100%)`,
         position: 'relative',
         paddingBottom: '32px'
       }}>
@@ -69,7 +69,7 @@ const Header = () => {
             <h1 style={{ 
               fontSize: '22px', 
               fontWeight: '800', 
-              color: currentNav.color,
+              color: '#111827',
               letterSpacing: '-0.5px'
             }}>
               {currentNav.name}
@@ -82,13 +82,13 @@ const Header = () => {
               <button className="tap-effect" style={{
                 position: 'relative',
                 padding: '10px',
-                color: currentNav.color,
-                border: `2px solid ${currentNav.color}20`,
+                color: '#111827',
+                border: 'none',
                 background: 'rgba(255, 255, 255, 0.9)',
                 borderRadius: '12px',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
               }}>
                 <ShoppingCartIcon size={22} strokeWidth={2} />
                 {cartItemsCount > 0 && (
@@ -133,12 +133,12 @@ const Header = () => {
               style={{
                 flex: 1,
                 padding: '12px 16px',
-                border: location.pathname === item.path ? 'none' : `2px solid ${item.color}15`,
+                border: 'none',
                 borderRadius: '12px',
                 background: location.pathname === item.path 
-                  ? `linear-gradient(135deg, ${item.color} 0%, ${item.color}dd 100%)` 
+                  ? 'rgba(255, 255, 255, 0.25)' 
                   : 'rgba(255, 255, 255, 0.9)',
-                color: location.pathname === item.path ? 'white' : item.color,
+                color: location.pathname === item.path ? 'white' : '#111827',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: location.pathname === item.path ? '700' : '600',
@@ -149,8 +149,8 @@ const Header = () => {
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 whiteSpace: 'nowrap',
                 boxShadow: location.pathname === item.path 
-                  ? `0 4px 12px ${item.color}40` 
-                  : '0 2px 6px rgba(0, 0, 0, 0.06)',
+                  ? '0 4px 12px rgba(255, 255, 255, 0.3)' 
+                  : '0 2px 6px rgba(0, 0, 0, 0.1)',
                 animationDelay: `${0.1 + index * 0.05}s`,
                 opacity: 0,
                 animation: 'fadeInScale 0.4s ease-out forwards'

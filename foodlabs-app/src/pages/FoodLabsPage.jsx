@@ -100,19 +100,6 @@ const FoodLabsPage = () => {
           }}>
             Descubre los mejores restaurantes locales y haz tu pedido
           </p>
-          <div className="fade-in stagger-3 glass" style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            gap: '8px', 
-            fontSize: '13px',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontWeight: '500'
-          }}>
-            <MapPin size={14} />
-            <span>Ubicación detectada</span>
-          </div>
         </div>
         
         {/* Decorative circles */}
