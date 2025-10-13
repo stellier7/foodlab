@@ -118,7 +118,9 @@ const SportsShopPage = () => {
         padding: '32px 24px',
         textAlign: 'center',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px'
       }}>
         <div style={{ 
           maxWidth: '400px', 

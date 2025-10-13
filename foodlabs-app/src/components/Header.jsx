@@ -23,11 +23,9 @@ const Header = () => {
       top: 0,
       zIndex: 50
     }}>
-      {/* Full Color Background with Rounded Bottom */}
+      {/* Full Color Background */}
       <div style={{
-        background: `linear-gradient(135deg, ${currentNav.color} 0%, ${currentNav.color}dd 100%)`,
-        borderBottomLeftRadius: '24px',
-        borderBottomRightRadius: '24px'
+        background: `linear-gradient(135deg, ${currentNav.color} 0%, ${currentNav.color}dd 100%)`
       }}>
         <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
