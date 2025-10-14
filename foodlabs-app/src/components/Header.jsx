@@ -25,7 +25,9 @@ const Header = () => {
     }}>
       {/* Full Color Background */}
       <div style={{
-        background: currentNav.color
+        background: currentNav.color,
+        paddingTop: 'env(safe-area-inset-top)',
+        minHeight: 'calc(env(safe-area-inset-top) + 140px)'
       }}>
         <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
