@@ -101,9 +101,10 @@ const Header = () => {
         <div className="fade-in stagger-2" style={{
           marginTop: '16px',
           display: 'flex',
-          gap: '8px',
+          gap: '6px',
           overflowX: 'auto',
-          paddingBottom: '4px'
+          paddingBottom: '4px',
+          justifyContent: 'space-between'
         }}>
           {navItems.map((item, index) => (
             <button
@@ -111,8 +112,10 @@ const Header = () => {
               onClick={() => navigate(item.path)}
               className="tap-effect"
               style={{
-                flex: 1,
-                padding: '12px 16px',
+                flex: '0 0 auto',
+                minWidth: '90px',
+                maxWidth: '120px',
+                padding: '10px 12px',
                 border: 'none',
                 borderRadius: '12px',
                 background: location.pathname === item.path 
@@ -120,12 +123,12 @@ const Header = () => {
                   : 'rgba(255, 255, 255, 0.9)',
                 color: location.pathname === item.path ? 'white' : '#111827',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: '13px',
                 fontWeight: location.pathname === item.path ? '700' : '600',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
+                gap: '6px',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 whiteSpace: 'nowrap',
                 boxShadow: location.pathname === item.path 
@@ -136,7 +139,7 @@ const Header = () => {
                 animation: 'fadeInScale 0.4s ease-out forwards'
               }}
             >
-              <item.icon size={18} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
+              <item.icon size={16} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
               <span>{item.name}</span>
             </button>
           ))}
