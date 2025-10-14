@@ -158,19 +158,6 @@ const SportsShopPage = () => {
           }}>
             Todo para tu deporte favorito
           </p>
-          <div className="fade-in stagger-3 glass" style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            gap: '8px', 
-            fontSize: '13px',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontWeight: '500'
-          }}>
-            <ShoppingBag size={14} />
-            <span>Envío gratis +$100</span>
-          </div>
         </div>
         
         {/* Decorative circles */}
