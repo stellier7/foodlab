@@ -51,7 +51,7 @@ const Header = () => {
             <h1 style={{ 
               fontSize: '22px', 
               fontWeight: '800', 
-              color: '#111827',
+              color: 'white',
               letterSpacing: '-0.5px'
             }}>
               {currentNav.name}
@@ -64,7 +64,7 @@ const Header = () => {
               <button className="tap-effect" style={{
                 position: 'relative',
                 padding: '10px',
-                color: '#111827',
+                color: currentNav.color,
                 border: 'none',
                 background: 'rgba(255, 255, 255, 0.9)',
                 borderRadius: '12px',
