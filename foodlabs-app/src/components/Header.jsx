@@ -21,13 +21,15 @@ const Header = () => {
     <header className="fade-in" style={{
       position: 'sticky',
       top: 0,
-      zIndex: 50
+      zIndex: 50,
+      background: currentNav.color,
+      paddingTop: 'env(safe-area-inset-top)',
+      minHeight: 'calc(env(safe-area-inset-top) + 140px)'
     }}>
       {/* Full Color Background */}
       <div style={{
         background: currentNav.color,
-        paddingTop: 'env(safe-area-inset-top)',
-        minHeight: 'calc(env(safe-area-inset-top) + 140px)'
+        height: '100%'
       }}>
         <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
