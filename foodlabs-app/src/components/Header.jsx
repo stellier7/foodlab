@@ -103,10 +103,14 @@ const Header = () => {
         <div className="fade-in stagger-2" style={{
           marginTop: '16px',
           display: 'flex',
-          gap: '6px',
-          overflowX: 'auto',
-          paddingBottom: '4px',
-          justifyContent: 'space-between'
+          gap: '0',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: '12px',
+          padding: '4px',
+          maxWidth: window.innerWidth >= 768 ? '380px' : '100%',
+          margin: window.innerWidth >= 768 ? '16px auto 0' : '16px 0 0',
+          overflowX: 'auto'
         }}>
           {navItems.map((item, index) => (
             <button
@@ -114,16 +118,14 @@ const Header = () => {
               onClick={() => navigate(item.path)}
               className="tap-effect"
               style={{
-                flex: '0 0 auto',
-                minWidth: '90px',
-                maxWidth: '120px',
+                flex: 1,
                 padding: '10px 12px',
                 border: 'none',
-                borderRadius: '12px',
+                borderRadius: location.pathname === item.path ? '10px' : '0',
                 background: location.pathname === item.path 
-                  ? 'rgba(255, 255, 255, 0.25)' 
-                  : 'rgba(255, 255, 255, 0.9)',
-                color: location.pathname === item.path ? 'white' : '#111827',
+                  ? 'rgba(255, 255, 255, 1)' 
+                  : 'transparent',
+                color: location.pathname === item.path ? currentNav.color : '#6b7280',
                 cursor: 'pointer',
                 fontSize: '13px',
                 fontWeight: location.pathname === item.path ? '700' : '600',
@@ -134,8 +136,8 @@ const Header = () => {
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 whiteSpace: 'nowrap',
                 boxShadow: location.pathname === item.path 
-                  ? '0 4px 12px rgba(255, 255, 255, 0.3)' 
-                  : '0 2px 6px rgba(0, 0, 0, 0.1)',
+                  ? '0 2px 8px rgba(0, 0, 0, 0.1)' 
+                  : 'none',
                 animationDelay: `${0.1 + index * 0.05}s`,
                 opacity: 0,
                 animation: 'fadeInScale 0.4s ease-out forwards'
