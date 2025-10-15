@@ -3,7 +3,7 @@ import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBa
 import { useAppStore } from '../stores/useAppStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const Header = () => {
+const Header = ({ heroContent }) => {
   const { cart } = useAppStore()
   const navigate = useNavigate()
   const location = useLocation()
@@ -33,12 +33,15 @@ const Header = () => {
       zIndex: 50,
       background: currentNav.color,
       paddingTop: 'env(safe-area-inset-top)',
-      minHeight: 'calc(env(safe-area-inset-top) + 140px)'
+      transition: 'background-color 0.3s ease-in-out',
+      willChange: 'background-color'
     }}>
       {/* Full Color Background */}
       <div style={{
         background: currentNav.color,
-        height: '100%'
+        transition: 'background-color 0.3s ease-in-out',
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px'
       }}>
         <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -72,14 +75,18 @@ const Header = () => {
             <div className="fade-in stagger-2" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button className="tap-effect" style={{
                 position: 'relative',
-                padding: '10px',
+                width: '42px',
+                height: '42px',
                 color: currentNav.color,
                 border: 'none',
                 background: 'rgba(255, 255, 255, 0.9)',
                 borderRadius: '12px',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}>
                 <ShoppingCartIcon size={22} strokeWidth={2} />
                 {cartItemsCount > 0 && (
@@ -158,6 +165,18 @@ const Header = () => {
           ))}
         </div>
         </div>
+        
+        {/* Hero content from props */}
+        {heroContent && (
+          <div style={{ 
+            padding: '32px 24px',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {heroContent}
+          </div>
+        )}
       </div>
     </header>
   )

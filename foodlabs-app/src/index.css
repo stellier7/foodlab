@@ -8,6 +8,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
 :root {
@@ -24,6 +25,11 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Optimize performance for header transitions */
+header, main, section {
+  will-change: background-color;
 }
 
 /* ============================================

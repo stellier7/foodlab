@@ -3,64 +3,6 @@ import { Dumbbell, Heart, Calendar, Users } from 'lucide-react'
 const FitLabsPage = () => {
   return (
     <main style={{ paddingBottom: '80px' }}>
-      {/* Hero Section */}
-      <div className="fade-in" style={{
-        background: '#10b981',
-        color: 'white',
-        padding: '32px 24px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        borderBottomLeftRadius: '24px',
-        borderBottomRightRadius: '24px'
-      }}>
-        <div style={{ 
-          maxWidth: '400px', 
-          margin: '0 auto',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          <h1 className="fade-in stagger-1" style={{ 
-            fontSize: '28px', 
-            fontWeight: '800', 
-            marginBottom: '12px',
-            letterSpacing: '-0.5px'
-          }}>
-            ¡Bienvenido a FitLabs!
-          </h1>
-          <p className="fade-in stagger-2" style={{ 
-            color: '#d1fae5', 
-            marginBottom: '20px',
-            fontSize: '15px',
-            fontWeight: '500'
-          }}>
-            Tu centro de fitness y bienestar
-          </p>
-        </div>
-        
-        {/* Decorative circles */}
-        <div style={{
-          position: 'absolute',
-          top: '-50px',
-          right: '-50px',
-          width: '150px',
-          height: '150px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(40px)'
-        }}></div>
-        <div style={{
-          position: 'absolute',
-          bottom: '-30px',
-          left: '-30px',
-          width: '100px',
-          height: '100px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(30px)'
-        }}></div>
-      </div>
-
       {/* Coming Soon Section */}
       <div style={{ padding: '32px 16px', textAlign: 'center' }}>
         <div className="card fade-in stagger-2" style={{ 
