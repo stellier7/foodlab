@@ -102,7 +102,7 @@ const SportsShopPage = () => {
         setIsModalOpen(true)
       }
     }
-  }, [products])
+  }, [])
 
   const handleAddToCart = (product) => {
     addToCart({
