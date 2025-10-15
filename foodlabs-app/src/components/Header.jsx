@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBag } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBag, Search } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -8,6 +8,7 @@ const Header = ({ heroContent }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   const navItems = [
     { path: '/', name: 'FoodLab', icon: UtensilsCrossed, color: '#f97316' },
@@ -26,6 +27,17 @@ const Header = ({ heroContent }) => {
     }
   }, [currentNav.color])
 
+  // Handle scroll behavior
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      setIsScrolled(scrollTop > 100)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
     <header className="fade-in" style={{
       position: 'sticky',
@@ -39,40 +51,69 @@ const Header = ({ heroContent }) => {
       {/* Full Color Background */}
       <div style={{
         background: currentNav.color,
-        transition: 'background-color 0.3s ease-in-out',
-        borderBottomLeftRadius: '24px',
-        borderBottomRightRadius: '24px'
+        transition: 'background-color 0.3s ease-in-out, border-radius 0.3s ease-in-out',
+        borderBottomLeftRadius: isScrolled ? '0' : '24px',
+        borderBottomRightRadius: isScrolled ? '0' : '24px'
       }}>
-        <div style={{ padding: '16px' }}>
+        <div style={{ 
+          padding: isScrolled ? '8px 16px' : '16px',
+          transition: 'padding 0.3s ease-in-out'
+        }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Logo */}
-          <div className="fade-in stagger-1" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: `linear-gradient(135deg, ${currentNav.color} 0%, ${currentNav.color}dd 100%)`,
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: `0 4px 12px ${currentNav.color}40`,
-              transition: 'all 0.3s ease'
-            }}>
-              <currentNav.icon size={22} style={{ color: 'white' }} strokeWidth={2.5} />
+          {/* Logo - Hidden when scrolled */}
+          {!isScrolled && (
+            <div className="fade-in stagger-1" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                background: `linear-gradient(135deg, ${currentNav.color} 0%, ${currentNav.color}dd 100%)`,
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: `0 4px 12px ${currentNav.color}40`,
+                transition: 'all 0.3s ease'
+              }}>
+                <currentNav.icon size={22} style={{ color: 'white' }} strokeWidth={2.5} />
+              </div>
+              <h1 style={{ 
+                fontSize: '22px', 
+                fontWeight: '800', 
+                color: 'white',
+                letterSpacing: '-0.5px'
+              }}>
+                {currentNav.name}
+              </h1>
             </div>
-            <h1 style={{ 
-              fontSize: '22px', 
-              fontWeight: '800', 
-              color: 'white',
-              letterSpacing: '-0.5px'
-            }}>
-              {currentNav.name}
-            </h1>
-          </div>
+          )}
 
-          {/* Cart Button - Hidden in Admin */}
+          {/* Right side buttons */}
           {!isAdminPage && (
-            <div className="fade-in stagger-2" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="fade-in stagger-2" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px',
+              marginLeft: isScrolled ? 'auto' : '0'
+            }}>
+              {/* Search Button */}
+              <button className="tap-effect" style={{
+                width: '42px',
+                height: '42px',
+                color: currentNav.color,
+                border: 'none',
+                background: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Search size={20} strokeWidth={2} />
+              </button>
+
+              {/* Cart Button */}
               <button className="tap-effect" style={{
                 position: 'relative',
                 width: '42px',
@@ -117,7 +158,7 @@ const Header = ({ heroContent }) => {
 
         {/* Navigation Tabs */}
         <div className="fade-in stagger-2" style={{
-          marginTop: '16px',
+          marginTop: isScrolled ? '0' : '16px',
           display: 'flex',
           gap: '0',
           justifyContent: 'center',
@@ -125,8 +166,9 @@ const Header = ({ heroContent }) => {
           borderRadius: '12px',
           padding: '4px',
           maxWidth: window.innerWidth >= 768 ? '380px' : '100%',
-          margin: window.innerWidth >= 768 ? '16px auto 0' : '16px 0 0',
-          overflowX: 'auto'
+          margin: window.innerWidth >= 768 ? (isScrolled ? '0 auto' : '16px auto 0') : (isScrolled ? '0' : '16px 0 0'),
+          overflowX: 'auto',
+          transition: 'margin-top 0.3s ease-in-out, margin 0.3s ease-in-out'
         }}>
           {navItems.map((item, index) => (
             <button
@@ -167,7 +209,7 @@ const Header = ({ heroContent }) => {
         </div>
         
         {/* Hero content from props */}
-        {heroContent && (
+        {heroContent && !isScrolled && (
           <div style={{ 
             padding: '32px 24px',
             textAlign: 'center',
