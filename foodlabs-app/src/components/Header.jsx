@@ -71,9 +71,9 @@ const Header = ({ heroContent }) => {
       <div style={{
         background: currentNav.color,
         paddingTop: 'env(safe-area-inset-top)',
-        transition: 'background-color 0.3s ease-in-out, border-radius 0.3s ease-in-out',
-        borderBottomLeftRadius: '24px',
-        borderBottomRightRadius: '24px',
+        transition: 'background-color 0.3s ease-in-out, border-radius 0.4s ease-in-out',
+        borderBottomLeftRadius: scrollStage >= 2 ? '12px' : '24px',
+        borderBottomRightRadius: scrollStage >= 2 ? '12px' : '24px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
       }}>
         <div style={{ 
@@ -239,16 +239,12 @@ const Header = ({ heroContent }) => {
         </div>
         </div>
         
-        {/* Hero content from props - Fades with scroll naturally */}
-        {heroContent && (
+        {/* Hero content from props - Static, no animations */}
+        {heroContent && scrollStage === 0 && (
           <div style={{ 
-            padding: `${Math.max(0, 32 - (scrollY * 0.4))}px 24px`,
+            padding: '32px 24px',
             textAlign: 'center',
-            position: 'relative',
-            overflow: 'hidden',
-            opacity: heroOpacity,
-            maxHeight: `${Math.max(0, 200 - (scrollY * 2.5))}px`,
-            pointerEvents: scrollStage >= 1 ? 'none' : 'auto'
+            position: 'relative'
           }}>
             {heroContent}
           </div>
