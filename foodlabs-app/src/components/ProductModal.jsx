@@ -64,7 +64,9 @@ const ProductModal = ({ product, isOpen, onClose }) => {
         borderRadius: '24px',
         overflow: 'hidden',
         boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
-        position: 'relative'
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
         {/* Header */}
         <div style={{
@@ -169,7 +171,11 @@ const ProductModal = ({ product, isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div style={{ padding: '24px' }}>
+        <div style={{ 
+          padding: '24px',
+          overflowY: 'auto',
+          flex: 1
+        }}>
           {/* Title and Price */}
           <div style={{ marginBottom: '16px' }}>
             <h1 style={{
