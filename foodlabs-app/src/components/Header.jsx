@@ -9,6 +9,7 @@ const Header = ({ heroContent }) => {
   const location = useLocation()
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
   const [scrollStage, setScrollStage] = useState(0)
+  const [scrollY, setScrollY] = useState(0)
   // Stage 0: Full header (0-80px)
   // Stage 1: Hero hidden, logo/title visible (80-200px)
   // Stage 2: Logo/title hidden, toggle visible (200-400px)
@@ -23,6 +24,11 @@ const Header = ({ heroContent }) => {
   const currentNav = navItems.find(item => item.path === location.pathname) || navItems[0]
   const isAdminPage = location.pathname.startsWith('/admin')
 
+  // Calculate smooth opacity values based on scroll position
+  const heroOpacity = Math.max(0, Math.min(1, 1 - (scrollY / 80)))
+  const logoOpacity = Math.max(0, Math.min(1, 1 - ((scrollY - 80) / 120)))
+  const toggleOpacity = Math.max(0, Math.min(1, 1 - ((scrollY - 200) / 200)))
+
   // Update theme color dynamically based on current section
   useEffect(() => {
     const metaThemeColor = document.querySelector('meta[name="theme-color"]')
@@ -35,6 +41,8 @@ const Header = ({ heroContent }) => {
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      setScrollY(scrollTop)
+      
       if (scrollTop < 80) {
         setScrollStage(0)
       } else if (scrollTop < 200) {
@@ -73,14 +81,13 @@ const Header = ({ heroContent }) => {
           transition: 'padding 0.4s ease-in-out'
         }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Logo - Hidden after stage 1 */}
+          {/* Logo - Hidden after stage 1 with slower transition */}
           <div className="fade-in stagger-1" style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '10px',
-            opacity: scrollStage >= 2 ? 0 : 1,
-            transform: scrollStage >= 2 ? 'translateY(-10px)' : 'translateY(0)',
-            transition: 'opacity 0.4s ease-in-out, transform 0.4s ease-in-out',
+            opacity: logoOpacity,
+            transform: `translateY(${-Math.max(0, (scrollY - 80) * 0.08)}px)`,
             pointerEvents: scrollStage >= 2 ? 'none' : 'auto'
           }}>
               <div style={{
@@ -176,24 +183,23 @@ const Header = ({ heroContent }) => {
           )}
         </div>
 
-        {/* Navigation Tabs - Hidden after stage 2 */}
+        {/* Navigation Tabs - Gradual fade with scroll */}
         <div className="fade-in stagger-2" style={{
-          marginTop: scrollStage >= 2 ? '0' : '16px',
+          marginTop: `${Math.max(0, 16 - Math.max(0, (scrollY - 200) * 0.08))}px`,
           display: 'flex',
           gap: '0',
           justifyContent: 'center',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: `rgba(255, 255, 255, ${0.9 * toggleOpacity})`,
           borderRadius: '12px',
-          padding: '4px',
+          padding: `${Math.max(0, 4 * toggleOpacity)}px`,
           maxWidth: window.innerWidth >= 768 ? '380px' : '100%',
-          margin: window.innerWidth >= 768 ? (scrollStage >= 2 ? '0 auto' : '16px auto 0') : (scrollStage >= 2 ? '0' : '16px 0 0'),
+          margin: window.innerWidth >= 768 ? `${Math.max(0, 16 - Math.max(0, (scrollY - 200) * 0.08))}px auto 0` : `${Math.max(0, 16 - Math.max(0, (scrollY - 200) * 0.08))}px 0 0`,
           overflowX: 'auto',
-          opacity: scrollStage >= 3 ? 0 : 1,
-          transform: scrollStage >= 3 ? 'translateY(-10px)' : 'translateY(0)',
-          transition: 'margin-top 0.4s ease-in-out, margin 0.4s ease-in-out, opacity 0.6s ease-in-out, transform 0.6s ease-in-out',
+          opacity: toggleOpacity,
+          transform: `translateY(${-Math.max(0, (scrollY - 200) * 0.05)}px) scale(${Math.max(0.95, toggleOpacity)})`,
           pointerEvents: scrollStage >= 3 ? 'none' : 'auto',
-          height: scrollStage >= 3 ? '0' : 'auto',
-          overflow: scrollStage >= 3 ? 'hidden' : 'visible'
+          maxHeight: `${Math.max(0, 60 * toggleOpacity)}px`,
+          overflow: 'hidden'
         }}>
           {navItems.map((item, index) => (
             <button
@@ -233,16 +239,15 @@ const Header = ({ heroContent }) => {
         </div>
         </div>
         
-        {/* Hero content from props - Hidden after stage 0 */}
+        {/* Hero content from props - Fades with scroll naturally */}
         {heroContent && (
           <div style={{ 
-            padding: scrollStage >= 1 ? '0 24px' : '32px 24px',
+            padding: `${Math.max(0, 32 - (scrollY * 0.4))}px 24px`,
             textAlign: 'center',
             position: 'relative',
             overflow: 'hidden',
-            opacity: scrollStage >= 1 ? 0 : 1,
-            transform: scrollStage >= 1 ? 'translateY(-20px)' : 'translateY(0)',
-            transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out, padding 0.2s ease-in-out',
+            opacity: heroOpacity,
+            transform: `translateY(${-scrollY * 0.25}px)`,
             height: scrollStage >= 1 ? '0' : 'auto',
             pointerEvents: scrollStage >= 1 ? 'none' : 'auto'
           }}>
