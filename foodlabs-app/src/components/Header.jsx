@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBag } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -16,6 +17,14 @@ const Header = () => {
 
   const currentNav = navItems.find(item => item.path === location.pathname) || navItems[0]
   const isAdminPage = location.pathname.startsWith('/admin')
+
+  // Update theme color dynamically based on current section
+  useEffect(() => {
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', currentNav.color)
+    }
+  }, [currentNav.color])
 
   return (
     <header className="fade-in" style={{
