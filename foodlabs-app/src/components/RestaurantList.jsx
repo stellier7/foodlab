@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../stores/useAppStore'
 import { Clock, Star, Truck } from 'lucide-react'
 
 const RestaurantList = () => {
-  const { restaurants, isLoading, addToCart } = useAppStore()
-  const [expandedRestaurant, setExpandedRestaurant] = useState(null)
+  const { restaurants, isLoading } = useAppStore()
+  const navigate = useNavigate()
+
+  const handleRestaurantClick = (restaurant) => {
+    const slug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, '-')
+    navigate(`/restaurant/${slug}`)
+  }
 
   if (isLoading) {
     return (
@@ -38,10 +43,12 @@ const RestaurantList = () => {
         <div 
           key={restaurant.id} 
           className="card fade-in tap-effect"
+          onClick={() => handleRestaurantClick(restaurant)}
           style={{
             padding: '20px',
             animationDelay: `${index * 0.1}s`,
-            opacity: 0
+            opacity: 0,
+            cursor: 'pointer'
           }}
         >
           {/* Restaurant Header */}
@@ -128,116 +135,7 @@ const RestaurantList = () => {
             </div>
           </div>
 
-          {/* Menu Toggle Button */}
-          <button
-            onClick={() => setExpandedRestaurant(
-              expandedRestaurant === restaurant.id ? null : restaurant.id
-            )}
-            className="tap-effect"
-            style={{
-              width: '100%',
-              marginTop: '16px',
-              padding: '12px',
-              color: '#f97316',
-              fontWeight: '700',
-              fontSize: '14px',
-              background: expandedRestaurant === restaurant.id 
-                ? 'linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%)'
-                : '#fef3c7',
-              border: 'none',
-              cursor: 'pointer',
-              borderRadius: '12px',
-              transition: 'all 0.3s ease',
-              boxShadow: expandedRestaurant === restaurant.id 
-                ? '0 4px 12px rgba(249, 115, 22, 0.15)'
-                : 'none'
-            }}
-          >
-            {expandedRestaurant === restaurant.id ? '▲ Ocultar menú' : '▼ Ver menú'}
-          </button>
 
-          {/* Menu Items */}
-          {expandedRestaurant === restaurant.id && (
-            <div className="fade-in" style={{ 
-              marginTop: '16px', 
-              paddingTop: '16px', 
-              borderTop: '2px solid rgba(249, 115, 22, 0.1)' 
-            }}>
-              <h4 style={{ 
-                fontWeight: '800', 
-                color: '#111827', 
-                marginBottom: '16px',
-                fontSize: '16px',
-                letterSpacing: '-0.3px'
-              }}>
-                🍽️ Menú
-              </h4>
-              <div>
-                {restaurant.menu.map((item, itemIndex) => (
-                  <div 
-                    key={item.id} 
-                    className="card fade-in tap-effect"
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between', 
-                      marginBottom: '12px',
-                      padding: '16px',
-                      background: 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
-                      animationDelay: `${itemIndex * 0.05}s`,
-                      opacity: 0
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <h5 style={{ 
-                        fontWeight: '700', 
-                        color: '#111827', 
-                        margin: 0,
-                        fontSize: '15px'
-                      }}>
-                        {item.name}
-                      </h5>
-                      <p style={{ 
-                        fontSize: '13px', 
-                        color: '#6b7280', 
-                        margin: '4px 0',
-                        fontWeight: '500'
-                      }}>
-                        {item.description}
-                      </p>
-                    </div>
-                    <div style={{ 
-                      display: 'flex', 
-                      flexDirection: 'column',
-                      alignItems: 'flex-end',
-                      gap: '8px',
-                      marginLeft: '16px'
-                    }}>
-                      <span style={{ 
-                        fontWeight: '800', 
-                        color: '#f97316',
-                        fontSize: '18px'
-                      }}>
-                        ${item.price.toFixed(2)}
-                      </span>
-                      <button 
-                        onClick={() => addToCart(item, restaurant.id)}
-                        className="btn-primary ripple"
-                        style={{ 
-                          fontSize: '13px', 
-                          padding: '10px 20px',
-                          fontWeight: '700',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        + Agregar
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       ))}
     </div>

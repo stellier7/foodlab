@@ -23,6 +23,7 @@ const Header = () => {
 
   const currentNav = navItems.find(item => item.path === location.pathname) || navItems[0]
   const isAdminPage = location.pathname.startsWith('/admin')
+  const isRestaurantPage = location.pathname.startsWith('/restaurant/')
 
   // Calculate smooth opacity values based on scroll position
   const logoOpacity = Math.max(0, Math.min(1, 1 - ((scrollY - 100) / 150)))
@@ -56,6 +57,11 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Hide header on restaurant pages
+  if (isRestaurantPage) {
+    return null
+  }
 
   return (
     <header className="fade-in" style={{

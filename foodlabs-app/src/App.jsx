@@ -4,6 +4,7 @@ import ShoppingCart from './components/ShoppingCart'
 import FoodLabsPage from './pages/FoodLabsPage'
 import FitLabsPage from './pages/FitLabsPage'
 import SportsShopPage from './pages/SportsShopPage'
+import RestaurantDetailPage from './pages/RestaurantDetailPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminPage from './pages/AdminPage'
 import { useAuthStore } from './stores/useAuthStore'
@@ -30,6 +31,7 @@ const AppContent = () => {
           <Route path="/" element={<FoodLabsPage />} />
           <Route path="/fitlabs" element={<FitLabsPage />} />
           <Route path="/sportsshop" element={<SportsShopPage />} />
+          <Route path="/restaurant/:restaurantName" element={<RestaurantDetailPage />} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
