@@ -8,7 +8,11 @@ const Header = ({ heroContent }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [scrollStage, setScrollStage] = useState(0)
+  // Stage 0: Full header (0-80px)
+  // Stage 1: Hero hidden, logo/title visible (80-200px)
+  // Stage 2: Logo/title hidden, toggle visible (200-400px)
+  // Stage 3: Toggle hidden, minimal header (400px+)
 
   const navItems = [
     { path: '/', name: 'FoodLab', icon: UtensilsCrossed, color: '#f97316' },
@@ -27,11 +31,19 @@ const Header = ({ heroContent }) => {
     }
   }, [currentNav.color])
 
-  // Handle scroll behavior
+  // Handle scroll behavior with multi-stage transitions
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-      setIsScrolled(scrollTop > 100)
+      if (scrollTop < 80) {
+        setScrollStage(0)
+      } else if (scrollTop < 200) {
+        setScrollStage(1)
+      } else if (scrollTop < 400) {
+        setScrollStage(2)
+      } else {
+        setScrollStage(3)
+      }
     }
 
     window.addEventListener('scroll', handleScroll)
@@ -52,17 +64,25 @@ const Header = ({ heroContent }) => {
       <div style={{
         background: currentNav.color,
         transition: 'background-color 0.3s ease-in-out, border-radius 0.3s ease-in-out',
-        borderBottomLeftRadius: isScrolled ? '0' : '24px',
-        borderBottomRightRadius: isScrolled ? '0' : '24px'
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
       }}>
         <div style={{ 
-          padding: isScrolled ? '8px 16px' : '16px',
-          transition: 'padding 0.3s ease-in-out'
+          padding: scrollStage >= 2 ? '8px 16px' : '16px',
+          transition: 'padding 0.4s ease-in-out'
         }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Logo - Hidden when scrolled */}
-          {!isScrolled && (
-            <div className="fade-in stagger-1" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Logo - Hidden after stage 1 */}
+          <div className="fade-in stagger-1" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px',
+            opacity: scrollStage >= 2 ? 0 : 1,
+            transform: scrollStage >= 2 ? 'translateY(-10px)' : 'translateY(0)',
+            transition: 'opacity 0.4s ease-in-out, transform 0.4s ease-in-out',
+            pointerEvents: scrollStage >= 2 ? 'none' : 'auto'
+          }}>
               <div style={{
                 width: '40px',
                 height: '40px',
@@ -85,7 +105,6 @@ const Header = ({ heroContent }) => {
                 {currentNav.name}
               </h1>
             </div>
-          )}
 
           {/* Right side buttons */}
           {!isAdminPage && (
@@ -93,7 +112,8 @@ const Header = ({ heroContent }) => {
               display: 'flex', 
               alignItems: 'center', 
               gap: '12px',
-              marginLeft: isScrolled ? 'auto' : '0'
+              marginLeft: scrollStage >= 2 ? 'auto' : '0',
+              transition: 'margin-left 0.4s ease-in-out'
             }}>
               {/* Search Button */}
               <button className="tap-effect" style={{
@@ -156,9 +176,9 @@ const Header = ({ heroContent }) => {
           )}
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs - Hidden after stage 2 */}
         <div className="fade-in stagger-2" style={{
-          marginTop: isScrolled ? '0' : '16px',
+          marginTop: scrollStage >= 2 ? '0' : '16px',
           display: 'flex',
           gap: '0',
           justifyContent: 'center',
@@ -166,9 +186,14 @@ const Header = ({ heroContent }) => {
           borderRadius: '12px',
           padding: '4px',
           maxWidth: window.innerWidth >= 768 ? '380px' : '100%',
-          margin: window.innerWidth >= 768 ? (isScrolled ? '0 auto' : '16px auto 0') : (isScrolled ? '0' : '16px 0 0'),
+          margin: window.innerWidth >= 768 ? (scrollStage >= 2 ? '0 auto' : '16px auto 0') : (scrollStage >= 2 ? '0' : '16px 0 0'),
           overflowX: 'auto',
-          transition: 'margin-top 0.3s ease-in-out, margin 0.3s ease-in-out'
+          opacity: scrollStage >= 3 ? 0 : 1,
+          transform: scrollStage >= 3 ? 'translateY(-10px)' : 'translateY(0)',
+          transition: 'margin-top 0.4s ease-in-out, margin 0.4s ease-in-out, opacity 0.6s ease-in-out, transform 0.6s ease-in-out',
+          pointerEvents: scrollStage >= 3 ? 'none' : 'auto',
+          height: scrollStage >= 3 ? '0' : 'auto',
+          overflow: scrollStage >= 3 ? 'hidden' : 'visible'
         }}>
           {navItems.map((item, index) => (
             <button
@@ -208,13 +233,18 @@ const Header = ({ heroContent }) => {
         </div>
         </div>
         
-        {/* Hero content from props */}
-        {heroContent && !isScrolled && (
+        {/* Hero content from props - Hidden after stage 0 */}
+        {heroContent && (
           <div style={{ 
-            padding: '32px 24px',
+            padding: scrollStage >= 1 ? '0 24px' : '32px 24px',
             textAlign: 'center',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            opacity: scrollStage >= 1 ? 0 : 1,
+            transform: scrollStage >= 1 ? 'translateY(-20px)' : 'translateY(0)',
+            transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out, padding 0.2s ease-in-out',
+            height: scrollStage >= 1 ? '0' : 'auto',
+            pointerEvents: scrollStage >= 1 ? 'none' : 'auto'
           }}>
             {heroContent}
           </div>
