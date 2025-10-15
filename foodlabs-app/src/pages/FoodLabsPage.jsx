@@ -9,6 +9,54 @@ const FoodLabsPage = () => {
   // Datos de ejemplo para desarrollo
   const mockRestaurants = [
     {
+      id: 'foodlab-flagship',
+      name: 'FoodLab',
+      category: 'Internacional',
+      tier: 'premium',
+      isPrime: true,
+      rating: 4.9,
+      deliveryTime: '20-30 min',
+      deliveryFee: 0,
+      image: '/images/products/foodLab/orangeChicken.jpeg',
+      menu: [
+        { 
+          id: 'fl1', 
+          name: 'Croissant de Desayuno', 
+          price: 4.50, 
+          description: 'Croissant recién horneado relleno de jamón y queso',
+          image: '/images/products/foodLab/croissantDeDesayuno.jpeg'
+        },
+        { 
+          id: 'fl2', 
+          name: 'Dumplings Asiáticos', 
+          price: 8.00, 
+          description: 'Dumplings al vapor con salsa de soya y jengibre',
+          image: '/images/products/foodLab/dumplings.jpeg'
+        },
+        { 
+          id: 'fl3', 
+          name: 'Papas Cargadas', 
+          price: 6.50, 
+          description: 'Papas fritas con queso, tocino, cebollín y crema',
+          image: '/images/products/foodLab/loadedFries.jpeg'
+        },
+        { 
+          id: 'fl4', 
+          name: 'Orange Chicken', 
+          price: 12.00, 
+          description: 'Pollo crujiente bañado en salsa de naranja dulce',
+          image: '/images/products/foodLab/orangeChicken.jpeg'
+        },
+        { 
+          id: 'fl5', 
+          name: 'Pad Thai', 
+          price: 11.00, 
+          description: 'Fideos salteados estilo tailandés con camarones',
+          image: '/images/products/foodLab/padTai.jpeg'
+        }
+      ]
+    },
+    {
       id: '1',
       name: 'Baleadas de Doña María',
       category: 'Hondureña',
