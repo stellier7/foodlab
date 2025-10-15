@@ -247,8 +247,7 @@ const Header = ({ heroContent }) => {
             position: 'relative',
             overflow: 'hidden',
             opacity: heroOpacity,
-            transform: `translateY(${-scrollY * 0.25}px)`,
-            height: scrollStage >= 1 ? '0' : 'auto',
+            maxHeight: `${Math.max(0, 200 - (scrollY * 2.5))}px`,
             pointerEvents: scrollStage >= 1 ? 'none' : 'auto'
           }}>
             {heroContent}
