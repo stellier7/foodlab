@@ -66,14 +66,14 @@ const Header = () => {
       transition: 'background-color 0.3s ease-in-out',
       willChange: 'background-color'
     }}>
-      {/* Full Color Background with rounded bottom */}
+      {/* Full Color Background with conditional rounded bottom */}
       <div style={{
         background: currentNav.color,
         paddingTop: 'env(safe-area-inset-top)',
         transition: 'background-color 0.3s ease-in-out, border-radius 0.4s ease-in-out',
-        borderBottomLeftRadius: scrollStage >= 2 ? '12px' : '24px',
-        borderBottomRightRadius: scrollStage >= 2 ? '12px' : '24px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+        borderBottomLeftRadius: scrollStage === 0 ? '0' : (scrollStage >= 2 ? '12px' : '24px'),
+        borderBottomRightRadius: scrollStage === 0 ? '0' : (scrollStage >= 2 ? '12px' : '24px'),
+        boxShadow: scrollStage === 0 ? 'none' : '0 4px 12px rgba(0, 0, 0, 0.1)'
       }}>
         <div style={{ 
           padding: scrollStage >= 2 ? '8px 16px' : '16px',
