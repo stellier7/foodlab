@@ -63,14 +63,14 @@ const Header = ({ heroContent }) => {
       position: 'sticky',
       top: 0,
       zIndex: 50,
-      background: currentNav.color,
-      paddingTop: 'env(safe-area-inset-top)',
+      background: 'transparent',
       transition: 'background-color 0.3s ease-in-out',
       willChange: 'background-color'
     }}>
-      {/* Full Color Background */}
+      {/* Full Color Background with rounded bottom */}
       <div style={{
         background: currentNav.color,
+        paddingTop: 'env(safe-area-inset-top)',
         transition: 'background-color 0.3s ease-in-out, border-radius 0.3s ease-in-out',
         borderBottomLeftRadius: '24px',
         borderBottomRightRadius: '24px',
