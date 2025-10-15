@@ -3,6 +3,35 @@ import { Dumbbell, Heart, Calendar, Users } from 'lucide-react'
 const FitLabsPage = () => {
   return (
     <main style={{ paddingBottom: '80px' }}>
+      {/* Hero Section - Scrolls with page */}
+      <div className="fade-in stagger-1" style={{
+        background: '#10b981',
+        padding: '32px 24px',
+        textAlign: 'center',
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px',
+        marginTop: '-1px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h1 style={{ 
+          fontSize: '28px', 
+          fontWeight: '800', 
+          marginBottom: '12px',
+          letterSpacing: '-0.5px',
+          color: 'white'
+        }}>
+          ¡Bienvenido a FitLabs!
+        </h1>
+        <p style={{ 
+          color: '#a7f3d0', 
+          marginBottom: '0',
+          fontSize: '15px',
+          fontWeight: '500'
+        }}>
+          Tu centro de fitness y bienestar
+        </p>
+      </div>
+
       {/* Coming Soon Section */}
       <div style={{ padding: '32px 16px', textAlign: 'center' }}>
         <div className="card fade-in stagger-2" style={{ 

@@ -3,17 +3,17 @@ import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBa
 import { useAppStore } from '../stores/useAppStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const Header = ({ heroContent }) => {
+const Header = () => {
   const { cart } = useAppStore()
   const navigate = useNavigate()
   const location = useLocation()
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
   const [scrollStage, setScrollStage] = useState(0)
   const [scrollY, setScrollY] = useState(0)
-  // Stage 0: Full header (0-80px)
-  // Stage 1: Hero hidden, logo/title visible (80-200px)
-  // Stage 2: Logo/title hidden, toggle visible (200-400px)
-  // Stage 3: Toggle hidden, minimal header (400px+)
+  // Stage 0: Full header with logo + toggle (0-100px)
+  // Stage 1: Logo fading (100-250px)
+  // Stage 2: Toggle fading (250-450px)
+  // Stage 3: Minimal header (450px+)
 
   const navItems = [
     { path: '/', name: 'FoodLab', icon: UtensilsCrossed, color: '#f97316' },
@@ -25,9 +25,8 @@ const Header = ({ heroContent }) => {
   const isAdminPage = location.pathname.startsWith('/admin')
 
   // Calculate smooth opacity values based on scroll position
-  const heroOpacity = Math.max(0, Math.min(1, 1 - (scrollY / 80)))
-  const logoOpacity = Math.max(0, Math.min(1, 1 - ((scrollY - 80) / 120)))
-  const toggleOpacity = Math.max(0, Math.min(1, 1 - ((scrollY - 200) / 200)))
+  const logoOpacity = Math.max(0, Math.min(1, 1 - ((scrollY - 100) / 150)))
+  const toggleOpacity = Math.max(0, Math.min(1, 1 - ((scrollY - 250) / 200)))
 
   // Update theme color dynamically based on current section
   useEffect(() => {
@@ -43,11 +42,11 @@ const Header = ({ heroContent }) => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop
       setScrollY(scrollTop)
       
-      if (scrollTop < 80) {
+      if (scrollTop < 100) {
         setScrollStage(0)
-      } else if (scrollTop < 200) {
+      } else if (scrollTop < 250) {
         setScrollStage(1)
-      } else if (scrollTop < 400) {
+      } else if (scrollTop < 450) {
         setScrollStage(2)
       } else {
         setScrollStage(3)
@@ -238,17 +237,6 @@ const Header = ({ heroContent }) => {
           ))}
         </div>
         </div>
-        
-        {/* Hero content from props - Static, no animations */}
-        {heroContent && scrollStage === 0 && (
-          <div style={{ 
-            padding: '32px 24px',
-            textAlign: 'center',
-            position: 'relative'
-          }}>
-            {heroContent}
-          </div>
-        )}
       </div>
     </header>
   )

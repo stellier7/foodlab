@@ -125,6 +125,34 @@ const SportsShopPage = () => {
 
   return (
     <main style={{ paddingBottom: '80px' }}>
+      {/* Hero Section - Scrolls with page */}
+      <div className="fade-in stagger-1" style={{
+        background: '#3b82f6',
+        padding: '32px 24px',
+        textAlign: 'center',
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px',
+        marginTop: '-1px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h1 style={{ 
+          fontSize: '28px', 
+          fontWeight: '800', 
+          marginBottom: '12px',
+          letterSpacing: '-0.5px',
+          color: 'white'
+        }}>
+          ¡Bienvenido a SportsShop!
+        </h1>
+        <p style={{ 
+          color: '#bfdbfe', 
+          marginBottom: '0',
+          fontSize: '15px',
+          fontWeight: '500'
+        }}>
+          Todo para tu deporte favorito
+        </p>
+      </div>
 
       {/* Categories */}
       <div className="fade-in stagger-2" style={{ 

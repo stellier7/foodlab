@@ -117,6 +117,35 @@ const FoodLabsPage = () => {
 
   return (
     <main style={{ paddingBottom: '80px' }}>
+      {/* Hero Section - Scrolls with page */}
+      <div className="fade-in stagger-1" style={{
+        background: '#f97316',
+        padding: '32px 24px',
+        textAlign: 'center',
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px',
+        marginTop: '-1px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h1 style={{ 
+          fontSize: '28px', 
+          fontWeight: '800', 
+          marginBottom: '12px',
+          letterSpacing: '-0.5px',
+          color: 'white'
+        }}>
+          ¡Bienvenido a FoodLab!
+        </h1>
+        <p style={{ 
+          color: '#fed7aa', 
+          marginBottom: '0',
+          fontSize: '15px',
+          fontWeight: '500'
+        }}>
+          Descubre los mejores restaurantes locales y haz tu pedido
+        </p>
+      </div>
+
       {/* Restaurants Section */}
       <div style={{ padding: '20px 16px' }}>
         <div className="fade-in stagger-2" style={{ 
