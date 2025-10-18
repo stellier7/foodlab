@@ -257,7 +257,7 @@ const ShoppingCart = () => {
                 <div>
                   {cart.map((item, index) => (
                     <div 
-                      key={`${item.id}-${item.restaurantId}-${index}`}
+                      key={item.variantKey || `${item.id}-${item.restaurantId}-${index}`}
                       className="card fade-in tap-effect"
                       style={{ 
                         display: 'flex', 
@@ -273,13 +273,13 @@ const ShoppingCart = () => {
                       <div style={{ flex: 1 }}>
                         <h4 style={{ fontWeight: '700', color: '#111827', margin: 0, fontSize: '15px' }}>{item.name}</h4>
                         <p style={{ fontSize: '13px', color: '#6b7280', margin: '6px 0', fontWeight: '500' }}>
-                          ${item.price.toFixed(2)} c/u
+                          L {item.price.toFixed(2)} c/u
                         </p>
                       </div>
                       
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <button
-                          onClick={() => removeFromCart(item.id, item.restaurantId)}
+                          onClick={() => removeFromCart(item.variantKey || item.id, item.restaurantId)}
                           className="tap-effect"
                           style={{
                             width: '36px',
@@ -342,19 +342,19 @@ const ShoppingCart = () => {
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px', fontWeight: '500' }}>
                     <span style={{ color: '#6b7280' }}>Subtotal:</span>
-                    <span style={{ color: '#111827' }}>${fees.subtotal.toFixed(2)}</span>
+                    <span style={{ color: '#111827' }}>L {fees.subtotal.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>
                     <span>Fee de plataforma (5%):</span>
-                    <span>${fees.platformFee.toFixed(2)}</span>
+                    <span>L {fees.platformFee.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>
                     <span>Fee de servicio (10%):</span>
-                    <span>${fees.serviceFee.toFixed(2)}</span>
+                    <span>L {fees.serviceFee.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#9ca3af', marginBottom: '12px' }}>
                     <span>Delivery:</span>
-                    <span>${fees.deliveryFee.toFixed(2)}</span>
+                    <span>L {fees.deliveryFee.toFixed(2)}</span>
                   </div>
                   <div className="card" style={{ 
                     display: 'flex', 
@@ -373,7 +373,7 @@ const ShoppingCart = () => {
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text'
                     }}>
-                      ${fees.grandTotal.toFixed(2)}
+                      L {fees.grandTotal.toFixed(2)}
                     </span>
                   </div>
                 </div>

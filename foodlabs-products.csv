@@ -1,0 +1,34 @@
+Restaurante,Producto,Categoria,Tamaño,Precio FL App,Costo por Plato,Comision Foodlab,Tiene Combo,Precio Combo Adicional,Imagen,Imagen Combo,Descripcion,Labels
+FoodLab SPS,Orange Chicken,Mas vendidos,,227.90,163.84,49.15,No,,orangeChicken.jpeg,,Pollo crujiente bañado en salsa de naranja dulce,
+FoodLab SPS,Angus Burger,Platos principales,,150.23,108.00,32.40,No,,angusBurger.jpeg,,Hamburguesa de carne Angus premium,
+FoodLab SPS,Chicken Sandwich,Platos principales,,121.02,87.00,26.10,No,,chickenSandwich.jpeg,,Sándwich de pollo crujiente,
+FoodLab SPS,Tallarin,Platos principales,,234.58,168.64,50.59,No,,padTai.jpeg,,Orange Chicken con tallarines,Pescaradiano
+FoodLab SPS,Loaded Fries,Entradas,,140.63,101.10,30.33,No,,loadedFries.jpeg,,Papas fritas con queso tocino y crema,Vegetariano
+FoodLab SPS,Boneless,Mas vendidos,Regular,193.40,139.04,41.71,Si,32.66,boneless.jpeg,bonelessPapas.jpeg,Deliciosos boneless de pollo crujiente,
+FoodLab SPS,Boneless,Mas vendidos,Regular con Papas,226.79,163.04,48.91,No,,bonelessPapas.jpeg,,Boneless con papas fritas,
+FoodLab SPS,Boneless,Mas vendidos,12 piezas,328.14,235.90,70.77,Si,98.96,boneless12.jpeg,boneless12Combo.jpeg,12 piezas de boneless crujientes,
+FoodLab SPS,Boneless,Mas vendidos,24 piezas,598.55,430.30,129.09,Si,200.30,boneless24.jpeg,boneless24Combo.jpeg,24 piezas de boneless crujientes,
+FoodLab SPS,Agua,Bebidas,,20.87,15.00,4.50,No,,agua.jpeg,,Agua purificada,Vegano
+FoodLab SPS,Pepsi Light,Bebidas,355ml,41.73,30.00,9.00,No,,pepsiLight.jpeg,,Pepsi Light 355ml,Vegano;Fit
+FoodLab SPS,7Up,Bebidas,355ml,41.73,30.00,9.00,No,,7up.jpeg,,7Up 355ml,Vegano
+FoodLab SPS,Coca Cola,Bebidas,355ml,41.73,30.00,9.00,No,,cocaCola.jpeg,,Coca Cola 355ml,Vegano
+FoodLab SPS,Natural,Bebidas,16oz,55.64,40.00,12.00,No,,natural.jpeg,,Jugo natural 16oz,Vegano;Fit
+FoodLab SPS,Tamarindo,Bebidas,16oz,55.64,40.00,12.00,No,,tamarindo.jpeg,,Jugo de tamarindo 16oz,Vegano;Fit
+FoodLab SPS,Limonada,Bebidas,16oz,55.64,40.00,12.00,No,,limonada.jpeg,,Limonada natural 16oz,Vegano;Fit
+FoodLab TGU,CroiLab,Entradas,,118.24,85.00,25.50,No,,croissantDeDesayuno.jpeg,,Croissant artesanal relleno,Vegetariano
+FoodLab TGU,Orange Chicken,Mas vendidos,,227.90,163.84,49.15,No,,orangeChicken.jpeg,,Pollo crujiente bañado en salsa de naranja dulce,
+FoodLab TGU,Tallarin,Platos principales,,234.58,168.64,50.59,No,,padTai.jpeg,,Orange Chicken con tallarines,Pescaradiano
+FoodLab TGU,Gyozas,Entradas,,150.00,100.00,30.00,No,,dumplings.jpeg,,Dumplings al vapor con salsa de soya,Vegetariano
+FoodLab TGU,Loaded Fries,Entradas,,140.63,101.10,30.33,No,,loadedFries.jpeg,,Papas fritas con queso tocino y crema,Vegetariano
+FoodLab TGU,Boneless,Mas vendidos,Regular,193.40,139.04,41.71,Si,32.66,boneless.jpeg,bonelessPapas.jpeg,Deliciosos boneless de pollo crujiente,
+FoodLab TGU,Boneless,Mas vendidos,Regular con Papas,226.79,163.04,48.91,No,,bonelessPapas.jpeg,,Boneless con papas fritas,
+FoodLab TGU,Boneless,Mas vendidos,12 piezas,328.14,235.90,70.77,Si,98.96,boneless12.jpeg,boneless12Combo.jpeg,12 piezas de boneless crujientes,
+FoodLab TGU,Boneless,Mas vendidos,24 piezas,598.55,430.30,129.09,Si,200.30,boneless24.jpeg,boneless24Combo.jpeg,24 piezas de boneless crujientes,
+FoodLab TGU,Agua,Bebidas,,20.87,15.00,4.50,No,,agua.jpeg,,Agua purificada,Vegano
+FoodLab TGU,Pepsi Light,Bebidas,355ml,41.73,30.00,9.00,No,,pepsiLight.jpeg,,Pepsi Light 355ml,Vegano;Fit
+FoodLab TGU,7Up,Bebidas,355ml,41.73,30.00,9.00,No,,7up.jpeg,,7Up 355ml,Vegano
+FoodLab TGU,Coca Cola,Bebidas,355ml,41.73,30.00,9.00,No,,cocaCola.jpeg,,Coca Cola 355ml,Vegano
+FoodLab TGU,Natural,Bebidas,16oz,55.64,40.00,12.00,No,,natural.jpeg,,Jugo natural 16oz,Vegano;Fit
+FoodLab TGU,Tamarindo,Bebidas,16oz,55.64,40.00,12.00,No,,tamarindo.jpeg,,Jugo de tamarindo 16oz,Vegano;Fit
+FoodLab TGU,Limonada,Bebidas,16oz,55.64,40.00,12.00,No,,limonada.jpeg,,Limonada natural 16oz,Vegano;Fit
+FoodLab TGU,Padelbuddy,Productos especiales,,348.18,157.20,168.20,No,,phoneMount-PadelBuddy.jpeg,,Soporte para celular Padelbuddy,

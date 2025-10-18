@@ -9,9 +9,10 @@ const FoodLabsPage = () => {
   // Datos de ejemplo para desarrollo
   const mockRestaurants = [
     {
-      id: 'foodlab-flagship',
-      name: 'FoodLab',
-      slug: 'foodlab',
+      id: 'foodlab-tgu',
+      name: 'FoodLab TGU',
+      slug: 'foodlab-tgu',
+      city: 'Tegucigalpa',
       category: 'Internacional',
       tier: 'premium',
       isPrime: true,
@@ -32,22 +33,38 @@ const FoodLabsPage = () => {
           name: 'Más vendidos',
           items: [
             { 
-              id: 'fl4', 
+              id: 'orange-chicken', 
               name: 'Orange Chicken', 
-              price: 12.00, 
+              basePrice: 227.90,
+              price: 227.90,
               description: 'Pollo crujiente bañado en salsa de naranja dulce',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               isPopular: true,
-              popularity: '95% (40)'
+              popularity: '95% (40)',
+              labels: []
             },
             { 
-              id: 'fl2', 
-              name: 'Dumplings Asiáticos', 
-              price: 8.00, 
-              description: 'Dumplings al vapor con salsa de soya y jengibre',
-              image: '/images/products/foodLab/dumplings.jpeg',
+              id: 'boneless', 
+              name: 'Boneless', 
+              basePrice: 193.40,
+              price: 193.40,
+              description: 'Deliciosos boneless de pollo crujiente',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
               isPopular: true,
-              popularity: '92% (35)'
+              popularity: '98% (65)',
+              labels: [],
+              sizes: [
+                { value: 'regular', label: 'Regular', priceModifier: 0 },
+                { value: 'regular-papas', label: 'Regular + Papas', priceModifier: 33.39 },
+                { value: '12', label: '12 piezas', priceModifier: 134.74 },
+                { value: '24', label: '24 piezas', priceModifier: 405.15 }
+              ],
+              comboOptions: {
+                available: true,
+                price: 32.66,
+                description: 'Incluye papas fritas',
+                includesImage: '/images/products/foodLab/loadedFries.jpeg'
+              }
             }
           ]
         },
@@ -55,18 +72,31 @@ const FoodLabsPage = () => {
           name: 'Entradas',
           items: [
             { 
-              id: 'fl1', 
-              name: 'Croissant de Desayuno', 
-              price: 4.50, 
-              description: 'Croissant recién horneado relleno de jamón y queso',
-              image: '/images/products/foodLab/croissantDeDesayuno.jpeg'
+              id: 'croilab', 
+              name: 'CroiLab', 
+              basePrice: 118.24,
+              price: 118.24,
+              description: 'Croissant artesanal relleno',
+              image: '/images/products/foodLab/croissantDeDesayuno.jpeg',
+              labels: ['Vegetariano']
             },
             { 
-              id: 'fl3', 
-              name: 'Papas Cargadas', 
-              price: 6.50, 
+              id: 'gyozas', 
+              name: 'Gyozas', 
+              basePrice: 150.00,
+              price: 150.00,
+              description: 'Dumplings al vapor con salsa de soya y jengibre',
+              image: '/images/products/foodLab/dumplings.jpeg',
+              labels: ['Vegetariano']
+            },
+            { 
+              id: 'loaded-fries', 
+              name: 'Loaded Fries', 
+              basePrice: 140.63,
+              price: 140.63,
               description: 'Papas fritas con queso, tocino, cebollín y crema',
-              image: '/images/products/foodLab/loadedFries.jpeg'
+              image: '/images/products/foodLab/loadedFries.jpeg',
+              labels: ['Vegetariano']
             }
           ]
         },
@@ -74,11 +104,257 @@ const FoodLabsPage = () => {
           name: 'Platos principales',
           items: [
             { 
-              id: 'fl5', 
-              name: 'Pad Thai', 
-              price: 11.00, 
-              description: 'Fideos salteados estilo tailandés con camarones',
-              image: '/images/products/foodLab/padTai.jpeg'
+              id: 'tallarin', 
+              name: 'Tallarin', 
+              basePrice: 234.58,
+              price: 234.58,
+              description: 'Orange Chicken con tallarines',
+              image: '/images/products/foodLab/padTai.jpeg',
+              labels: ['Pescaradiano']
+            }
+          ]
+        },
+        {
+          name: 'Bebidas',
+          items: [
+            { 
+              id: 'agua', 
+              name: 'Agua', 
+              basePrice: 20.87,
+              price: 20.87,
+              description: 'Agua purificada',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano']
+            },
+            { 
+              id: 'coca-cola', 
+              name: 'Coca Cola', 
+              basePrice: 41.73,
+              price: 41.73,
+              description: 'Coca Cola 355ml',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano']
+            },
+            { 
+              id: 'pepsi-light', 
+              name: 'Pepsi Light', 
+              basePrice: 41.73,
+              price: 41.73,
+              description: 'Pepsi Light 355ml',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano', 'Fit']
+            },
+            { 
+              id: '7up', 
+              name: '7Up', 
+              basePrice: 41.73,
+              price: 41.73,
+              description: '7Up 355ml',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano']
+            },
+            { 
+              id: 'natural', 
+              name: 'Natural', 
+              basePrice: 55.64,
+              price: 55.64,
+              description: 'Jugo natural 16oz',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano', 'Fit']
+            },
+            { 
+              id: 'tamarindo', 
+              name: 'Tamarindo', 
+              basePrice: 55.64,
+              price: 55.64,
+              description: 'Jugo de tamarindo 16oz',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano', 'Fit']
+            },
+            { 
+              id: 'limonada', 
+              name: 'Limonada', 
+              basePrice: 55.64,
+              price: 55.64,
+              description: 'Limonada natural 16oz',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano', 'Fit']
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'foodlab-sps',
+      name: 'FoodLab SPS',
+      slug: 'foodlab-sps',
+      city: 'San Pedro Sula',
+      category: 'Internacional',
+      tier: 'premium',
+      isPrime: true,
+      rating: 4.8,
+      reviewCount: 95,
+      deliveryTime: '25-35 min',
+      deliveryFee: 0,
+      image: '/images/products/foodLab/orangeChicken.jpeg',
+      logo: '/images/products/foodLab/orangeChicken.jpeg',
+      openingTime: '11:30',
+      isOpen: true,
+      offers: [
+        { type: 'plus', title: 'Ahorra con Plus' },
+        { type: 'pickup', title: '10% DTO con retiro en local' }
+      ],
+      menuCategories: [
+        {
+          name: 'Más vendidos',
+          items: [
+            { 
+              id: 'orange-chicken', 
+              name: 'Orange Chicken', 
+              basePrice: 227.90,
+              price: 227.90,
+              description: 'Pollo crujiente bañado en salsa de naranja dulce',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              isPopular: true,
+              popularity: '93% (42)',
+              labels: []
+            },
+            { 
+              id: 'boneless', 
+              name: 'Boneless', 
+              basePrice: 193.40,
+              price: 193.40,
+              description: 'Deliciosos boneless de pollo crujiente',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              isPopular: true,
+              popularity: '97% (58)',
+              labels: [],
+              sizes: [
+                { value: 'regular', label: 'Regular', priceModifier: 0 },
+                { value: 'regular-papas', label: 'Regular + Papas', priceModifier: 33.39 },
+                { value: '12', label: '12 piezas', priceModifier: 134.74 },
+                { value: '24', label: '24 piezas', priceModifier: 405.15 }
+              ],
+              comboOptions: {
+                available: true,
+                price: 32.66,
+                description: 'Incluye papas fritas',
+                includesImage: '/images/products/foodLab/loadedFries.jpeg'
+              }
+            }
+          ]
+        },
+        {
+          name: 'Entradas',
+          items: [
+            { 
+              id: 'loaded-fries', 
+              name: 'Loaded Fries', 
+              basePrice: 140.63,
+              price: 140.63,
+              description: 'Papas fritas con queso, tocino, cebollín y crema',
+              image: '/images/products/foodLab/loadedFries.jpeg',
+              labels: ['Vegetariano']
+            }
+          ]
+        },
+        {
+          name: 'Platos principales',
+          items: [
+            { 
+              id: 'angus-burger', 
+              name: 'Angus Burger', 
+              basePrice: 150.23,
+              price: 150.23,
+              description: 'Hamburguesa de carne Angus premium',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: []
+            },
+            { 
+              id: 'chicken-sandwich', 
+              name: 'Chicken Sandwich', 
+              basePrice: 121.02,
+              price: 121.02,
+              description: 'Sándwich de pollo crujiente',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: []
+            },
+            { 
+              id: 'tallarin', 
+              name: 'Tallarin', 
+              basePrice: 234.58,
+              price: 234.58,
+              description: 'Orange Chicken con tallarines',
+              image: '/images/products/foodLab/padTai.jpeg',
+              labels: ['Pescaradiano']
+            }
+          ]
+        },
+        {
+          name: 'Bebidas',
+          items: [
+            { 
+              id: 'agua', 
+              name: 'Agua', 
+              basePrice: 20.87,
+              price: 20.87,
+              description: 'Agua purificada',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano']
+            },
+            { 
+              id: 'coca-cola', 
+              name: 'Coca Cola', 
+              basePrice: 41.73,
+              price: 41.73,
+              description: 'Coca Cola 355ml',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano']
+            },
+            { 
+              id: 'pepsi-light', 
+              name: 'Pepsi Light', 
+              basePrice: 41.73,
+              price: 41.73,
+              description: 'Pepsi Light 355ml',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano', 'Fit']
+            },
+            { 
+              id: '7up', 
+              name: '7Up', 
+              basePrice: 41.73,
+              price: 41.73,
+              description: '7Up 355ml',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano']
+            },
+            { 
+              id: 'natural', 
+              name: 'Natural', 
+              basePrice: 55.64,
+              price: 55.64,
+              description: 'Jugo natural 16oz',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano', 'Fit']
+            },
+            { 
+              id: 'tamarindo', 
+              name: 'Tamarindo', 
+              basePrice: 55.64,
+              price: 55.64,
+              description: 'Jugo de tamarindo 16oz',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano', 'Fit']
+            },
+            { 
+              id: 'limonada', 
+              name: 'Limonada', 
+              basePrice: 55.64,
+              price: 55.64,
+              description: 'Limonada natural 16oz',
+              image: '/images/products/foodLab/orangeChicken.jpeg',
+              labels: ['Vegano', 'Fit']
             }
           ]
         }

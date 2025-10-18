@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, MoreVertical, Star, Clock, Truck, Plus, User } from 'lucide-react'
+import { ArrowLeft, Heart, MoreVertical, Star, Clock, Truck, Plus, User, Leaf, Sprout, Fish, Heart as FitIcon } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
 import ProductModal from '../components/ProductModal'
+
+// Label configuration
+const LABEL_CONFIG = {
+  'Vegano': { icon: Leaf, color: '#10b981', bgColor: '#d1fae5', label: 'Vegano' },
+  'Vegetariano': { icon: Sprout, color: '#059669', bgColor: '#a7f3d0', label: 'Vegetariano' },
+  'Pescaradiano': { icon: Fish, color: '#0ea5e9', bgColor: '#e0f2fe', label: 'Pescaradiano' },
+  'Fit': { icon: FitIcon, color: '#f97316', bgColor: '#fed7aa', label: 'Fit' }
+}
 
 const RestaurantDetailPage = () => {
   const { restaurants } = useAppStore()
@@ -177,7 +185,7 @@ const RestaurantDetailPage = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Truck size={14} style={{ color: '#6b7280' }} />
                   <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                    {restaurant.deliveryFee === 0 ? 'Envío gratis' : `$${restaurant.deliveryFee} envío`}
+                    {restaurant.deliveryFee === 0 ? 'Envío gratis' : `L ${restaurant.deliveryFee} envío`}
                   </span>
                 </div>
               </div>
@@ -343,6 +351,36 @@ const RestaurantDetailPage = () => {
                       }}>
                         {item.description}
                       </p>
+                      
+                      {/* Labels dietarios */}
+                      {item.labels && item.labels.length > 0 && (
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                          {item.labels.map((label, idx) => {
+                            const config = LABEL_CONFIG[label]
+                            if (!config) return null
+                            const Icon = config.icon
+                            return (
+                              <div 
+                                key={idx}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '4px 8px',
+                                  backgroundColor: config.bgColor,
+                                  borderRadius: '8px',
+                                  fontSize: '11px',
+                                  fontWeight: '600',
+                                  color: config.color
+                                }}
+                              >
+                                <Icon size={12} strokeWidth={2.5} />
+                                {config.label}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                     
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -351,7 +389,7 @@ const RestaurantDetailPage = () => {
                         fontWeight: '700',
                         color: '#111827'
                       }}>
-                        ${item.price}
+                        L {item.basePrice || item.price}
                       </span>
                       {item.popularity && (
                         <span style={{
@@ -375,11 +413,9 @@ const RestaurantDetailPage = () => {
       {isModalOpen && selectedProduct && (
         <ProductModal
           product={selectedProduct}
+          restaurantId={restaurant.id}
+          isOpen={isModalOpen}
           onClose={closeModal}
-          onAddToCart={(product, quantity) => {
-            // Add to cart logic here
-            closeModal()
-          }}
         />
       )}
     </div>

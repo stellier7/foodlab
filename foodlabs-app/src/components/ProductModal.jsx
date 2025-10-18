@@ -1,21 +1,83 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '../stores/useAppStore'
-import { X, Plus, Minus, Star, Shield, Truck, CheckCircle, Share2 } from 'lucide-react'
+import { X, Plus, Minus, Star, Shield, Truck, CheckCircle, Share2, Leaf, Sprout, Fish, Heart as FitIcon } from 'lucide-react'
 
-const ProductModal = ({ product, isOpen, onClose }) => {
+// Label configuration
+const LABEL_CONFIG = {
+  'Vegano': { icon: Leaf, color: '#10b981', bgColor: '#d1fae5', label: 'Vegano' },
+  'Vegetariano': { icon: Sprout, color: '#059669', bgColor: '#a7f3d0', label: 'Vegetariano' },
+  'Pescaradiano': { icon: Fish, color: '#0ea5e9', bgColor: '#e0f2fe', label: 'Pescaradiano' },
+  'Fit': { icon: FitIcon, color: '#f97316', bgColor: '#fed7aa', label: 'Fit' }
+}
+
+const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' }) => {
   const { addToCart } = useAppStore()
   const [quantity, setQuantity] = useState(1)
+  const [selectedSize, setSelectedSize] = useState(null)
+  const [withCombo, setWithCombo] = useState(false)
+
+  // Initialize selected size when product changes
+  useEffect(() => {
+    if (product?.sizes && product.sizes.length > 0) {
+      setSelectedSize(product.sizes[0].value)
+    } else {
+      setSelectedSize(null)
+    }
+    setWithCombo(false)
+    setQuantity(1)
+  }, [product])
 
   if (!isOpen || !product) return null
 
+  // Calculate current price based on selections
+  const getCurrentPrice = () => {
+    let price = product.basePrice || product.price
+    
+    // Add size modifier if applicable
+    if (selectedSize && product.sizes) {
+      const size = product.sizes.find(s => s.value === selectedSize)
+      if (size && size.priceModifier) {
+        price += size.priceModifier
+      }
+    }
+    
+    // Add combo price if selected
+    if (withCombo && product.comboOptions?.price) {
+      price += product.comboOptions.price
+    }
+    
+    return price
+  }
+
+  // Get current image based on combo selection
+  const getCurrentImage = () => {
+    if (withCombo && product.comboOptions?.includesImage) {
+      return product.comboOptions.includesImage
+    }
+    return product.image
+  }
+
+  // Get size label for display
+  const getSizeLabel = () => {
+    if (!selectedSize || !product.sizes) return ''
+    const size = product.sizes.find(s => s.value === selectedSize)
+    return size ? ` - ${size.label}` : ''
+  }
+
   const handleAddToCart = () => {
+    const finalPrice = getCurrentPrice()
+    const displayName = `${product.name}${getSizeLabel()}${withCombo ? ' con Combo' : ''}`
+    
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: product.id,
-        name: product.name,
-        price: product.price,
-        description: product.description
-      }, 'sportsshop')
+        name: displayName,
+        price: finalPrice,
+        description: product.description,
+        selectedSize: selectedSize,
+        withCombo: withCombo,
+        image: getCurrentImage()
+      }, restaurantId)
     }
     onClose()
   }
@@ -72,9 +134,10 @@ const ProductModal = ({ product, isOpen, onClose }) => {
         <div style={{
           position: 'relative',
           height: '300px',
-          backgroundImage: `url(${product.image})`,
+          backgroundImage: `url(${getCurrentImage()})`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          backgroundPosition: 'center',
+          transition: 'all 0.3s ease'
         }}>
           {/* Action Buttons */}
           <div style={{
@@ -199,9 +262,10 @@ const ProductModal = ({ product, isOpen, onClose }) => {
                 background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
+                backgroundClip: 'text',
+                transition: 'all 0.3s ease'
               }}>
-                ${product.price}
+                L {getCurrentPrice().toFixed(2)}
               </span>
               <div style={{
                 display: 'flex',
@@ -224,10 +288,165 @@ const ProductModal = ({ product, isOpen, onClose }) => {
             fontSize: '16px',
             color: '#6b7280',
             lineHeight: '1.6',
-            marginBottom: '20px'
+            marginBottom: '16px'
           }}>
             {product.description}
           </p>
+
+          {/* Labels dietarios */}
+          {product.labels && product.labels.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+              {product.labels.map((label, idx) => {
+                const config = LABEL_CONFIG[label]
+                if (!config) return null
+                const Icon = config.icon
+                return (
+                  <div 
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '8px 12px',
+                      backgroundColor: config.bgColor,
+                      borderRadius: '12px',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      color: config.color,
+                      border: `2px solid ${config.color}20`
+                    }}
+                  >
+                    <Icon size={16} strokeWidth={2.5} />
+                    {config.label}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Size Selector */}
+          {product.sizes && product.sizes.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '700',
+                color: '#111827',
+                marginBottom: '12px'
+              }}>
+                Tamaño:
+              </h3>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${Math.min(product.sizes.length, 3)}, 1fr)`,
+                gap: '8px'
+              }}>
+                {product.sizes.map((size) => (
+                  <button
+                    key={size.value}
+                    onClick={() => setSelectedSize(size.value)}
+                    className="tap-effect"
+                    style={{
+                      padding: '12px',
+                      borderRadius: '12px',
+                      border: selectedSize === size.value ? '2px solid #f97316' : '2px solid #e5e7eb',
+                      backgroundColor: selectedSize === size.value ? '#fff7ed' : 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      color: selectedSize === size.value ? '#f97316' : '#111827',
+                      marginBottom: '4px'
+                    }}>
+                      {size.label}
+                    </div>
+                    {size.priceModifier !== 0 && (
+                      <div style={{
+                        fontSize: '12px',
+                        color: selectedSize === size.value ? '#ea580c' : '#6b7280'
+                      }}>
+                        {size.priceModifier > 0 ? '+' : ''}L {size.priceModifier.toFixed(2)}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Combo Option */}
+          {product.comboOptions?.available && (
+            <div style={{ marginBottom: '24px' }}>
+              <div
+                onClick={() => setWithCombo(!withCombo)}
+                className="tap-effect"
+                style={{
+                  padding: '16px',
+                  borderRadius: '16px',
+                  border: withCombo ? '2px solid #f97316' : '2px solid #e5e7eb',
+                  backgroundColor: withCombo ? '#fff7ed' : '#f9fafb',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <div>
+                  <div style={{
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: withCombo ? '#f97316' : '#111827',
+                    marginBottom: '4px'
+                  }}>
+                    Agregar Combo
+                  </div>
+                  <div style={{
+                    fontSize: '13px',
+                    color: withCombo ? '#ea580c' : '#6b7280'
+                  }}>
+                    {product.comboOptions.description || 'Incluye papas y bebida'}
+                  </div>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <span style={{
+                    fontSize: '16px',
+                    fontWeight: '800',
+                    color: withCombo ? '#f97316' : '#6b7280'
+                  }}>
+                    +L {product.comboOptions.price.toFixed(2)}
+                  </span>
+                  <div style={{
+                    width: '48px',
+                    height: '28px',
+                    borderRadius: '14px',
+                    backgroundColor: withCombo ? '#f97316' : '#d1d5db',
+                    position: 'relative',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: withCombo ? '22px' : '2px',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Features */}
           {product.features && (

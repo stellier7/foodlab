@@ -30,14 +30,17 @@ export const useAppStore = create(
         const restaurants = get().restaurants
         const restaurant = restaurants.find(r => r.id === restaurantId)
         
+        // Crear una clave única para las variantes del producto
+        const variantKey = `${item.id}-${item.selectedSize || 'default'}-${item.withCombo || false}`
+        
         const existingItem = cart.find(
-          cartItem => cartItem.id === item.id && cartItem.restaurantId === restaurantId
+          cartItem => cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId
         )
         
         if (existingItem) {
           set({
             cart: cart.map(cartItem =>
-              cartItem.id === item.id && cartItem.restaurantId === restaurantId
+              cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId
                 ? { ...cartItem, quantity: cartItem.quantity + 1 }
                 : cartItem
             )
@@ -45,7 +48,8 @@ export const useAppStore = create(
         } else {
           set({
             cart: [...cart, { 
-              ...item, 
+              ...item,
+              variantKey,
               quantity: 1, 
               restaurantId,
               restaurantName: restaurant?.name || 'Restaurante'
@@ -56,16 +60,16 @@ export const useAppStore = create(
         get().calculateCartTotal()
       },
       
-      removeFromCart: (itemId, restaurantId) => {
+      removeFromCart: (variantKey, restaurantId) => {
         const cart = get().cart
         const existingItem = cart.find(
-          cartItem => cartItem.id === itemId && cartItem.restaurantId === restaurantId
+          cartItem => cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId
         )
         
         if (existingItem && existingItem.quantity > 1) {
           set({
             cart: cart.map(cartItem =>
-              cartItem.id === itemId && cartItem.restaurantId === restaurantId
+              cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId
                 ? { ...cartItem, quantity: cartItem.quantity - 1 }
                 : cartItem
             )
@@ -73,7 +77,7 @@ export const useAppStore = create(
         } else {
           set({
             cart: cart.filter(
-              cartItem => !(cartItem.id === itemId && cartItem.restaurantId === restaurantId)
+              cartItem => !(cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId)
             )
           })
         }
