@@ -14,11 +14,26 @@ const FoodLabsPage = () => {
         // Si el producto tiene precios en Lempiras (actuales), agregar precio_HNL
         // y convertir basePrice/price a USD
         const precioLempiras = item.basePrice || item.price
+        
+        // Procesar sizes si existen
+        const processedSizes = item.sizes ? item.sizes.map(size => ({
+          ...size,
+          priceModifier: (size.priceModifier || 0) / 24.75  // Convertir modificador a USD
+        })) : undefined
+        
+        // Procesar comboOptions si existe
+        const processedCombo = item.comboOptions ? {
+          ...item.comboOptions,
+          price: (item.comboOptions.price || 0) / 24.75  // Convertir precio combo a USD
+        } : undefined
+        
         return {
           ...item,
           price: precioLempiras / 24.75,  // Convertir a USD
           basePrice: precioLempiras / 24.75,  // Convertir a USD
-          precio_HNL: precioLempiras  // Guardar precio exacto en Lempiras
+          precio_HNL: precioLempiras,  // Guardar precio exacto en Lempiras
+          sizes: processedSizes,
+          comboOptions: processedCombo
         }
       })
     }))
@@ -377,54 +392,6 @@ const FoodLabsPage = () => {
           ]
         }
       ]
-    },
-    {
-      id: '1',
-      name: 'Baleadas de Doña María',
-      category: 'Hondureña',
-      tier: 'local',
-      isPrime: true,
-      rating: 4.8,
-      deliveryTime: '25-35 min',
-      deliveryFee: 2.50,
-      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
-      menu: [
-        { id: '1', name: 'Baleada Simple', price: 2.50, description: 'Tortilla, frijoles, queso' },
-        { id: '2', name: 'Baleada Especial', price: 4.00, description: 'Tortilla, frijoles, queso, aguacate, carne' },
-        { id: '3', name: 'Baleada Super', price: 5.50, description: 'Tortilla, frijoles, queso, aguacate, carne, huevo' }
-      ]
-    },
-    {
-      id: '2',
-      name: 'Tacos El Güero',
-      category: 'Mexicana',
-      tier: 'local',
-      isPrime: false,
-      rating: 4.5,
-      deliveryTime: '20-30 min',
-      deliveryFee: 2.00,
-      image: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=400&h=300&fit=crop',
-      menu: [
-        { id: '4', name: 'Tacos de Carne', price: 1.50, description: 'Tacos de carne asada con cebolla y cilantro' },
-        { id: '5', name: 'Tacos de Pollo', price: 1.50, description: 'Tacos de pollo con cebolla y cilantro' },
-        { id: '6', name: 'Quesadilla', price: 3.00, description: 'Quesadilla con queso y carne' }
-      ]
-    },
-    {
-      id: '3',
-      name: 'Pizza Corner',
-      category: 'Italiana',
-      tier: 'premium',
-      isPrime: true,
-      rating: 4.7,
-      deliveryTime: '30-45 min',
-      deliveryFee: 3.50,
-      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop',
-      menu: [
-        { id: '7', name: 'Pizza Margherita', price: 12.00, description: 'Tomate, mozzarella, albahaca' },
-        { id: '8', name: 'Pizza Pepperoni', price: 14.00, description: 'Tomate, mozzarella, pepperoni' },
-        { id: '9', name: 'Pizza Hawaiana', price: 15.00, description: 'Tomate, mozzarella, jamón, piña' }
-      ]
     }
   ]
 
@@ -435,7 +402,7 @@ const FoodLabsPage = () => {
       // Procesar restaurantes para agregar precios con override
       const processedRestaurants = mockRestaurants.map(restaurant => ({
         ...restaurant,
-        menuCategories: processProducts(restaurant.menuCategories)
+        menuCategories: restaurant.menuCategories ? processProducts(restaurant.menuCategories) : []
       }))
       setRestaurants(processedRestaurants)
       setLoading(false)
