@@ -176,7 +176,7 @@ export const useAppStore = create(
       
       // Función para calcular fees
       calculateFees: (subtotal) => {
-        const platformFee = subtotal * 0.0749 // 7.49% fee de plataforma
+        const platformFee = subtotal * 0.075 // 7.5% fee de plataforma
         const serviceFee = 0 // Removido
         const deliveryFee = 0 // Por ahora 0
         const totalFees = platformFee + serviceFee + deliveryFee
