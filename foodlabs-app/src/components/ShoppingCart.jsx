@@ -4,7 +4,7 @@ import { useOrdersStore } from '../stores/useOrdersStore'
 import { ShoppingCart as ShoppingCartIcon, Plus, Minus, X, MessageCircle } from 'lucide-react'
 
 const ShoppingCart = () => {
-  const { cart, cartTotal, addToCart, removeFromCart, clearCart, calculateFees, convertPrice, getCurrencySymbol } = useAppStore()
+  const { cart, cartTotal, addToCart, removeFromCart, clearCart, calculateFees, getPriceForCurrency, convertPrice, getCurrencySymbol } = useAppStore()
   const { addOrder } = useOrdersStore()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -96,7 +96,8 @@ const ShoppingCart = () => {
       }
       
       items.forEach(item => {
-        const itemTotal = convertPrice(item.price * item.quantity)
+        const itemPrice = getPriceForCurrency(item)
+        const itemTotal = itemPrice * item.quantity
         message += `• ${item.name} x${item.quantity} - ${getCurrencySymbol()}${itemTotal.toFixed(2)}\n`
         
         // Información especial para productos destacados
@@ -264,7 +265,7 @@ const ShoppingCart = () => {
                       <div style={{ flex: 1 }}>
                         <h4 style={{ fontWeight: '700', color: '#111827', margin: 0, fontSize: '15px' }}>{item.name}</h4>
                         <p style={{ fontSize: '13px', color: '#6b7280', margin: '6px 0', fontWeight: '500' }}>
-                          {getCurrencySymbol()} {convertPrice(item.price).toFixed(2)} c/u
+                          {getCurrencySymbol()} {getPriceForCurrency(item).toFixed(2)} c/u
                         </p>
                       </div>
                       

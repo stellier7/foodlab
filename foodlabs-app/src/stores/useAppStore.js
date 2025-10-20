@@ -147,6 +147,22 @@ export const useAppStore = create(
         return usdPrice * exchangeRates[currency]
       },
       
+      // Obtener precio con sistema de override
+      getPriceForCurrency: (product, targetCurrency) => {
+        const { currency, exchangeRates } = get()
+        const curr = targetCurrency || currency
+        
+        // 1. Si hay precio específico para esta moneda, usarlo (override)
+        const overrideKey = `precio_${curr}`
+        if (product[overrideKey] && product[overrideKey] > 0) {
+          return product[overrideKey]
+        }
+        
+        // 2. Si no hay override, convertir desde precio base (USD)
+        const basePrice = product.price || product.basePrice
+        return basePrice * exchangeRates[curr]
+      },
+      
       // Obtener símbolo de moneda
       getCurrencySymbol: () => {
         const currency = get().currency

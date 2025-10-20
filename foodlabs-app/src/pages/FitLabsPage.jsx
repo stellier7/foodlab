@@ -212,7 +212,7 @@ const FitLabsPage = () => {
                       fontWeight: '700',
                       color: '#111827'
                     }}>
-                      {useAppStore.getState().getCurrencySymbol()} {useAppStore.getState().convertPrice(product.basePrice || product.price).toFixed(2)}
+                      {useAppStore.getState().getCurrencySymbol()} {useAppStore.getState().getPriceForCurrency(product).toFixed(2)}
                     </span>
                     {product.labels && product.labels.length > 1 && (
                       <div style={{ display: 'flex', gap: '4px' }}>

@@ -6,6 +6,24 @@ import { MapPin, Star } from 'lucide-react'
 const FoodLabsPage = () => {
   const { setLoading, setRestaurants } = useAppStore()
 
+  // Helper para convertir productos con precios en Lempiras
+  const processProducts = (menuCategories) => {
+    return menuCategories.map(category => ({
+      ...category,
+      items: category.items.map(item => {
+        // Si el producto tiene precios en Lempiras (actuales), agregar precio_HNL
+        // y convertir basePrice/price a USD
+        const precioLempiras = item.basePrice || item.price
+        return {
+          ...item,
+          price: precioLempiras / 24.75,  // Convertir a USD
+          basePrice: precioLempiras / 24.75,  // Convertir a USD
+          precio_HNL: precioLempiras  // Guardar precio exacto en Lempiras
+        }
+      })
+    }))
+  }
+
   // Datos de ejemplo para desarrollo
   const mockRestaurants = [
     {
@@ -414,7 +432,12 @@ const FoodLabsPage = () => {
     // Simular carga de datos
     setLoading(true)
     setTimeout(() => {
-      setRestaurants(mockRestaurants)
+      // Procesar restaurantes para agregar precios con override
+      const processedRestaurants = mockRestaurants.map(restaurant => ({
+        ...restaurant,
+        menuCategories: processProducts(restaurant.menuCategories)
+      }))
+      setRestaurants(processedRestaurants)
       setLoading(false)
     }, 1000)
   }, [setLoading, setRestaurants])

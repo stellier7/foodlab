@@ -11,7 +11,7 @@ const LABEL_CONFIG = {
 }
 
 const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' }) => {
-  const { addToCart, convertPrice, getCurrencySymbol } = useAppStore()
+  const { addToCart, getPriceForCurrency, convertPrice, getCurrencySymbol } = useAppStore()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState(null)
   const [withCombo, setWithCombo] = useState(false)
@@ -265,7 +265,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
                 backgroundClip: 'text',
                 transition: 'all 0.3s ease'
               }}>
-                {getCurrencySymbol()} {convertPrice(getCurrentPrice()).toFixed(2)}
+                {getCurrencySymbol()} {getPriceForCurrency({ ...product, price: getCurrentPrice() }).toFixed(2)}
               </span>
               <div style={{
                 display: 'flex',
