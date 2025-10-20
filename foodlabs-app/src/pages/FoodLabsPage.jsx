@@ -1,10 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useAppStore } from '../stores/useAppStore'
 import RestaurantList from '../components/RestaurantList'
 import { MapPin, Star } from 'lucide-react'
 
 const FoodLabsPage = () => {
-  const { setLoading, setRestaurants } = useAppStore()
+  const { setLoading, setRestaurants, restaurants, manualLocation } = useAppStore()
 
   // Helper para convertir productos con precios en Lempiras
   const processProducts = (menuCategories) => {
@@ -46,6 +46,12 @@ const FoodLabsPage = () => {
       name: 'FoodLab TGU',
       slug: 'foodlab-tgu',
       city: 'Tegucigalpa',
+      address: 'Col. Palmira, Blvd. Morazán',
+      coordinates: {
+        lat: 14.0723,
+        lng: -87.1921
+      },
+      deliveryRadius: 5,
       category: 'Internacional',
       tier: 'premium',
       isPrime: true,
@@ -222,6 +228,12 @@ const FoodLabsPage = () => {
       name: 'FoodLab SPS',
       slug: 'foodlab-sps',
       city: 'San Pedro Sula',
+      address: 'Col. Trejo, Av. Circunvalación',
+      coordinates: {
+        lat: 15.5047,
+        lng: -88.0253
+      },
+      deliveryRadius: 5,
       category: 'Internacional',
       tier: 'premium',
       isPrime: true,
@@ -409,6 +421,21 @@ const FoodLabsPage = () => {
     }, 1000)
   }, [setLoading, setRestaurants])
 
+  // Filtrar restaurantes por ciudad si hay ubicación seleccionada
+  const filteredRestaurants = useMemo(() => {
+    if (!restaurants || restaurants.length === 0) {
+      return []
+    }
+    
+    // Si no hay ubicación manual, mostrar todos
+    if (!manualLocation || !manualLocation.city) {
+      return restaurants
+    }
+    
+    // Filtrar por ciudad
+    return restaurants.filter(r => r.city === manualLocation.city)
+  }, [restaurants, manualLocation])
+
   return (
     <main style={{ paddingBottom: '80px' }}>
       {/* Hero Section - Scrolls with page */}
@@ -467,7 +494,7 @@ const FoodLabsPage = () => {
         </div>
         
         <div className="fade-in stagger-3">
-          <RestaurantList />
+          <RestaurantList filteredRestaurants={filteredRestaurants} />
         </div>
       </div>
     </main>

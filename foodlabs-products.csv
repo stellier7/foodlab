@@ -1,34 +1,34 @@
-Restaurante,Producto,Categoria,Tamaño,Precio FL App,Precio HNL,Precio GTQ,Costo por Plato,Comision Foodlab,Tiene Combo,Precio Combo Adicional,Imagen,Imagen Combo,Descripcion,Labels,Moneda Base,Pais,Ciudad,Latitud,Longitud
-FoodLab SPS,Orange Chicken,Mas vendidos,,9.21,227.90,,163.84,49.15,No,,orangeChicken.jpeg,,Pollo crujiente bañado en salsa de naranja dulce,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Angus Burger,Platos principales,,6.07,150.23,,108.00,32.40,No,,angusBurger.jpeg,,Hamburguesa de carne Angus premium,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Chicken Sandwich,Platos principales,,4.89,121.02,,87.00,26.10,No,,chickenSandwich.jpeg,,Sándwich de pollo crujiente,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Tallarin,Platos principales,,9.48,234.58,,168.64,50.59,No,,padTai.jpeg,,Orange Chicken con tallarines,Pescaradiano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Loaded Fries,Entradas,,5.68,140.63,,101.10,30.33,No,,loadedFries.jpeg,,Papas fritas con queso tocino y crema,Vegetariano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Boneless,Mas vendidos,Regular,7.82,193.40,,139.04,41.71,Si,1.32,boneless.jpeg,bonelessPapas.jpeg,Deliciosos boneless de pollo crujiente,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Boneless,Mas vendidos,Regular con Papas,9.16,226.79,,163.04,48.91,No,,bonelessPapas.jpeg,,Boneless con papas fritas,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Boneless,Mas vendidos,12 piezas,13.26,328.14,,235.90,70.77,Si,4.00,boneless12.jpeg,boneless12Combo.jpeg,12 piezas de boneless crujientes,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Boneless,Mas vendidos,24 piezas,24.18,598.55,,430.30,129.09,Si,8.09,boneless24.jpeg,boneless24Combo.jpeg,24 piezas de boneless crujientes,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Agua,Bebidas,,0.84,20.87,,15.00,4.50,No,,agua.jpeg,,Agua purificada,Vegano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Pepsi Light,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,pepsiLight.jpeg,,Pepsi Light 355ml,Vegano;Fit,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,7Up,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,7up.jpeg,,7Up 355ml,Vegano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Coca Cola,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,cocaCola.jpeg,,Coca Cola 355ml,Vegano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Natural,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,natural.jpeg,,Jugo natural 16oz,Vegano;Fit,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Tamarindo,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,tamarindo.jpeg,,Jugo de tamarindo 16oz,Vegano;Fit,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab SPS,Limonada,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,limonada.jpeg,,Limonada natural 16oz,Vegano;Fit,HNL,Honduras,San Pedro Sula,15.5047,-88.0253
-FoodLab TGU,CroiLab,Entradas,,4.78,118.24,,85.00,25.50,No,,croissantDeDesayuno.jpeg,,Croissant artesanal relleno,Vegetariano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Orange Chicken,Mas vendidos,,9.21,227.90,,163.84,49.15,No,,orangeChicken.jpeg,,Pollo crujiente bañado en salsa de naranja dulce,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Tallarin,Platos principales,,9.48,234.58,,168.64,50.59,No,,padTai.jpeg,,Orange Chicken con tallarines,Pescaradiano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Gyozas,Entradas,,6.06,150.00,,100.00,30.00,No,,dumplings.jpeg,,Dumplings al vapor con salsa de soya,Vegetariano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Loaded Fries,Entradas,,5.68,140.63,,101.10,30.33,No,,loadedFries.jpeg,,Papas fritas con queso tocino y crema,Vegetariano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Boneless,Mas vendidos,Regular,7.82,193.40,,139.04,41.71,Si,1.32,boneless.jpeg,bonelessPapas.jpeg,Deliciosos boneless de pollo crujiente,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Boneless,Mas vendidos,Regular con Papas,9.16,226.79,,163.04,48.91,No,,bonelessPapas.jpeg,,Boneless con papas fritas,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Boneless,Mas vendidos,12 piezas,13.26,328.14,,235.90,70.77,Si,4.00,boneless12.jpeg,boneless12Combo.jpeg,12 piezas de boneless crujientes,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Boneless,Mas vendidos,24 piezas,24.18,598.55,,430.30,129.09,Si,8.09,boneless24.jpeg,boneless24Combo.jpeg,24 piezas de boneless crujientes,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Agua,Bebidas,,0.84,20.87,,15.00,4.50,No,,agua.jpeg,,Agua purificada,Vegano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Pepsi Light,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,pepsiLight.jpeg,,Pepsi Light 355ml,Vegano;Fit,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,7Up,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,7up.jpeg,,7Up 355ml,Vegano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Coca Cola,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,cocaCola.jpeg,,Coca Cola 355ml,Vegano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Natural,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,natural.jpeg,,Jugo natural 16oz,Vegano;Fit,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Tamarindo,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,tamarindo.jpeg,,Jugo de tamarindo 16oz,Vegano;Fit,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Limonada,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,limonada.jpeg,,Limonada natural 16oz,Vegano;Fit,HNL,Honduras,Tegucigalpa,14.0723,-87.1921
-FoodLab TGU,Padelbuddy,Productos especiales,,13.15,325.00,,157.20,168.20,No,,phoneMount-PadelBuddy.jpeg,,Soporte para celular Padelbuddy,,USD,Honduras,Tegucigalpa,14.0723,-87.1921
+Restaurante,Producto,Categoria,Tamaño,Precio FL App,Precio HNL,Precio GTQ,Costo por Plato,Comision Foodlab,Tiene Combo,Precio Combo Adicional,Imagen,Imagen Combo,Descripcion,Labels,Moneda Base,Pais,Ciudad,Latitud,Longitud,Direccion,Delivery Radius
+FoodLab SPS,Orange Chicken,Mas vendidos,,9.21,227.90,,163.84,49.15,No,,orangeChicken.jpeg,,Pollo crujiente bañado en salsa de naranja dulce,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Angus Burger,Platos principales,,6.07,150.23,,108.00,32.40,No,,angusBurger.jpeg,,Hamburguesa de carne Angus premium,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Chicken Sandwich,Platos principales,,4.89,121.02,,87.00,26.10,No,,chickenSandwich.jpeg,,Sándwich de pollo crujiente,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Tallarin,Platos principales,,9.48,234.58,,168.64,50.59,No,,padTai.jpeg,,Orange Chicken con tallarines,Pescaradiano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Loaded Fries,Entradas,,5.68,140.63,,101.10,30.33,No,,loadedFries.jpeg,,Papas fritas con queso tocino y crema,Vegetariano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Boneless,Mas vendidos,Regular,7.82,193.40,,139.04,41.71,Si,1.32,boneless.jpeg,bonelessPapas.jpeg,Deliciosos boneless de pollo crujiente,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Boneless,Mas vendidos,Regular con Papas,9.16,226.79,,163.04,48.91,No,,bonelessPapas.jpeg,,Boneless con papas fritas,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Boneless,Mas vendidos,12 piezas,13.26,328.14,,235.90,70.77,Si,4.00,boneless12.jpeg,boneless12Combo.jpeg,12 piezas de boneless crujientes,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Boneless,Mas vendidos,24 piezas,24.18,598.55,,430.30,129.09,Si,8.09,boneless24.jpeg,boneless24Combo.jpeg,24 piezas de boneless crujientes,,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Agua,Bebidas,,0.84,20.87,,15.00,4.50,No,,agua.jpeg,,Agua purificada,Vegano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Pepsi Light,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,pepsiLight.jpeg,,Pepsi Light 355ml,Vegano;Fit,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,7Up,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,7up.jpeg,,7Up 355ml,Vegano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Coca Cola,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,cocaCola.jpeg,,Coca Cola 355ml,Vegano,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Natural,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,natural.jpeg,,Jugo natural 16oz,Vegano;Fit,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Tamarindo,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,tamarindo.jpeg,,Jugo de tamarindo 16oz,Vegano;Fit,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab SPS,Limonada,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,limonada.jpeg,,Limonada natural 16oz,Vegano;Fit,HNL,Honduras,San Pedro Sula,15.5047,-88.0253,"Col. Trejo, Av. Circunvalación",5
+FoodLab TGU,CroiLab,Entradas,,4.78,118.24,,85.00,25.50,No,,croissantDeDesayuno.jpeg,,Croissant artesanal relleno,Vegetariano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Orange Chicken,Mas vendidos,,9.21,227.90,,163.84,49.15,No,,orangeChicken.jpeg,,Pollo crujiente bañado en salsa de naranja dulce,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Tallarin,Platos principales,,9.48,234.58,,168.64,50.59,No,,padTai.jpeg,,Orange Chicken con tallarines,Pescaradiano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Gyozas,Entradas,,6.06,150.00,,100.00,30.00,No,,dumplings.jpeg,,Dumplings al vapor con salsa de soya,Vegetariano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Loaded Fries,Entradas,,5.68,140.63,,101.10,30.33,No,,loadedFries.jpeg,,Papas fritas con queso tocino y crema,Vegetariano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Boneless,Mas vendidos,Regular,7.82,193.40,,139.04,41.71,Si,1.32,boneless.jpeg,bonelessPapas.jpeg,Deliciosos boneless de pollo crujiente,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Boneless,Mas vendidos,Regular con Papas,9.16,226.79,,163.04,48.91,No,,bonelessPapas.jpeg,,Boneless con papas fritas,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Boneless,Mas vendidos,12 piezas,13.26,328.14,,235.90,70.77,Si,4.00,boneless12.jpeg,boneless12Combo.jpeg,12 piezas de boneless crujientes,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Boneless,Mas vendidos,24 piezas,24.18,598.55,,430.30,129.09,Si,8.09,boneless24.jpeg,boneless24Combo.jpeg,24 piezas de boneless crujientes,,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Agua,Bebidas,,0.84,20.87,,15.00,4.50,No,,agua.jpeg,,Agua purificada,Vegano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Pepsi Light,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,pepsiLight.jpeg,,Pepsi Light 355ml,Vegano;Fit,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,7Up,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,7up.jpeg,,7Up 355ml,Vegano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Coca Cola,Bebidas,355ml,1.69,41.73,,30.00,9.00,No,,cocaCola.jpeg,,Coca Cola 355ml,Vegano,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Natural,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,natural.jpeg,,Jugo natural 16oz,Vegano;Fit,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Tamarindo,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,tamarindo.jpeg,,Jugo de tamarindo 16oz,Vegano;Fit,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Limonada,Bebidas,16oz,2.25,55.64,,40.00,12.00,No,,limonada.jpeg,,Limonada natural 16oz,Vegano;Fit,HNL,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5
+FoodLab TGU,Padelbuddy,Productos especiales,,13.15,325.00,,157.20,168.20,No,,phoneMount-PadelBuddy.jpeg,,Soporte para celular Padelbuddy,,USD,Honduras,Tegucigalpa,14.0723,-87.1921,"Col. Palmira, Blvd. Morazán",5

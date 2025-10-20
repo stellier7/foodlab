@@ -2,9 +2,12 @@ import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../stores/useAppStore'
 import { Clock, Star, Truck } from 'lucide-react'
 
-const RestaurantList = () => {
-  const { restaurants, isLoading } = useAppStore()
+const RestaurantList = ({ filteredRestaurants }) => {
+  const { restaurants: storeRestaurants, isLoading } = useAppStore()
   const navigate = useNavigate()
+  
+  // Usar restaurantes filtrados si se proporcionan, sino usar del store
+  const restaurants = filteredRestaurants || storeRestaurants
 
   const handleRestaurantClick = (restaurant) => {
     const slug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, '-')
