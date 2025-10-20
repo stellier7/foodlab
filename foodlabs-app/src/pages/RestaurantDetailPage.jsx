@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, MoreVertical, Star, Clock, Truck, Plus, User, Leaf, Sprout, Fish, Heart as FitIcon } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { ArrowLeft, Heart, MoreVertical, Star, Clock, Truck, Plus, User, Leaf, Sprout, Fish, Heart as FitIcon, X } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
 import ProductModal from '../components/ProductModal'
 
@@ -16,15 +16,50 @@ const RestaurantDetailPage = () => {
   const { restaurants } = useAppStore()
   const { restaurantName } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('menu')
+
+  // Detectar si viene de FitLab con filtros
+  const searchParams = new URLSearchParams(location.search)
+  const filterMode = searchParams.get('filter')
+  const filterLabelsParam = searchParams.get('labels')
+  const filterLabels = filterLabelsParam ? filterLabelsParam.split(',') : []
+  const isFitMode = filterMode === 'fit'
 
   // Find restaurant by slug/name
   const restaurant = restaurants.find(r => 
     r.slug === restaurantName || 
     r.name.toLowerCase().replace(/\s+/g, '-') === restaurantName
   )
+  
+  // Filtrar categorías y productos según modo Fit
+  const filteredMenuCategories = useMemo(() => {
+    if (!restaurant?.menuCategories || !isFitMode) {
+      return restaurant?.menuCategories || []
+    }
+    
+    const targetLabels = filterLabels.length > 0 
+      ? filterLabels 
+      : ['Fit', 'Vegano', 'Vegetariano', 'Pescatariano']
+    
+    // Filtrar categorías y sus items
+    return restaurant.menuCategories
+      .map(category => ({
+        ...category,
+        items: category.items.filter(item =>
+          item.labels?.some(label => targetLabels.includes(label))
+        )
+      }))
+      .filter(category => category.items.length > 0)  // Solo categorías con items
+  }, [restaurant, isFitMode, filterLabels])
+  
+  // Función para quitar filtro
+  const clearFitFilter = () => {
+    const slug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, '-')
+    navigate(`/restaurant/${slug}`)
+  }
 
   useEffect(() => {
     if (!restaurant) {
@@ -258,7 +293,52 @@ const RestaurantDetailPage = () => {
 
       {/* Menu Content */}
       <div style={{ padding: '16px' }}>
-        {restaurant.menuCategories?.map((category, categoryIndex) => (
+        {/* Fit Mode Banner */}
+        {isFitMode && (
+          <div className="fade-in" style={{
+            background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+            padding: '16px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Heart size={20} style={{ color: '#10b981', fill: '#10b981' }} />
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#10b981' }}>
+                  Modo Fit Activado
+                </div>
+                <div style={{ fontSize: '12px', color: '#059669', fontWeight: '500' }}>
+                  {filterLabels.length > 0 
+                    ? `Mostrando solo: ${filterLabels.join(', ')}`
+                    : 'Mostrando opciones saludables'
+                  }
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={clearFitFilter}
+              className="tap-effect"
+              style={{
+                padding: '8px',
+                border: 'none',
+                background: 'white',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <X size={18} style={{ color: '#10b981' }} />
+            </button>
+          </div>
+        )}
+        
+        {filteredMenuCategories?.map((category, categoryIndex) => (
           <div key={categoryIndex} style={{ marginBottom: '32px' }}>
             <h2 style={{
               fontSize: '20px',

@@ -1,46 +1,82 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Dumbbell, Heart, Calendar, Users, Star, Leaf } from 'lucide-react'
+import { Dumbbell, Heart, Calendar, Users, Star, Leaf, MapPin, Clock } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
-import ProductModal from '../components/ProductModal'
 
 const FitLabsPage = () => {
-  const { restaurants, setLoading, setRestaurants } = useAppStore()
-  const [selectedProduct, setSelectedProduct] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { restaurants } = useAppStore()
   const navigate = useNavigate()
+  const [selectedLabels, setSelectedLabels] = useState([])
 
-  // Filter all products with "Fit" label from all restaurants
-  const fitProducts = restaurants.flatMap(restaurant => {
-    if (!restaurant.menuCategories) return []
+  // Labels disponibles para filtrar
+  const LABEL_FILTERS = [
+    { key: 'Vegano', label: 'Vegano', icon: '🌿', color: '#10b981' },
+    { key: 'Vegetariano', label: 'Vegetariano', icon: '🌱', color: '#059669' },
+    { key: 'Pescatariano', label: 'Pescatariano', icon: '🐟', color: '#0ea5e9' }
+  ]
+
+  // Restaurantes que tienen productos con labels dietarios
+  const fitRestaurants = useMemo(() => {
+    return restaurants.filter(restaurant => {
+      return restaurant.menuCategories?.some(category =>
+        category.items?.some(item =>
+          item.labels?.some(label => 
+            ['Fit', 'Vegano', 'Vegetariano', 'Pescatariano'].includes(label)
+          )
+        )
+      )
+    })
+  }, [restaurants])
+
+  // Filtrar restaurantes según labels seleccionados
+  const filteredRestaurants = useMemo(() => {
+    if (selectedLabels.length === 0) {
+      return fitRestaurants
+    }
     
-    return restaurant.menuCategories.flatMap(category =>
-      (category.items || [])
-        .filter(item => item.labels && item.labels.includes('Fit'))
-        .map(item => ({
-          ...item,
-          restaurantId: restaurant.id,
-          restaurantName: restaurant.name,
-          category: category.name
-        }))
-    )
-  })
+    return fitRestaurants.filter(restaurant => {
+      return restaurant.menuCategories?.some(category =>
+        category.items?.some(item =>
+          item.labels?.some(label => selectedLabels.includes(label))
+        )
+      )
+    })
+  }, [fitRestaurants, selectedLabels])
 
-  const openProductModal = (product) => {
-    setSelectedProduct(product)
-    setIsModalOpen(true)
+  // Contar productos fit de un restaurante
+  const countFitProducts = (restaurant, labels = []) => {
+    const targetLabels = labels.length > 0 
+      ? labels 
+      : ['Fit', 'Vegano', 'Vegetariano', 'Pescatariano']
+    
+    return restaurant.menuCategories?.reduce((count, category) => {
+      return count + (category.items?.filter(item =>
+        item.labels?.some(l => targetLabels.includes(l))
+      ).length || 0)
+    }, 0) || 0
   }
 
-  const closeModal = () => {
-    setIsModalOpen(false)
-    setSelectedProduct(null)
+  // Toggle label filter
+  const toggleLabel = (labelKey) => {
+    if (selectedLabels.includes(labelKey)) {
+      setSelectedLabels(selectedLabels.filter(l => l !== labelKey))
+    } else {
+      setSelectedLabels([...selectedLabels, labelKey])
+    }
+  }
+
+  // Navegar a restaurante con filtro
+  const handleRestaurantClick = (restaurant) => {
+    const slug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, '-')
+    const labelsParam = selectedLabels.length > 0 ? `&labels=${selectedLabels.join(',')}` : ''
+    navigate(`/restaurant/${slug}?filter=fit${labelsParam}`)
   }
 
   return (
     <main style={{ paddingBottom: '80px' }}>
       {/* Hero Section - Scrolls with page */}
       <div className="fade-in stagger-1" style={{
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        background: '#10b981',
         padding: '32px 24px',
         textAlign: 'center',
         borderBottomLeftRadius: '24px',
@@ -67,16 +103,57 @@ const FitLabsPage = () => {
           </h1>
         </div>
         <p style={{ 
-          color: '#a7f3d0', 
-          marginBottom: '0',
+          color: '#d1fae5', 
+          marginBottom: '16px',
           fontSize: '15px',
           fontWeight: '500'
         }}>
           Productos saludables de todos nuestros restaurantes
         </p>
+        
+        {/* Label Filters */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          justifyContent: 'center',
+          flexWrap: 'wrap'
+        }}>
+          {LABEL_FILTERS.map((filter) => (
+            <button
+              key={filter.key}
+              onClick={() => toggleLabel(filter.key)}
+              className="tap-effect"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '20px',
+                border: selectedLabels.includes(filter.key)
+                  ? '2px solid white' 
+                  : '2px solid rgba(255, 255, 255, 0.4)',
+                background: selectedLabels.includes(filter.key)
+                  ? 'white' 
+                  : 'rgba(255, 255, 255, 0.2)',
+                color: selectedLabels.includes(filter.key) ? filter.color : 'white',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                border: 'none',
+                boxShadow: selectedLabels.includes(filter.key)
+                  ? '0 2px 8px rgba(0, 0, 0, 0.15)'
+                  : 'none'
+              }}
+            >
+              <span style={{ fontSize: '14px' }}>{filter.icon}</span>
+              <span>{filter.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Fit Products Section */}
+      {/* Fit Restaurants Section */}
       <div style={{ padding: '20px 16px' }}>
         <div className="fade-in stagger-2" style={{ 
           display: 'flex', 
@@ -90,25 +167,25 @@ const FitLabsPage = () => {
             color: '#111827',
             letterSpacing: '-0.3px'
           }}>
-            Productos Fit
+            Restaurantes con Opciones Fit
           </h2>
           <div className="badge" style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '4px',
-            backgroundColor: '#fed7aa',
-            color: '#f97316',
+            backgroundColor: '#d1fae5',
+            color: '#10b981',
             padding: '6px 12px',
             borderRadius: '12px',
             fontWeight: '700',
             fontSize: '11px'
           }}>
-            <Heart size={12} style={{ fill: '#f97316' }} />
-            <span>{fitProducts.length} opciones</span>
+            <Heart size={12} style={{ fill: '#10b981' }} />
+            <span>{filteredRestaurants.length} {filteredRestaurants.length === 1 ? 'restaurante' : 'restaurantes'}</span>
           </div>
         </div>
 
-        {fitProducts.length === 0 ? (
+        {filteredRestaurants.length === 0 ? (
           <div className="card fade-in stagger-3" style={{ 
             backgroundColor: 'white',
             borderRadius: '20px',
@@ -118,138 +195,111 @@ const FitLabsPage = () => {
           }}>
             <Leaf size={48} style={{ margin: '0 auto 12px', color: '#10b981', strokeWidth: 1.5 }} />
             <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#111827' }}>
-              No hay productos fit disponibles
+              No hay restaurantes con estas opciones
             </h3>
             <p style={{ fontSize: '14px', color: '#6b7280' }}>
-              Pronto agregaremos opciones saludables para ti
+              Intenta con otros filtros o espera nuevos restaurantes
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {fitProducts.map((product, index) => (
-              <div
-                key={`${product.restaurantId}-${product.id}-${index}`}
-                onClick={() => openProductModal(product)}
-                className="card fade-in tap-effect"
-                style={{
-                  display: 'flex',
-                  gap: '12px',
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '12px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s ease',
-                  animationDelay: `${index * 0.05}s`
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    style={{
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {filteredRestaurants.map((restaurant, index) => {
+              const productCount = countFitProducts(restaurant, selectedLabels)
+              
+              return (
+                <div
+                  key={restaurant.id}
+                  onClick={() => handleRestaurantClick(restaurant)}
+                  className="card fade-in tap-effect"
+                  style={{
+                    padding: '20px',
+                    background: 'white',
+                    borderRadius: '16px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    animationDelay: `${index * 0.1}s`,
+                    opacity: 0
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    {/* Restaurant Logo */}
+                    <div style={{
                       width: '80px',
                       height: '80px',
-                      borderRadius: '8px',
-                      objectFit: 'cover'
-                    }}
-                  />
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '4px',
-                    left: '4px',
-                    right: '4px',
-                    background: 'rgba(16, 185, 129, 0.95)',
-                    color: 'white',
-                    padding: '3px 6px',
-                    borderRadius: '6px',
-                    fontSize: '9px',
-                    fontWeight: '700',
-                    textAlign: 'center',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '3px'
-                  }}>
-                    <Heart size={9} style={{ fill: 'white' }} />
-                    FIT
-                  </div>
-                </div>
-                
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <h3 style={{
-                      fontSize: '16px',
-                      fontWeight: '600',
-                      color: '#111827',
-                      marginBottom: '2px'
-                    }}>
-                      {product.name}
-                    </h3>
-                    <p style={{
-                      fontSize: '12px',
-                      color: '#10b981',
-                      marginBottom: '4px',
-                      fontWeight: '600'
-                    }}>
-                      {product.restaurantName}
-                    </p>
-                    <p style={{
-                      fontSize: '13px',
-                      color: '#6b7280',
-                      marginBottom: '0',
-                      lineHeight: '1.3'
-                    }}>
-                      {product.description}
-                    </p>
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
-                    <span style={{
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      color: '#111827'
-                    }}>
-                      {useAppStore.getState().getCurrencySymbol()} {useAppStore.getState().getPriceForCurrency(product).toFixed(2)}
-                    </span>
-                    {product.labels && product.labels.length > 1 && (
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {product.labels.filter(l => l !== 'Fit').slice(0, 2).map((label, idx) => (
-                          <span 
-                            key={idx}
-                            style={{
-                              fontSize: '10px',
-                              padding: '3px 6px',
-                              borderRadius: '6px',
-                              backgroundColor: label === 'Vegano' ? '#d1fae5' : '#e0f2fe',
-                              color: label === 'Vegano' ? '#059669' : '#0369a1',
-                              fontWeight: '600'
-                            }}
-                          >
-                            {label}
+                      borderRadius: '12px',
+                      backgroundImage: `url(${restaurant.image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      flexShrink: 0,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                    }}></div>
+                    
+                    {/* Restaurant Info */}
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{
+                        fontSize: '18px',
+                        fontWeight: '700',
+                        color: '#111827',
+                        marginBottom: '6px'
+                      }}>
+                        {restaurant.name}
+                      </h3>
+                      
+                      {/* Rating and Delivery Time */}
+                      <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Star size={14} style={{ fill: '#fbbf24', color: '#fbbf24' }} />
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>
+                            {restaurant.rating}
                           </span>
-                        ))}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={14} style={{ color: '#6b7280' }} />
+                          <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
+                            {restaurant.deliveryTime}
+                          </span>
+                        </div>
                       </div>
-                    )}
+                      
+                      {/* Address */}
+                      {restaurant.address && (
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px',
+                          marginBottom: '8px'
+                        }}>
+                          <MapPin size={14} style={{ color: '#10b981' }} />
+                          <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
+                            {restaurant.address}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Fit Options Count */}
+                      <div className="badge" style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        backgroundColor: '#d1fae5',
+                        color: '#10b981',
+                        padding: '6px 10px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: '700'
+                      }}>
+                        <Heart size={12} style={{ fill: '#10b981' }} />
+                        {productCount} opciones fit disponibles
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
-
-      {/* Product Modal */}
-      {isModalOpen && selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          restaurantId={selectedProduct.restaurantId}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-        />
-      )}
     </main>
   )
 }
