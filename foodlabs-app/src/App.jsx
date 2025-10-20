@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Header from './components/Header'
 import ShoppingCart from './components/ShoppingCart'
+import LocationSelector from './components/LocationSelector'
 import FoodLabsPage from './pages/FoodLabsPage'
 import FitLabsPage from './pages/FitLabsPage'
 import SportsShopPage from './pages/SportsShopPage'
@@ -24,18 +25,48 @@ const ProtectedRoute = ({ children }) => {
 
 // Componente interno para manejar las rutas
 const AppContent = () => {
-  const { detectCurrencyByLocation, currency } = useAppStore()
+  const { detectCurrencyByLocation, manualLocation, hasAskedLocation, setManualLocation, setHasAskedLocation } = useAppStore()
+  const [showLocationSelector, setShowLocationSelector] = useState(false)
   
-  // Detectar moneda automáticamente al cargar la app
+  // Detectar ubicación automáticamente al cargar la app
   useEffect(() => {
-    // Solo detectar si no hay una moneda ya configurada o es USD por defecto
-    if (currency === 'USD') {
-      detectCurrencyByLocation()
+    // Si ya hay ubicación manual, no hacer nada
+    if (manualLocation) {
+      return
     }
+    
+    // Si ya preguntamos antes y no hay ubicación, mostrar selector
+    if (hasAskedLocation && !manualLocation) {
+      setShowLocationSelector(true)
+      return
+    }
+    
+    // Intentar GPS
+    detectCurrencyByLocation().then(() => {
+      // Si después de intentar GPS, hasAskedLocation es true y no hay ubicación
+      // significa que GPS falló, mostrar selector
+      const state = useAppStore.getState()
+      if (state.hasAskedLocation && !state.manualLocation && !state.userLocation) {
+        setShowLocationSelector(true)
+      }
+    })
   }, [])
+  
+  const handleLocationConfirm = (country, city) => {
+    setManualLocation(country, city)
+    setShowLocationSelector(false)
+    setHasAskedLocation(false)
+  }
   
   return (
     <div style={{ minHeight: '100vh' }}>
+      {/* Location Selector Modal */}
+      <LocationSelector
+        isOpen={showLocationSelector}
+        onConfirm={handleLocationConfirm}
+        onClose={() => setShowLocationSelector(false)}
+      />
+      
       <Header />
         
         <Routes>

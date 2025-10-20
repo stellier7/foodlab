@@ -1,6 +1,19 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+// ========================================
+// CONFIGURACIÓN GLOBAL - Modificar aquí
+// ========================================
+const DEFAULT_CURRENCY = 'HNL'  // 'USD', 'HNL', 'GTQ'
+const DEFAULT_COUNTRY = 'Honduras'
+const DEFAULT_CITY = 'Tegucigalpa'
+const EXCHANGE_RATES = {
+  USD: 1,
+  HNL: 24.75,  // Lempiras hondureñas
+  GTQ: 7.80    // Quetzales guatemaltecos
+}
+// ========================================
+
 // Store principal de la aplicación
 export const useAppStore = create(
   persist(
@@ -19,14 +32,12 @@ export const useAppStore = create(
       
       // Estado de ubicación
       userLocation: null,
+      manualLocation: null,  // { country, city } o null
+      hasAskedLocation: false,
       
       // Estado de moneda
-      currency: 'USD', // 'USD', 'HNL', 'GTQ'
-      exchangeRates: {
-        USD: 1,
-        HNL: 24.75, // Lempiras hondureñas
-        GTQ: 7.80   // Quetzales guatemaltecos
-      },
+      currency: DEFAULT_CURRENCY,
+      exchangeRates: EXCHANGE_RATES,
       
       // Acciones para restaurantes
       setRestaurants: (restaurants) => set({ restaurants }),
@@ -108,6 +119,20 @@ export const useAppStore = create(
       // Acciones para ubicación
       setUserLocation: (location) => set({ userLocation: location }),
       
+      setManualLocation: (country, city) => {
+        set({ manualLocation: { country, city } })
+        // Establecer moneda según país
+        if (country === 'Honduras') {
+          set({ currency: 'HNL' })
+        } else if (country === 'Guatemala') {
+          set({ currency: 'GTQ' })
+        } else {
+          set({ currency: 'USD' })
+        }
+      },
+      
+      setHasAskedLocation: (value) => set({ hasAskedLocation: value }),
+      
       // Acciones para moneda
       setCurrency: (currency) => set({ currency }),
       
@@ -149,11 +174,23 @@ export const useAppStore = create(
       
       // Detectar moneda basada en geolocalización del navegador
       detectCurrencyByLocation: async () => {
-        if (!navigator.geolocation) return
+        // Si ya hay ubicación manual, no sobrescribir
+        const { manualLocation } = get()
+        if (manualLocation) {
+          return
+        }
+        
+        if (!navigator.geolocation) {
+          set({ hasAskedLocation: true })
+          return
+        }
         
         try {
           const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject)
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 10000,
+              maximumAge: 0
+            })
           })
           
           const { latitude, longitude } = position.coords
@@ -171,6 +208,7 @@ export const useAppStore = create(
           set({ userLocation: { latitude, longitude } })
         } catch (error) {
           console.log('No se pudo obtener la ubicación:', error)
+          set({ hasAskedLocation: true })
         }
       },
       
@@ -197,6 +235,8 @@ export const useAppStore = create(
         cart: state.cart,
         cartTotal: state.cartTotal,
         userLocation: state.userLocation,
+        manualLocation: state.manualLocation,
+        hasAskedLocation: state.hasAskedLocation,
         currency: state.currency,
         exchangeRates: state.exchangeRates
       })

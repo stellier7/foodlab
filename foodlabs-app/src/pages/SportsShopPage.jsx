@@ -9,72 +9,18 @@ const SportsShopPage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Productos iniciales de padel y deportes
+  // Productos de la Shop
   const products = [
-    {
-      id: 'sp1',
-      name: 'Paleta Padel Pro',
-      price: 89.99,
-      category: 'padel',
-      description: 'Paleta profesional de fibra de carbono',
-      image: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400&h=300&fit=crop',
-      stock: 15
-    },
-    {
-      id: 'sp2',
-      name: 'Pelotas Padel x3',
-      price: 12.99,
-      category: 'padel',
-      description: 'Set de 3 pelotas profesionales',
-      image: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=400&h=300&fit=crop',
-      stock: 50
-    },
     {
       id: 'sp3',
       name: 'PadelBuddy - Phone Mount',
-      price: 13.15,
+      price: 13.15,  // Precio en USD (base)
       category: 'accessories',
       description: 'Soporte para teléfono con ventosas en forma de raqueta de padel. Perfecto para grabar tus partidos.',
       image: '/images/products/phoneMount-PadelBuddy.jpeg',
       stock: 35,
       isNew: true,
       features: ['10 ventosas', 'Forma de raqueta', 'Para vidrio', 'Grabación HD']
-    },
-    {
-      id: 'sp4',
-      name: 'Bolso Deportivo',
-      price: 45.99,
-      category: 'accessories',
-      description: 'Bolso para raquetas y accesorios',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=300&fit=crop',
-      stock: 20
-    },
-    {
-      id: 'sp5',
-      name: 'Muñequeras Pro',
-      price: 15.99,
-      category: 'accessories',
-      description: 'Par de muñequeras deportivas',
-      image: 'https://images.unsplash.com/photo-1576678927484-cc907957088c?w=400&h=300&fit=crop',
-      stock: 30
-    },
-    {
-      id: 'sp6',
-      name: 'Zapatillas Padel',
-      price: 79.99,
-      category: 'footwear',
-      description: 'Zapatillas especiales para padel',
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop',
-      stock: 12
-    },
-    {
-      id: 'sp7',
-      name: 'Camiseta Técnica',
-      price: 29.99,
-      category: 'clothing',
-      description: 'Camiseta transpirable de alto rendimiento',
-      image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=300&fit=crop',
-      stock: 25
     }
   ]
 
