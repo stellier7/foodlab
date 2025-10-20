@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import Header from './components/Header'
 import ShoppingCart from './components/ShoppingCart'
 import FoodLabsPage from './pages/FoodLabsPage'
@@ -8,6 +9,7 @@ import RestaurantDetailPage from './pages/RestaurantDetailPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminPage from './pages/AdminPage'
 import { useAuthStore } from './stores/useAuthStore'
+import { useAppStore } from './stores/useAppStore'
 
 // Componente para rutas protegidas
 const ProtectedRoute = ({ children }) => {
@@ -22,6 +24,16 @@ const ProtectedRoute = ({ children }) => {
 
 // Componente interno para manejar las rutas
 const AppContent = () => {
+  const { detectCurrencyByLocation, currency } = useAppStore()
+  
+  // Detectar moneda automáticamente al cargar la app
+  useEffect(() => {
+    // Solo detectar si no hay una moneda ya configurada o es USD por defecto
+    if (currency === 'USD') {
+      detectCurrencyByLocation()
+    }
+  }, [])
+  
   return (
     <div style={{ minHeight: '100vh' }}>
       <Header />

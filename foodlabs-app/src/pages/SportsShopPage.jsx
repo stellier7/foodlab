@@ -4,7 +4,7 @@ import { ShoppingBag, Plus } from 'lucide-react'
 import ProductModal from '../components/ProductModal'
 
 const SportsShopPage = () => {
-  const { addToCart } = useAppStore()
+  const { addToCart, convertPrice, getCurrencySymbol, currency } = useAppStore()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -32,7 +32,7 @@ const SportsShopPage = () => {
     {
       id: 'sp3',
       name: 'PadelBuddy - Phone Mount',
-      price: 13.99,
+      price: 13.15,
       category: 'accessories',
       description: 'Soporte para teléfono con ventosas en forma de raqueta de padel. Perfecto para grabar tus partidos.',
       image: '/images/products/phoneMount-PadelBuddy.jpeg',
@@ -142,7 +142,7 @@ const SportsShopPage = () => {
           letterSpacing: '-0.5px',
           color: 'white'
         }}>
-          ¡Bienvenido a SportsShop!
+          ¡Bienvenido a Shop!
         </h1>
         <p style={{ 
           color: '#bfdbfe', 
@@ -316,7 +316,7 @@ const SportsShopPage = () => {
                     fontWeight: 'bold',
                     color: '#3b82f6'
                   }}>
-                    ${product.price}
+                    {getCurrencySymbol()} {convertPrice(product.price).toFixed(2)}
                   </span>
                   
                   <button

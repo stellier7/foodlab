@@ -20,6 +20,14 @@ export const useAppStore = create(
       // Estado de ubicación
       userLocation: null,
       
+      // Estado de moneda
+      currency: 'USD', // 'USD', 'HNL', 'GTQ'
+      exchangeRates: {
+        USD: 1,
+        HNL: 24.75, // Lempiras hondureñas
+        GTQ: 7.80   // Quetzales guatemaltecos
+      },
+      
       // Acciones para restaurantes
       setRestaurants: (restaurants) => set({ restaurants }),
       setSelectedRestaurant: (restaurant) => set({ selectedRestaurant: restaurant }),
@@ -100,11 +108,77 @@ export const useAppStore = create(
       // Acciones para ubicación
       setUserLocation: (location) => set({ userLocation: location }),
       
+      // Acciones para moneda
+      setCurrency: (currency) => set({ currency }),
+      
+      setExchangeRate: (currency, rate) => {
+        const rates = get().exchangeRates
+        set({ exchangeRates: { ...rates, [currency]: rate } })
+      },
+      
+      // Convertir precio de USD a la moneda seleccionada
+      convertPrice: (usdPrice) => {
+        const { currency, exchangeRates } = get()
+        return usdPrice * exchangeRates[currency]
+      },
+      
+      // Obtener símbolo de moneda
+      getCurrencySymbol: () => {
+        const currency = get().currency
+        const symbols = {
+          USD: '$',
+          HNL: 'L',
+          GTQ: 'Q'
+        }
+        return symbols[currency] || '$'
+      },
+      
+      // Detectar moneda según país del restaurante
+      detectCurrencyByCountry: (country) => {
+        if (!country) return 'USD'
+        
+        const countryLower = country.toLowerCase()
+        if (countryLower.includes('honduras') || countryLower === 'hn') {
+          return 'HNL'
+        }
+        if (countryLower.includes('guatemala') || countryLower === 'gt') {
+          return 'GTQ'
+        }
+        return 'USD'
+      },
+      
+      // Detectar moneda basada en geolocalización del navegador
+      detectCurrencyByLocation: async () => {
+        if (!navigator.geolocation) return
+        
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject)
+          })
+          
+          const { latitude, longitude } = position.coords
+          
+          // Honduras aproximadamente: 13-16°N, 83-89°W
+          // Guatemala aproximadamente: 13.5-18°N, 88-92.5°W
+          
+          if (latitude >= 13 && latitude <= 16 && longitude >= -89 && longitude <= -83) {
+            set({ currency: 'HNL' })
+          } else if (latitude >= 13.5 && latitude <= 18 && longitude >= -92.5 && longitude <= -88) {
+            set({ currency: 'GTQ' })
+          }
+          
+          // Guardar ubicación del usuario
+          set({ userLocation: { latitude, longitude } })
+        } catch (error) {
+          console.log('No se pudo obtener la ubicación:', error)
+        }
+      },
+      
       // Función para calcular fees
       calculateFees: (subtotal) => {
-        const platformFee = subtotal * 0.05 // 5% fee base
-        const serviceFee = subtotal * 0.10 // 10% fee de servicio (ejemplo)
-        const deliveryFee = 3.00 // Fee fijo de delivery
+        const platformFee = subtotal * 0.0749 // 7.49% fee de plataforma
+        const serviceFee = 0 // Removido
+        const deliveryFee = 0 // Por ahora 0
         const totalFees = platformFee + serviceFee + deliveryFee
         
         return {
@@ -122,7 +196,9 @@ export const useAppStore = create(
       partialize: (state) => ({
         cart: state.cart,
         cartTotal: state.cartTotal,
-        userLocation: state.userLocation
+        userLocation: state.userLocation,
+        currency: state.currency,
+        exchangeRates: state.exchangeRates
       })
     }
   )

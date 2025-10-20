@@ -11,7 +11,7 @@ const LABEL_CONFIG = {
 }
 
 const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' }) => {
-  const { addToCart } = useAppStore()
+  const { addToCart, convertPrice, getCurrencySymbol } = useAppStore()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState(null)
   const [withCombo, setWithCombo] = useState(false)
@@ -84,7 +84,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
 
   const handleShare = async () => {
     const productUrl = `${window.location.origin}/sportsshop?product=${product.id}`
-    const shareText = `¡Mira este producto: ${product.name} por $${product.price}! ${productUrl}`
+    const shareText = `¡Mira este producto: ${product.name} por ${getCurrencySymbol()}${convertPrice(product.price).toFixed(2)}! ${productUrl}`
     
     if (navigator.share) {
       try {
@@ -265,7 +265,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
                 backgroundClip: 'text',
                 transition: 'all 0.3s ease'
               }}>
-                L {getCurrentPrice().toFixed(2)}
+                {getCurrencySymbol()} {convertPrice(getCurrentPrice()).toFixed(2)}
               </span>
               <div style={{
                 display: 'flex',
@@ -368,7 +368,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
                         fontSize: '12px',
                         color: selectedSize === size.value ? '#ea580c' : '#6b7280'
                       }}>
-                        {size.priceModifier > 0 ? '+' : ''}L {size.priceModifier.toFixed(2)}
+                        {size.priceModifier > 0 ? '+' : ''}{getCurrencySymbol()} {convertPrice(size.priceModifier).toFixed(2)}
                       </div>
                     )}
                   </button>
@@ -421,7 +421,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
                     fontWeight: '800',
                     color: withCombo ? '#f97316' : '#6b7280'
                   }}>
-                    +L {product.comboOptions.price.toFixed(2)}
+                    +{getCurrencySymbol()} {convertPrice(product.comboOptions.price).toFixed(2)}
                   </span>
                   <div style={{
                     width: '48px',

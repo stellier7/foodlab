@@ -22,7 +22,7 @@ const MOCK_ORDERS = [
     ],
     business: {
       id: 'sportsshop',
-      name: 'SportsShop'
+      name: 'Shop'
     },
     pricing: {
       subtotal: 24.99,
@@ -67,7 +67,7 @@ const MOCK_ORDERS = [
     ],
     business: {
       id: 'sportsshop',
-      name: 'SportsShop'
+      name: 'Shop'
     },
     pricing: {
       subtotal: 121.97,
@@ -158,7 +158,7 @@ const MOCK_ORDERS = [
     ],
     business: {
       id: 'sportsshop',
-      name: 'SportsShop'
+      name: 'Shop'
     },
     pricing: {
       subtotal: 45.99,

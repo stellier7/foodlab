@@ -4,7 +4,7 @@ import { useAppStore } from '../stores/useAppStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const Header = () => {
-  const { cart } = useAppStore()
+  const { cart, currency, setCurrency } = useAppStore()
   const navigate = useNavigate()
   const location = useLocation()
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
@@ -18,7 +18,7 @@ const Header = () => {
   const navItems = [
     { path: '/', name: 'FoodLab', icon: UtensilsCrossed, color: '#f97316' },
     { path: '/fitlabs', name: 'FitLabs', icon: Dumbbell, color: '#10b981' },
-    { path: '/sportsshop', name: 'SportsShop', icon: ShoppingBag, color: '#3b82f6' }
+    { path: '/sportsshop', name: 'Shop', icon: ShoppingBag, color: '#3b82f6' }
   ]
 
   const currentNav = navItems.find(item => item.path === location.pathname) || navItems[0]
@@ -127,6 +127,31 @@ const Header = () => {
               marginLeft: scrollStage >= 2 ? 'auto' : '0',
               transition: 'margin-left 0.4s ease-in-out'
             }}>
+              {/* Currency Selector */}
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="tap-effect"
+                style={{
+                  height: '42px',
+                  padding: '0 12px',
+                  color: currentNav.color,
+                  border: 'none',
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  outline: 'none'
+                }}
+              >
+                <option value="USD">USD $</option>
+                <option value="HNL">HNL L</option>
+                <option value="GTQ">GTQ Q</option>
+              </select>
+
               {/* Search Button */}
               <button className="tap-effect" style={{
                 width: '42px',

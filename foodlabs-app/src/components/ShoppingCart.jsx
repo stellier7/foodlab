@@ -4,7 +4,7 @@ import { useOrdersStore } from '../stores/useOrdersStore'
 import { ShoppingCart as ShoppingCartIcon, Plus, Minus, X, MessageCircle } from 'lucide-react'
 
 const ShoppingCart = () => {
-  const { cart, cartTotal, addToCart, removeFromCart, clearCart, calculateFees } = useAppStore()
+  const { cart, cartTotal, addToCart, removeFromCart, clearCart, calculateFees, convertPrice, getCurrencySymbol } = useAppStore()
   const { addOrder } = useOrdersStore()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -28,7 +28,7 @@ const ShoppingCart = () => {
       items: cart,
       business: {
         id: hasSportsItems ? 'sportsshop' : (cart[0]?.restaurantId || 'general'),
-        name: hasSportsItems ? 'SportsShop' : (cart[0]?.restaurantName || 'FoodLabs')
+        name: hasSportsItems ? 'Shop' : (cart[0]?.restaurantName || 'FoodLabs')
       },
       pricing: {
         subtotal: fees.subtotal,
@@ -68,7 +68,7 @@ const ShoppingCart = () => {
     if (hasFoodItems && hasSportsItems) {
       message = `🛍️ *NUEVO PEDIDO - Labs Platform*\n\n`
     } else if (hasSportsItems) {
-      message = `🏆 *NUEVO PEDIDO - SportsShop*\n\n`
+      message = `🏆 *NUEVO PEDIDO - Shop*\n\n`
     } else {
       message = `🍽️ *NUEVO PEDIDO - FoodLabs*\n\n`
     }
@@ -89,14 +89,15 @@ const ShoppingCart = () => {
 
     Object.entries(groupedBySource).forEach(([sourceId, items]) => {
       if (sourceId === 'sportsshop') {
-        message += `\n🏆 *SportsShop*\n`
+        message += `\n🏆 *Shop*\n`
       } else {
         const sourceName = items[0].restaurantName || 'Restaurante'
         message += `\n🏪 *${sourceName}*\n`
       }
       
       items.forEach(item => {
-        message += `• ${item.name} x${item.quantity} - $${(item.price * item.quantity).toFixed(2)}\n`
+        const itemTotal = convertPrice(item.price * item.quantity)
+        message += `• ${item.name} x${item.quantity} - ${getCurrencySymbol()}${itemTotal.toFixed(2)}\n`
         
         // Información especial para productos destacados
         if (item.id === 'sp3') {
@@ -107,25 +108,15 @@ const ShoppingCart = () => {
     })
 
     message += `\n💰 *Resumen:*\n`
-    message += `Subtotal: $${fees.subtotal.toFixed(2)}\n`
-    
-    if (hasFoodItems) {
-      message += `Fee de plataforma (5%): $${fees.platformFee.toFixed(2)}\n`
-      message += `Fee de servicio (10%): $${fees.serviceFee.toFixed(2)}\n`
-      message += `Delivery: $${fees.deliveryFee.toFixed(2)}\n`
-    } else if (hasSportsItems && fees.subtotal >= 100) {
-      message += `🎉 ¡Envío gratis por compra mayor a $100!\n`
-    } else if (hasSportsItems) {
-      message += `Envío: $${fees.deliveryFee.toFixed(2)}\n`
-    }
-    
-    message += `*Total: $${fees.grandTotal.toFixed(2)}*\n\n`
+    message += `Subtotal: ${getCurrencySymbol()}${convertPrice(fees.subtotal).toFixed(2)}\n`
+    message += `FoodLab: ${getCurrencySymbol()}${convertPrice(fees.platformFee).toFixed(2)}\n`
+    message += `*Total: ${getCurrencySymbol()}${convertPrice(fees.grandTotal).toFixed(2)}*\n\n`
     message += `💳 *Método de pago:* Efectivo/Transferencia/Tarjeta\n\n`
     
     if (hasFoodItems && hasSportsItems) {
       message += `¡Gracias por elegir Labs Platform! 🚀`
     } else if (hasSportsItems) {
-      message += `¡Gracias por elegir SportsShop! 🏆`
+      message += `¡Gracias por elegir Shop! 🏆`
     } else {
       message += `¡Gracias por elegir FoodLabs! 🚀`
     }
@@ -273,7 +264,7 @@ const ShoppingCart = () => {
                       <div style={{ flex: 1 }}>
                         <h4 style={{ fontWeight: '700', color: '#111827', margin: 0, fontSize: '15px' }}>{item.name}</h4>
                         <p style={{ fontSize: '13px', color: '#6b7280', margin: '6px 0', fontWeight: '500' }}>
-                          L {item.price.toFixed(2)} c/u
+                          {getCurrencySymbol()} {convertPrice(item.price).toFixed(2)} c/u
                         </p>
                       </div>
                       
@@ -342,19 +333,11 @@ const ShoppingCart = () => {
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px', fontWeight: '500' }}>
                     <span style={{ color: '#6b7280' }}>Subtotal:</span>
-                    <span style={{ color: '#111827' }}>L {fees.subtotal.toFixed(2)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>
-                    <span>Fee de plataforma (5%):</span>
-                    <span>L {fees.platformFee.toFixed(2)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#9ca3af', marginBottom: '6px' }}>
-                    <span>Fee de servicio (10%):</span>
-                    <span>L {fees.serviceFee.toFixed(2)}</span>
+                    <span style={{ color: '#111827' }}>{getCurrencySymbol()} {convertPrice(fees.subtotal).toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#9ca3af', marginBottom: '12px' }}>
-                    <span>Delivery:</span>
-                    <span>L {fees.deliveryFee.toFixed(2)}</span>
+                    <span>FoodLab:</span>
+                    <span>{getCurrencySymbol()} {convertPrice(fees.platformFee).toFixed(2)}</span>
                   </div>
                   <div className="card" style={{ 
                     display: 'flex', 
@@ -373,7 +356,7 @@ const ShoppingCart = () => {
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text'
                     }}>
-                      L {fees.grandTotal.toFixed(2)}
+                      {getCurrencySymbol()} {convertPrice(fees.grandTotal).toFixed(2)}
                     </span>
                   </div>
                 </div>

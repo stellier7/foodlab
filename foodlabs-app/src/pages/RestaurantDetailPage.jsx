@@ -389,7 +389,7 @@ const RestaurantDetailPage = () => {
                         fontWeight: '700',
                         color: '#111827'
                       }}>
-                        L {item.basePrice || item.price}
+                        {useAppStore.getState().getCurrencySymbol()} {useAppStore.getState().convertPrice(item.basePrice || item.price).toFixed(2)}
                       </span>
                       {item.popularity && (
                         <span style={{
