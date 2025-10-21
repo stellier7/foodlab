@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useAppStore } from './useAppStore'
 
 // Datos mock para testing
 const MOCK_ORDERS = [
@@ -340,10 +341,28 @@ export const useOrdersStore = create(
       changeOrderStatus: (orderId, newStatus) => {
         const orders = get().orders
         const currentUser = get().currentUser || 'admin-001'
+        const order = orders.find(o => o.id === orderId)
+        
+        if (!order) return
+        
+        const oldStatus = order.status
+        
+        // Actualizar stock si se confirma la orden
+        if (newStatus === 'confirmed' && oldStatus === 'pending') {
+          order.items.forEach(item => {
+            useAppStore.getState().decreaseStock(item.id, item.quantity)
+          })
+        }
+        
+        // Devolver stock si se cancela la orden
+        if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
+          order.items.forEach(item => {
+            useAppStore.getState().updateStock(item.id, item.quantity)
+          })
+        }
         
         const updatedOrders = orders.map(order => {
           if (order.id === orderId) {
-            const oldStatus = order.status
             return {
               ...order,
               status: newStatus,

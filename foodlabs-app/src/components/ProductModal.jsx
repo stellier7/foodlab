@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '../stores/useAppStore'
-import { X, Plus, Minus, Star, Shield, Truck, CheckCircle, Share2, Leaf, Sprout, Fish, Heart as FitIcon } from 'lucide-react'
+import { X, Plus, Minus, Star, Shield, CheckCircle, Share2, Leaf, Sprout, Fish, Heart as FitIcon } from 'lucide-react'
 
 // Label configuration
 const LABEL_CONFIG = {
@@ -601,35 +601,6 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
               <Plus size={20} strokeWidth={2.5} />
               Agregar al Carrito
             </button>
-          </div>
-
-          {/* Shipping Info */}
-          <div style={{
-            marginTop: '20px',
-            padding: '16px',
-            backgroundColor: '#fef3c7',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <Truck size={20} style={{ color: '#f97316' }} />
-            <div>
-              <span style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#92400e'
-              }}>
-                Envío gratis en compras +$100
-              </span>
-              <p style={{
-                fontSize: '12px',
-                color: '#92400e',
-                margin: '2px 0 0 0'
-              }}>
-                Tiempo estimado: 2-3 días hábiles
-              </p>
-            </div>
           </div>
         </div>
       </div>

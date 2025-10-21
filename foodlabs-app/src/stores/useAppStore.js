@@ -39,6 +39,19 @@ export const useAppStore = create(
       currency: DEFAULT_CURRENCY,
       exchangeRates: EXCHANGE_RATES,
       
+      // Estado de inventario
+      inventory: {
+        'sp3': { stock: 20, reserved: 0, sold: 0 },  // PadelBuddy
+        'orange-chicken': { stock: 999, reserved: 0, sold: 0 },
+        'boneless': { stock: 999, reserved: 0, sold: 0 },
+        'angus-burger': { stock: 999, reserved: 0, sold: 0 },
+        'chicken-sandwich': { stock: 999, reserved: 0, sold: 0 },
+        'tallarin': { stock: 999, reserved: 0, sold: 0 },
+        'loaded-fries': { stock: 999, reserved: 0, sold: 0 },
+        'croilab': { stock: 999, reserved: 0, sold: 0 },
+        'gyozas': { stock: 999, reserved: 0, sold: 0 }
+      },
+      
       // Acciones para restaurantes
       setRestaurants: (restaurants) => set({ restaurants }),
       setSelectedRestaurant: (restaurant) => set({ selectedRestaurant: restaurant }),
@@ -132,6 +145,45 @@ export const useAppStore = create(
       },
       
       setHasAskedLocation: (value) => set({ hasAskedLocation: value }),
+      
+      // Acciones para inventario
+      updateStock: (productId, quantity) => {
+        const inventory = get().inventory
+        const currentItem = inventory[productId] || { stock: 0, reserved: 0, sold: 0 }
+        
+        set({
+          inventory: {
+            ...inventory,
+            [productId]: {
+              ...currentItem,
+              stock: Math.max(0, currentItem.stock + quantity),
+              sold: quantity < 0 ? currentItem.sold + Math.abs(quantity) : currentItem.sold
+            }
+          }
+        })
+      },
+      
+      decreaseStock: (productId, quantity) => {
+        get().updateStock(productId, -quantity)
+      },
+      
+      getProductStock: (productId) => {
+        const inventory = get().inventory
+        return inventory[productId]?.stock || 0
+      },
+      
+      setProductStock: (productId, stock) => {
+        const inventory = get().inventory
+        set({
+          inventory: {
+            ...inventory,
+            [productId]: {
+              ...(inventory[productId] || { reserved: 0, sold: 0 }),
+              stock
+            }
+          }
+        })
+      },
       
       // Acciones para moneda
       setCurrency: (currency) => set({ currency }),
@@ -254,7 +306,8 @@ export const useAppStore = create(
         manualLocation: state.manualLocation,
         hasAskedLocation: state.hasAskedLocation,
         currency: state.currency,
-        exchangeRates: state.exchangeRates
+        exchangeRates: state.exchangeRates,
+        inventory: state.inventory
       })
     }
   )

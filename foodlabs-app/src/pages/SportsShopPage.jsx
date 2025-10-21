@@ -16,21 +16,20 @@ const SportsShopPage = () => {
       name: 'PadelBuddy - Phone Mount',
       price: 13.15,  // Precio en USD (base)
       precio_HNL: 325.00,  // Precio exacto en Lempiras (override)
-      category: 'accessories',
+      category: 'sports',
       description: 'Soporte para teléfono con ventosas en forma de raqueta de padel. Perfecto para grabar tus partidos.',
       image: '/images/products/phoneMount-PadelBuddy.jpeg',
-      stock: 35,
+      stock: 20,
       isNew: true,
-      features: ['10 ventosas', 'Forma de raqueta', 'Para vidrio', 'Grabación HD']
+      features: ['12 ventosas', 'Forma de raqueta', 'Para vidrio', 'Grabación HD']
     }
   ]
 
   const categories = [
-    { id: 'all', name: 'Todo', emoji: '🏆' },
-    { id: 'padel', name: 'Padel', emoji: '🎾' },
-    { id: 'accessories', name: 'Accesorios', emoji: '🎒' },
-    { id: 'footwear', name: 'Calzado', emoji: '👟' },
-    { id: 'clothing', name: 'Ropa', emoji: '👕' }
+    { id: 'all', name: 'Todo', emoji: '🏪' },
+    { id: 'sports', name: 'Deportes', emoji: '⚽' },
+    { id: 'convenience', name: 'Conveniencia', emoji: '🏬' },
+    { id: 'pharmacy', name: 'Farmacias', emoji: '💊' }
   ]
 
   const filteredProducts = selectedCategory === 'all' 
