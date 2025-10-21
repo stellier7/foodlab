@@ -84,7 +84,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
 
   const handleShare = async () => {
     const productUrl = `${window.location.origin}/sportsshop?product=${product.id}`
-    const shareText = `¡Mira este producto: ${product.name} por ${getCurrencySymbol()}${convertPrice(product.price).toFixed(2)}! ${productUrl}`
+    const shareText = `¡Mira este producto: ${product.name} por ${getCurrencySymbol()}${getPriceForCurrency(product).toFixed(2)}!`
     
     if (navigator.share) {
       try {
@@ -95,12 +95,12 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
         })
       } catch (err) {
         // Fallback to clipboard
-        navigator.clipboard.writeText(shareText)
+        navigator.clipboard.writeText(`${shareText} ${productUrl}`)
         alert('¡Link copiado al portapapeles!')
       }
     } else {
       // Fallback to clipboard
-      navigator.clipboard.writeText(shareText)
+      navigator.clipboard.writeText(`${shareText} ${productUrl}`)
       alert('¡Link copiado al portapapeles!')
     }
   }
