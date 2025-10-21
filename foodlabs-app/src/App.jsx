@@ -9,6 +9,8 @@ import SportsShopPage from './pages/SportsShopPage'
 import RestaurantDetailPage from './pages/RestaurantDetailPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminPage from './pages/AdminPage'
+import BusinessLoginPage from './pages/BusinessLoginPage'
+import BusinessPage from './pages/BusinessPage'
 import { useAuthStore } from './stores/useAuthStore'
 import { useAppStore } from './stores/useAppStore'
 
@@ -91,6 +93,17 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <AdminPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Business Routes */}
+          <Route path="/business/login" element={<BusinessLoginPage />} />
+          <Route 
+            path="/business/:businessId" 
+            element={
+              <ProtectedRoute>
+                <BusinessPage />
               </ProtectedRoute>
             } 
           />

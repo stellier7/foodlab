@@ -22,6 +22,28 @@ const MOCK_USERS = [
   }
 ]
 
+// Comercios con credenciales
+const MOCK_BUSINESSES = [
+  {
+    id: 'sportsshop',
+    name: 'Shop',
+    password: 'shop123',
+    permissions: ['view_own_orders', 'edit_own_orders', 'change_own_status']
+  },
+  {
+    id: 'foodlab-tgu',
+    name: 'FoodLab TGU',
+    password: 'foodlab123',
+    permissions: ['view_own_orders', 'edit_own_orders', 'change_own_status']
+  },
+  {
+    id: 'foodlab-sps',
+    name: 'FoodLab SPS',
+    password: 'foodlab123',
+    permissions: ['view_own_orders', 'edit_own_orders', 'change_own_status']
+  }
+]
+
 export const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -85,6 +107,26 @@ export const useAuthStore = create(
           
           throw new Error(`Credenciales incorrectas. Intentos restantes: ${3 - newAttempts}`)
         }
+      },
+
+      businessLogin: (businessId, password) => {
+        const business = MOCK_BUSINESSES.find(b => b.id === businessId && b.password === password)
+        
+        if (business) {
+          set({
+            user: {
+              id: business.id,
+              name: business.name,
+              role: 'business',
+              businessId: business.id
+            },
+            isAuthenticated: true,
+            role: 'business',
+            permissions: business.permissions
+          })
+          return true
+        }
+        return false
       },
 
       logout: () => {
