@@ -72,9 +72,9 @@ const ShoppingCart = () => {
     })
 
     message += `\n💰 *Resumen:*\n`
-    message += `Subtotal: ${getCurrencySymbol()}${convertPrice(fees.subtotal).toFixed(2)}\n`
-    message += `FoodLab: ${getCurrencySymbol()}${convertPrice(fees.platformFee).toFixed(2)}\n`
-    message += `*Total: ${getCurrencySymbol()}${convertPrice(fees.grandTotal).toFixed(2)}*\n\n`
+    message += `Subtotal: ${getCurrencySymbol()}${fees.subtotal.toFixed(2)}\n`
+    message += `FoodLab: ${getCurrencySymbol()}${fees.platformFee.toFixed(2)}\n`
+    message += `*Total: ${getCurrencySymbol()}${fees.grandTotal.toFixed(2)}*\n\n`
     message += `💳 *Método de pago:* Efectivo/Transferencia/Tarjeta\n\n`
     
     if (hasFoodItems && hasSportsItems) {
@@ -298,11 +298,11 @@ const ShoppingCart = () => {
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px', fontWeight: '500' }}>
                     <span style={{ color: '#6b7280' }}>Subtotal:</span>
-                    <span style={{ color: '#111827' }}>{getCurrencySymbol()} {convertPrice(fees.subtotal).toFixed(2)}</span>
+                    <span style={{ color: '#111827' }}>{getCurrencySymbol()} {fees.subtotal.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#9ca3af', marginBottom: '12px' }}>
                     <span>FoodLab:</span>
-                    <span>{getCurrencySymbol()} {convertPrice(fees.platformFee).toFixed(2)}</span>
+                    <span>{getCurrencySymbol()} {fees.platformFee.toFixed(2)}</span>
                   </div>
                   <div className="card" style={{ 
                     display: 'flex', 
@@ -321,7 +321,7 @@ const ShoppingCart = () => {
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text'
                     }}>
-                      {getCurrencySymbol()} {convertPrice(fees.grandTotal).toFixed(2)}
+                      {getCurrencySymbol()} {fees.grandTotal.toFixed(2)}
                     </span>
                   </div>
                 </div>
