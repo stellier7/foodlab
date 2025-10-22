@@ -140,7 +140,6 @@ const FitLabsPage = () => {
                 fontWeight: '700',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                border: 'none',
                 boxShadow: selectedLabels.includes(filter.key)
                   ? '0 2px 8px rgba(0, 0, 0, 0.15)'
                   : 'none'
