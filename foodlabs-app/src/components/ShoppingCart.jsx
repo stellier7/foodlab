@@ -61,7 +61,22 @@ const ShoppingCart = () => {
       items.forEach(item => {
         const itemPrice = getPriceForCurrency(item)
         const itemTotal = itemPrice * item.quantity
-        message += `• ${item.name} x${item.quantity} - ${getCurrencySymbol()}${itemTotal.toFixed(2)}\n`
+        let itemName = item.name
+        
+        // Add variant info if available
+        if (item.selectedVariant) {
+          const variantInfo = item.selectedVariant === 'black' ? 'Negro' : 
+                             item.selectedVariant === 'bicolor' ? 'Bi-Color' : 
+                             item.selectedVariant
+          itemName += ` (${variantInfo})`
+        }
+        
+        // Add size info if available
+        if (item.selectedSize) {
+          itemName += ` - Talla ${item.selectedSize}`
+        }
+        
+        message += `• ${itemName} x${item.quantity} - ${getCurrencySymbol()}${itemTotal.toFixed(2)}\n`
         
         // Información especial para productos destacados
         if (item.id === 'sp3') {

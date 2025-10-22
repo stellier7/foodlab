@@ -14,15 +14,23 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
   const { addToCart, getPriceForCurrency, convertPrice, getCurrencySymbol } = useAppStore()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState(null)
+  const [selectedVariant, setSelectedVariant] = useState(null)
   const [withCombo, setWithCombo] = useState(false)
 
-  // Initialize selected size when product changes
+  // Initialize selected size and variant when product changes
   useEffect(() => {
     if (product?.sizes && product.sizes.length > 0) {
       setSelectedSize(product.sizes[0].value)
     } else {
       setSelectedSize(null)
     }
+    
+    if (product?.variants && product.variants.length > 0) {
+      setSelectedVariant(product.variants[0].id)
+    } else {
+      setSelectedVariant(null)
+    }
+    
     setWithCombo(false)
     setQuantity(1)
   }, [product])
@@ -50,24 +58,39 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
     return price
   }
 
-  // Get current image based on combo selection
+  // Get current image based on variant and combo selection
   const getCurrentImage = () => {
     if (withCombo && product.comboOptions?.includesImage) {
       return product.comboOptions.includesImage
     }
+    
+    // If variant is selected, use variant image
+    if (selectedVariant && product.variants) {
+      const variant = product.variants.find(v => v.id === selectedVariant)
+      if (variant) {
+        return variant.image
+      }
+    }
+    
     return product.image
   }
 
-  // Get size label for display
+  // Get size and variant labels for display
   const getSizeLabel = () => {
     if (!selectedSize || !product.sizes) return ''
     const size = product.sizes.find(s => s.value === selectedSize)
     return size ? ` - ${size.label}` : ''
   }
 
+  const getVariantLabel = () => {
+    if (!selectedVariant || !product.variants) return ''
+    const variant = product.variants.find(v => v.id === selectedVariant)
+    return variant ? ` - ${variant.name}` : ''
+  }
+
   const handleAddToCart = () => {
     const finalPrice = getCurrentPrice()
-    const displayName = `${product.name}${getSizeLabel()}${withCombo ? ' con Combo' : ''}`
+    const displayName = `${product.name}${getVariantLabel()}${getSizeLabel()}${withCombo ? ' con Combo' : ''}`
     
     for (let i = 0; i < quantity; i++) {
       addToCart({
@@ -77,6 +100,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
         precio_HNL: finalPrice,  // Ensure precio_HNL is set for cart calculation
         description: product.description,
         selectedSize: selectedSize,
+        selectedVariant: selectedVariant,
         withCombo: withCombo,
         image: getCurrentImage()
       }, restaurantId)
@@ -323,6 +347,69 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
                   </div>
                 )
               })}
+            </div>
+          )}
+
+          {/* Variant Selector */}
+          {product.variants && product.variants.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '700',
+                color: '#111827',
+                marginBottom: '12px'
+              }}>
+                Color:
+              </h3>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${Math.min(product.variants.length, 2)}, 1fr)`,
+                gap: '12px'
+              }}>
+                {product.variants.map((variant) => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedVariant(variant.id)}
+                    className="tap-effect"
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: selectedVariant === variant.id ? '2px solid #3b82f6' : '2px solid #e5e7eb',
+                      backgroundColor: selectedVariant === variant.id ? '#eff6ff' : 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <div style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '8px',
+                      backgroundImage: `url(${variant.image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      border: '2px solid #e5e7eb'
+                    }}></div>
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      color: selectedVariant === variant.id ? '#3b82f6' : '#111827'
+                    }}>
+                      {variant.name}
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: selectedVariant === variant.id ? '#2563eb' : '#6b7280'
+                    }}>
+                      {variant.stock} disponibles
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

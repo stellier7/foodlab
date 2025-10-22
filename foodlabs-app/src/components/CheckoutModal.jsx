@@ -254,7 +254,23 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     
     items.forEach(item => {
       const itemPrice = getPriceForCurrency(item)
-      message += `• ${item.name} x${item.quantity} - L${(itemPrice * item.quantity).toFixed(2)}\n`
+      let itemName = item.name
+      
+      // Add variant info if available
+      if (item.selectedVariant) {
+        // Find variant name from the product data
+        const variantInfo = item.selectedVariant === 'black' ? 'Negro' : 
+                           item.selectedVariant === 'bicolor' ? 'Bi-Color' : 
+                           item.selectedVariant
+        itemName += ` (${variantInfo})`
+      }
+      
+      // Add size info if available
+      if (item.selectedSize) {
+        itemName += ` - Talla ${item.selectedSize}`
+      }
+      
+      message += `• ${itemName} x${item.quantity} - L${(itemPrice * item.quantity).toFixed(2)}\n`
     })
     
     message += `\n💰 Subtotal: L${subtotal.toFixed(2)}`
