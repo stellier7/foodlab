@@ -6,7 +6,17 @@ import ProductModal from '../components/ProductModal'
 
 const SportsShopPage = () => {
   const navigate = useNavigate()
-  const { setRestaurants, restaurants, addToCart, getPriceForCurrency, getCurrencySymbol } = useAppStore()
+  const { 
+    setRestaurants, 
+    restaurants, 
+    addToCart, 
+    getPriceForCurrency, 
+    getCurrencySymbol,
+    fetchProducts,
+    products,
+    productsLoading,
+    productsError
+  } = useAppStore()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -65,8 +75,11 @@ const SportsShopPage = () => {
     }
   ]
   
-  // Cargar tiendas al iniciar
+  // Cargar productos y tiendas al iniciar
   useEffect(() => {
+    // Cargar productos de shop desde Firestore
+    fetchProducts('shop')
+    
     // Agregar PadelBuddy a la lista global de restaurantes si no existe
     const existingRestaurants = restaurants || []
     const hasPadelbuddy = existingRestaurants.some(r => r.id === 'padelbuddy')
@@ -94,16 +107,21 @@ const SportsShopPage = () => {
                )
       })
   
-  // Extraer todos los productos de todas las tiendas
-  const allProducts = shopBusinesses.flatMap(business =>
+  // Combinar productos de Firestore con productos hardcoded como fallback
+  const firestoreProducts = products?.filter(p => p.businessType === 'shop' && p.isActive) || []
+  const hardcodedProducts = shopBusinesses.flatMap(business =>
     business.menuCategories?.flatMap(category =>
       category.items?.map(item => ({
         ...item,
         businessId: business.id,
-        businessName: business.name
+        businessName: business.name,
+        businessType: 'shop'
       })) || []
     ) || []
   )
+  
+  // Usar productos de Firestore si están disponibles, sino usar hardcoded
+  const allProducts = firestoreProducts.length > 0 ? firestoreProducts : hardcodedProducts
   
   // Navegar a detalle de tienda
   const handleBusinessClick = (business) => {
@@ -128,10 +146,12 @@ const SportsShopPage = () => {
       id: product.id,
       name: product.name,
       price: product.price,
-      precio_HNL: product.precio_HNL,
+      precio_HNL: product.precio_HNL || product.price,
       currency: 'HNL',
-      description: product.description
-    }, 'sportsshop')
+      description: product.description,
+      image: product.image,
+      variants: product.variants
+    }, product.businessId || 'sportsshop')
   }
   
   const closeModal = () => {
@@ -214,7 +234,56 @@ const SportsShopPage = () => {
 
       {/* Content - Dual View */}
       <div style={{ padding: '20px 16px' }}>
-        {selectedCategory === 'all' ? (
+        {productsLoading && (
+          <div style={{ 
+            textAlign: 'center',
+            padding: '48px 16px',
+            color: '#6b7280'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: '3px solid #e5e7eb',
+              borderTop: '3px solid #3b82f6',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 16px'
+            }}></div>
+            <p>Cargando productos...</p>
+            <style jsx>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        )}
+        
+        {productsError && (
+          <div style={{ 
+            textAlign: 'center',
+            padding: '48px 16px',
+            color: '#ef4444'
+          }}>
+            <p>Error al cargar productos: {productsError}</p>
+            <button
+              onClick={() => fetchProducts('shop')}
+              style={{
+                marginTop: '16px',
+                padding: '8px 16px',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+        
+        {!productsLoading && !productsError && selectedCategory === 'all' ? (
           /* Vista de Productos (Grid 2x2) */
           <>
             <div style={{ 

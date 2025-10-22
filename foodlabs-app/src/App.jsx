@@ -8,9 +8,9 @@ import FitLabsPage from './pages/FitLabsPage'
 import SportsShopPage from './pages/SportsShopPage'
 import RestaurantDetailPage from './pages/RestaurantDetailPage'
 import AdminLoginPage from './pages/AdminLoginPage'
-import AdminPage from './pages/AdminPage'
-import BusinessLoginPage from './pages/BusinessLoginPage'
-import BusinessPage from './pages/BusinessPage'
+import AdminRouter from './components/admin/AdminRouter'
+import ComercioLoginPage from './pages/ComercioLoginPage'
+import ComercioRouter from './components/comercio/ComercioRouter'
 import { useAuthStore } from './stores/useAuthStore'
 import { useAppStore } from './stores/useAppStore'
 
@@ -85,7 +85,7 @@ const AppContent = () => {
             path="/admin" 
             element={
               <ProtectedRoute>
-                <AdminPage />
+                <AdminRouter />
               </ProtectedRoute>
             } 
           />
@@ -93,18 +93,18 @@ const AppContent = () => {
             path="/admin/*" 
             element={
               <ProtectedRoute>
-                <AdminPage />
+                <AdminRouter />
               </ProtectedRoute>
             } 
           />
           
-          {/* Business Routes */}
-          <Route path="/business/login" element={<BusinessLoginPage />} />
+          {/* Comercio Routes */}
+          <Route path="/comercio/login" element={<ComercioLoginPage />} />
           <Route 
-            path="/business/:businessId" 
+            path="/comercio/:businessId/*" 
             element={
               <ProtectedRoute>
-                <BusinessPage />
+                <ComercioRouter />
               </ProtectedRoute>
             } 
           />

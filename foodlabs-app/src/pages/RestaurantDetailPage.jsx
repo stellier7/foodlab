@@ -13,7 +13,14 @@ const LABEL_CONFIG = {
 }
 
 const RestaurantDetailPage = () => {
-  const { restaurants } = useAppStore()
+  const { 
+    restaurants, 
+    fetchProducts, 
+    products, 
+    productsLoading, 
+    productsError,
+    getProductsByBusiness 
+  } = useAppStore()
   const { restaurantName } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -33,11 +40,43 @@ const RestaurantDetailPage = () => {
     r.slug === restaurantName || 
     r.name.toLowerCase().replace(/\s+/g, '-') === restaurantName
   )
+
+  // Cargar productos del restaurante desde Firestore
+  useEffect(() => {
+    if (restaurant) {
+      fetchProducts('restaurant', restaurant.id)
+    }
+  }, [restaurant, fetchProducts])
+
+  // Obtener productos de Firestore para este restaurante
+  const firestoreProducts = restaurant ? getProductsByBusiness(restaurant.id) : []
   
+  // Combinar productos de Firestore con productos hardcoded como fallback
+  const combinedMenuCategories = useMemo(() => {
+    if (firestoreProducts.length > 0) {
+      // Agrupar productos de Firestore por categoría
+      const categoriesMap = {}
+      firestoreProducts.forEach(product => {
+        const categoryName = product.category || 'Otros'
+        if (!categoriesMap[categoryName]) {
+          categoriesMap[categoryName] = {
+            name: categoryName,
+            items: []
+          }
+        }
+        categoriesMap[categoryName].items.push(product)
+      })
+      return Object.values(categoriesMap)
+    }
+    
+    // Fallback a productos hardcoded
+    return restaurant?.menuCategories || []
+  }, [firestoreProducts, restaurant])
+
   // Filtrar categorías y productos según modo Fit
   const filteredMenuCategories = useMemo(() => {
-    if (!restaurant?.menuCategories || !isFitMode) {
-      return restaurant?.menuCategories || []
+    if (!combinedMenuCategories || !isFitMode) {
+      return combinedMenuCategories || []
     }
     
     const targetLabels = filterLabels.length > 0 
@@ -45,7 +84,7 @@ const RestaurantDetailPage = () => {
       : ['Fit', 'Vegano', 'Vegetariano', 'Pescatariano']
     
     // Filtrar categorías y sus items
-    return restaurant.menuCategories
+    return combinedMenuCategories
       .map(category => ({
         ...category,
         items: category.items.filter(item =>
@@ -53,7 +92,7 @@ const RestaurantDetailPage = () => {
         )
       }))
       .filter(category => category.items.length > 0)  // Solo categorías con items
-  }, [restaurant, isFitMode, filterLabels])
+  }, [combinedMenuCategories, isFitMode, filterLabels])
   
   // Función para quitar filtro
   const clearFitFilter = () => {
@@ -338,7 +377,56 @@ const RestaurantDetailPage = () => {
           </div>
         )}
         
-        {filteredMenuCategories?.map((category, categoryIndex) => (
+        {productsLoading && (
+          <div style={{ 
+            textAlign: 'center',
+            padding: '48px 16px',
+            color: '#6b7280'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: '3px solid #e5e7eb',
+              borderTop: '3px solid #3b82f6',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 16px'
+            }}></div>
+            <p>Cargando menú...</p>
+            <style jsx>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        )}
+        
+        {productsError && (
+          <div style={{ 
+            textAlign: 'center',
+            padding: '48px 16px',
+            color: '#ef4444'
+          }}>
+            <p>Error al cargar el menú: {productsError}</p>
+            <button
+              onClick={() => restaurant && fetchProducts('restaurant', restaurant.id)}
+              style={{
+                marginTop: '16px',
+                padding: '8px 16px',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+        
+        {!productsLoading && !productsError && filteredMenuCategories?.map((category, categoryIndex) => (
           <div key={categoryIndex} style={{ marginBottom: '32px' }}>
             <h2 style={{
               fontSize: '20px',

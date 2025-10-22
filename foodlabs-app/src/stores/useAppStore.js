@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { inventoryService } from '../services/firestore'
 import { useAuthStore } from './useAuthStore'
+import { getProducts, createProduct, updateProduct, deleteProduct } from '../services/products'
 
 // ========================================
 // CONFIGURACIÓN GLOBAL - Sistema de Ubicaciones
@@ -90,6 +91,11 @@ export const useAppStore = create(
       inventoryError: null,
       inventoryConnected: false,
       inventoryUnsubscribe: null,
+      
+      // Estado de productos
+      products: [],
+      productsLoading: false,
+      productsError: null,
       
       // Acciones para restaurantes
       setRestaurants: (restaurants) => set({ restaurants }),
@@ -458,6 +464,78 @@ export const useAppStore = create(
           totalFees,
           grandTotal: subtotal + totalFees
         }
+      },
+      
+      // Acciones para productos
+      fetchProducts: async (businessType = null, businessId = null) => {
+        set({ productsLoading: true, productsError: null })
+        try {
+          const products = await getProducts(businessType, businessId)
+          set({ products, productsLoading: false, productsError: null })
+          return products
+        } catch (error) {
+          console.error('Error fetching products:', error)
+          set({ productsError: error.message, productsLoading: false })
+          throw error
+        }
+      },
+      
+      createProduct: async (productData) => {
+        set({ productsLoading: true, productsError: null })
+        try {
+          const productId = await createProduct(productData)
+          // Refresh products list
+          await get().fetchProducts()
+          set({ productsLoading: false, productsError: null })
+          return productId
+        } catch (error) {
+          console.error('Error creating product:', error)
+          set({ productsError: error.message, productsLoading: false })
+          throw error
+        }
+      },
+      
+      updateProduct: async (productId, updateData) => {
+        set({ productsLoading: true, productsError: null })
+        try {
+          await updateProduct(productId, updateData)
+          // Refresh products list
+          await get().fetchProducts()
+          set({ productsLoading: false, productsError: null })
+        } catch (error) {
+          console.error('Error updating product:', error)
+          set({ productsError: error.message, productsLoading: false })
+          throw error
+        }
+      },
+      
+      deleteProduct: async (productId) => {
+        set({ productsLoading: true, productsError: null })
+        try {
+          await deleteProduct(productId)
+          // Refresh products list
+          await get().fetchProducts()
+          set({ productsLoading: false, productsError: null })
+        } catch (error) {
+          console.error('Error deleting product:', error)
+          set({ productsError: error.message, productsLoading: false })
+          throw error
+        }
+      },
+      
+      getProductsByBusiness: (businessId) => {
+        const products = get().products
+        return products.filter(product => product.businessId === businessId)
+      },
+      
+      getShopProducts: () => {
+        const products = get().products
+        return products.filter(product => product.businessType === 'shop' && product.isActive)
+      },
+      
+      getRestaurantProducts: () => {
+        const products = get().products
+        return products.filter(product => product.businessType === 'restaurant' && product.isActive)
       }
     }),
     {

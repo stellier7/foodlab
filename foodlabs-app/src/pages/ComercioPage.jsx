@@ -16,7 +16,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 
-const BusinessPage = () => {
+const ComercioPage = () => {
   const navigate = useNavigate()
   const { businessId } = useParams()
   const { user, logout, role } = useAuthStore()
@@ -30,7 +30,7 @@ const BusinessPage = () => {
   // Verificar autenticación y permisos
   useEffect(() => {
     if (!user || role !== 'business' || user.businessId !== businessId) {
-      navigate('/business/login')
+      navigate('/comercio/login')
     }
   }, [user, role, businessId, navigate])
 
@@ -68,7 +68,7 @@ const BusinessPage = () => {
 
   const handleLogout = () => {
     logout()
-    navigate('/business/login')
+    navigate('/comercio/login')
   }
 
   const handleAcceptOrder = (orderId) => {
@@ -492,5 +492,5 @@ const BusinessPage = () => {
   )
 }
 
-export default BusinessPage
+export default ComercioPage
 

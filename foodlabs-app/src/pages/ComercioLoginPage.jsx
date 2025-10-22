@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
 import { Store, Lock, AlertCircle } from 'lucide-react'
 
-const BusinessLoginPage = () => {
+const ComercioLoginPage = () => {
   const navigate = useNavigate()
   const { businessLogin } = useAuthStore()
   const [businessId, setBusinessId] = useState('')
@@ -39,7 +39,7 @@ const BusinessLoginPage = () => {
       const success = businessLogin(businessId, password)
       
       if (success) {
-        navigate(`/business/${businessId}`)
+        navigate(`/comercio/${businessId}`)
       } else {
         setError('Credenciales incorrectas')
       }
@@ -297,5 +297,5 @@ const BusinessLoginPage = () => {
   )
 }
 
-export default BusinessLoginPage
+export default ComercioLoginPage
 
