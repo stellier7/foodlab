@@ -35,8 +35,8 @@ const SportsShopPage = () => {
       deliveryTime: '24-48 hrs',
       deliveryFee: 0,
       address: 'Entregas a domicilio',
-      image: '/images/products/phoneMount-PadelBuddy.jpeg',
-      logo: '/images/products/phoneMount-PadelBuddy.jpeg',
+      image: '/images/products/padelBuddy/phoneMount_black.jpg',
+      logo: '/images/products/padelBuddy/phoneMount_black.jpg',
       isOpen: true,
       menuCategories: [
         {

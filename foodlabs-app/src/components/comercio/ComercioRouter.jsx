@@ -25,6 +25,7 @@ const ComercioRouter = () => {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Navegación del comercio
   const navigationItems = [
@@ -73,6 +74,7 @@ const ComercioRouter = () => {
   const handleTabClick = (tab) => {
     setActiveTab(tab.id)
     navigate(tab.path)
+    setIsMobileMenuOpen(false) // Cerrar menú móvil al navegar
   }
 
   // Determinar tab activo basado en la ruta actual
@@ -92,6 +94,25 @@ const ComercioRouter = () => {
       backgroundColor: '#f8fafc',
       display: 'flex'
     }}>
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          onClick={() => setIsMobileMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 5,
+            '@media (min-width: 768px)': {
+              display: 'none'
+            }
+          }}
+        />
+      )}
+      
       {/* Sidebar */}
       <div style={{
         width: '280px',
@@ -101,7 +122,13 @@ const ComercioRouter = () => {
         flexDirection: 'column',
         position: 'fixed',
         height: '100vh',
-        zIndex: 10
+        zIndex: 10,
+        transform: isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.3s ease',
+        '@media (min-width: 768px)': {
+          transform: 'translateX(0)',
+          position: 'fixed'
+        }
       }}>
         {/* Header */}
         <div style={{
@@ -256,9 +283,12 @@ const ComercioRouter = () => {
       {/* Main Content */}
       <div style={{
         flex: 1,
-        marginLeft: '280px',
+        marginLeft: '0',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        '@media (min-width: 768px)': {
+          marginLeft: '280px'
+        }
       }}>
         {/* Top Bar */}
         <div style={{
@@ -273,22 +303,46 @@ const ComercioRouter = () => {
           top: 0,
           zIndex: 5
         }}>
-          <div>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: '700',
-              color: '#1e293b',
-              margin: 0
-            }}>
-              {navigationItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
-            </h2>
-            <p style={{
-              fontSize: '14px',
-              color: '#64748b',
-              margin: '2px 0 0 0'
-            }}>
-              Gestiona tu negocio de manera eficiente
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="tap-effect"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                background: 'white',
+                cursor: 'pointer',
+                '@media (min-width: 768px)': {
+                  display: 'none'
+                }
+              }}
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            
+            <div>
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#1e293b',
+                margin: 0
+              }}>
+                {navigationItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
+              </h2>
+              <p style={{
+                fontSize: '14px',
+                color: '#64748b',
+                margin: '2px 0 0 0'
+              }}>
+                Gestiona tu negocio de manera eficiente
+              </p>
+            </div>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
