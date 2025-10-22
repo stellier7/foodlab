@@ -32,6 +32,26 @@ const ComercioProductsPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [variants, setVariants] = useState([])
+
+  // Detectar tipo de comercio
+  const businessType = user?.businessId === 'padelbuddy' || user?.businessId === 'sportsshop' 
+    ? 'shop' 
+    : 'restaurant'
+
+  // Categorías dinámicas según tipo de comercio
+  const categories = businessType === 'shop'
+    ? [
+        { value: 'accesorios', label: 'Accesorios' },
+        { value: 'ropa', label: 'Ropa' },
+        { value: 'equipamiento', label: 'Equipamiento' }
+      ]
+    : [
+        { value: 'comida', label: 'Comida' },
+        { value: 'bebida', label: 'Bebida' },
+        { value: 'postre', label: 'Postre' },
+        { value: 'snack', label: 'Snack' }
+      ]
 
   // Filtrar productos del comercio
   const businessProducts = products.filter(product => 
@@ -65,6 +85,28 @@ const ComercioProductsPage = () => {
         console.error('Error deleting product:', error)
       }
     }
+  }
+
+  // Funciones para manejar variantes
+  const addVariant = () => {
+    const newVariant = {
+      id: `variant_${Date.now()}`,
+      name: '',
+      price: 0,
+      stock: businessType === 'shop' ? 0 : undefined,
+      image: ''
+    }
+    setVariants([...variants, newVariant])
+  }
+
+  const updateVariant = (index, field, value) => {
+    const updatedVariants = [...variants]
+    updatedVariants[index] = { ...updatedVariants[index], [field]: value }
+    setVariants(updatedVariants)
+  }
+
+  const removeVariant = (index) => {
+    setVariants(variants.filter((_, i) => i !== index))
   }
 
   const getStatusBadge = (product) => {
@@ -589,12 +631,134 @@ const ComercioProductsPage = () => {
                     }}
                   >
                     <option value="">Seleccionar categoría</option>
-                    <option value="comida">Comida</option>
-                    <option value="bebida">Bebida</option>
-                    <option value="postre">Postre</option>
-                    <option value="snack">Snack</option>
+                    {categories.map(category => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Sección de Variantes */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#374151'
+                  }}>
+                    Variantes
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    style={{
+                      padding: '8px 12px',
+                      background: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    + Agregar Variante
+                  </button>
+                </div>
+
+                {variants.map((variant, index) => (
+                  <div key={variant.id} style={{
+                    padding: '12px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    marginBottom: '8px',
+                    background: '#f9fafb'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: '#374151' }}>
+                        Variante {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(index)}
+                        style={{
+                          padding: '4px 8px',
+                          background: '#dc2626',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                      <input
+                        type="text"
+                        placeholder={businessType === 'shop' ? 'Color (ej: Negro)' : 'Tamaño (ej: Grande)'}
+                        value={variant.name}
+                        onChange={(e) => updateVariant(index, 'name', e.target.value)}
+                        style={{
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          outline: 'none'
+                        }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Precio"
+                        value={variant.price}
+                        onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
+                        style={{
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    {businessType === 'shop' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <input
+                          type="number"
+                          placeholder="Stock"
+                          value={variant.stock}
+                          onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
+                          style={{
+                            padding: '8px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            outline: 'none'
+                          }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="URL de imagen (opcional)"
+                          value={variant.image}
+                          onChange={(e) => updateVariant(index, 'image', e.target.value)}
+                          style={{
+                            padding: '8px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
