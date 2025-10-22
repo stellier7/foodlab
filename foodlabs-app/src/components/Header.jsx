@@ -74,8 +74,8 @@ const Header = () => {
     return () => document.removeEventListener('click', handleClickOutside)
   }, [showCitySelector])
 
-  // Hide header on restaurant pages
-  if (isRestaurantPage) {
+  // Hide header on restaurant, admin, and business pages (tienen sus propios headers)
+  if (isRestaurantPage || isAdminPage || location.pathname.startsWith('/business')) {
     return null
   }
 
