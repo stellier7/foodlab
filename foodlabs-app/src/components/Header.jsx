@@ -15,6 +15,7 @@ const Header = () => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
   // Stage 0: Full header with logo + toggle (0-100px)
   // Stage 1: Logo fading (100-250px)
   // Stage 2: Toggle fading (250-450px)
@@ -76,11 +77,14 @@ const Header = () => {
       if (!e.target.closest('.user-menu-container')) {
         setShowUserMenu(false)
       }
+      if (!e.target.closest('.login-modal-container')) {
+        setShowLoginModal(false)
+      }
     }
     
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
-  }, [showLocationDropdown, showUserMenu])
+  }, [showLocationDropdown, showUserMenu, showLoginModal])
 
   // Handle logout
   const handleLogout = async () => {
@@ -96,6 +100,22 @@ const Header = () => {
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle()
+      setShowLoginModal(false)
+    } catch (error) {
+      console.error('Login error:', error)
+    }
+  }
+
+  // Handle email login
+  const handleEmailLogin = async (e) => {
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    const email = formData.get('email')
+    const password = formData.get('password')
+    
+    try {
+      await loginWithEmail(email, password)
+      setShowLoginModal(false)
     } catch (error) {
       console.error('Login error:', error)
     }
@@ -210,60 +230,11 @@ const Header = () => {
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
                       padding: '16px',
                       minWidth: '200px',
-                      zIndex: 1000
+                      zIndex: 9999
                     }}
                   >
-                    {/* Nivel 1: Países */}
-                    <div style={{
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      color: '#9ca3af',
-                      marginBottom: '8px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>
-                      País:
-                    </div>
-                    <div style={{ marginBottom: '16px' }}>
-                      {Object.keys(LOCATIONS).map((countryKey) => {
-                        const country = LOCATIONS[countryKey]
-                        const isSelected = userLocation.country === countryKey
-                        const isHovered = selectedCountry === countryKey
-                        
-                        return (
-                          <button
-                            key={countryKey}
-                            onClick={() => setSelectedCountry(countryKey)}
-                            onMouseEnter={() => setSelectedCountry(countryKey)}
-                            className="tap-effect"
-                            style={{
-                              width: '100%',
-                              padding: '10px 12px',
-                              marginBottom: '4px',
-                              border: 'none',
-                              borderRadius: '8px',
-                              background: isSelected ? '#e0f2fe' : (isHovered ? '#f3f4f6' : '#fafafa'),
-                              color: '#111827',
-                              fontSize: '14px',
-                              fontWeight: isSelected ? '700' : '600',
-                              cursor: 'pointer',
-                              textAlign: 'left',
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px'
-                            }}
-                          >
-                            <span>{country.flag}</span>
-                            <span>{country.name}</span>
-                            {isSelected && <span style={{ marginLeft: 'auto', color: '#3b82f6' }}>✓</span>}
-                          </button>
-                        )
-                      })}
-                    </div>
-                    
-                    {/* Nivel 2: Ciudades (si hay país seleccionado) */}
-                    {selectedCountry && (
+                    {!selectedCountry ? (
+                      // Show ONLY countries
                       <>
                         <div style={{
                           fontSize: '11px',
@@ -271,11 +242,81 @@ const Header = () => {
                           color: '#9ca3af',
                           marginBottom: '8px',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          borderTop: '1px solid #f3f4f6',
-                          paddingTop: '12px'
+                          letterSpacing: '0.5px'
                         }}>
-                          Ciudad:
+                          Selecciona tu país:
+                        </div>
+                        <div>
+                          {Object.keys(LOCATIONS).map((countryKey) => {
+                            const country = LOCATIONS[countryKey]
+                            const isSelected = userLocation.country === countryKey
+                            
+                            return (
+                              <button
+                                key={countryKey}
+                                onClick={() => setSelectedCountry(countryKey)}
+                                className="tap-effect"
+                                style={{
+                                  width: '100%',
+                                  padding: '10px 12px',
+                                  marginBottom: '4px',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  background: isSelected ? '#e0f2fe' : '#fafafa',
+                                  color: '#111827',
+                                  fontSize: '14px',
+                                  fontWeight: isSelected ? '700' : '600',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                  transition: 'all 0.2s ease',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px'
+                                }}
+                              >
+                                <span>{country.flag}</span>
+                                <span>{country.name}</span>
+                                {isSelected && <span style={{ marginLeft: 'auto', color: '#3b82f6' }}>✓</span>}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      // Show ONLY cities with back button
+                      <>
+                        <button
+                          onClick={() => setSelectedCountry(null)}
+                          className="tap-effect"
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            marginBottom: '12px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            background: '#f9fafb',
+                            color: '#6b7280',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          ← Volver a países
+                        </button>
+                        <div style={{
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: '#9ca3af',
+                          marginBottom: '8px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Selecciona tu ciudad:
                         </div>
                         <div>
                           {LOCATIONS[selectedCountry].cities.map((city) => {
@@ -467,7 +508,7 @@ const Header = () => {
                 </div>
               ) : (
                 <button
-                  onClick={handleGoogleLogin}
+                  onClick={() => setShowLoginModal(true)}
                   className="tap-effect"
                   style={{
                     height: '42px',
@@ -553,6 +594,179 @@ const Header = () => {
         </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div 
+          className="fade-in"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div 
+            className="login-modal-container"
+            style={{
+              backgroundColor: 'white',
+              width: '100%',
+              maxWidth: '400px',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+              position: 'relative'
+            }}
+          >
+            {/* Header */}
+            <div 
+              style={{
+                padding: '20px',
+                borderBottom: '1px solid #e5e7eb',
+                background: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <h2 
+                style={{ 
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  letterSpacing: '-0.3px',
+                  margin: 0,
+                  color: '#111827'
+                }}
+              >
+                Iniciar Sesión
+              </h2>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="tap-effect"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '22px',
+                  color: '#6b7280',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  lineHeight: '1'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div 
+              style={{ 
+                padding: '24px'
+              }}
+            >
+              {/* Google Sign-in */}
+              <button
+                onClick={handleGoogleLogin}
+                className="tap-effect"
+                style={{
+                  width: '100%',
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continuar con Google
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', margin: '16px 0' }}>
+                <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }}></div>
+                <span style={{ margin: '0 12px', fontSize: '12px', color: '#6b7280' }}>o</span>
+                <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }}></div>
+              </div>
+
+              {/* Email/Password Form */}
+              <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  style={{
+                    width: '100%',
+                    padding: '11px 14px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  className="focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  required
+                />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Contraseña"
+                  style={{
+                    width: '100%',
+                    padding: '11px 14px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  className="focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  required
+                />
+                <button
+                  type="submit"
+                  style={{
+                    width: '100%',
+                    background: '#f97316',
+                    color: 'white',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Iniciar Sesión
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
