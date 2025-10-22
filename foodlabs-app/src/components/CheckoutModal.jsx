@@ -234,33 +234,39 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       >
         {/* Header */}
         <div 
-          className="flex justify-between items-center p-6"
+          className="flex justify-between items-center"
           style={{
-            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-            borderTopLeftRadius: '24px',
-            borderTopRightRadius: '24px'
+            padding: '16px 20px',
+            borderBottom: '1px solid #e5e7eb',
+            background: 'white'
           }}
         >
-          <div>
-            <h2 className="text-xl font-bold text-white" style={{ letterSpacing: '-0.5px' }}>
-              {isAuthenticated ? '✅ Confirmar Pedido' : '🛒 Completa tu Pedido'}
-            </h2>
-            <p className="text-white text-sm mt-1" style={{ opacity: 0.9 }}>
-              {cartItems.length} {cartItems.length === 1 ? 'producto' : 'productos'}
-            </p>
-          </div>
+          <h2 
+            className="font-bold text-gray-900" 
+            style={{ 
+              fontSize: '18px',
+              letterSpacing: '-0.3px',
+              margin: 0
+            }}
+          >
+            Confirmar Pedido
+          </h2>
           <button
             onClick={onClose}
-            className="text-white hover:bg-white hover:bg-opacity-20 transition-all"
+            className="tap-effect"
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '12px',
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '24px',
-              fontWeight: '300'
+              fontSize: '20px',
+              color: '#6b7280',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
             }}
           >
             ×
@@ -272,49 +278,60 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           style={{ 
             flex: 1,
             overflowY: 'auto',
-            padding: '24px'
+            padding: '20px'
           }}
         >
-          {isAuthenticated && user ? (
+          {/* Login prompt for guests */}
+          {!isAuthenticated && (
             <div 
-              className="mb-4"
               style={{
-                background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
-                borderRadius: '16px',
-                padding: '16px',
-                border: '1px solid rgba(16, 185, 129, 0.2)',
-                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.1)'
+                background: '#f9fafb',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                marginBottom: '20px',
+                border: '1px solid #e5e7eb',
+                textAlign: 'center'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <span style={{ fontSize: '18px' }}>👤</span>
-                <p className="text-green-900 font-bold text-sm" style={{ margin: 0 }}>
-                  ¡Hola {user.firstName || user.displayName?.split(' ')[0] || 'Usuario'}!
-                </p>
-              </div>
-              <p className="text-green-700 text-xs" style={{ fontWeight: '500', margin: 0 }}>
-                ✅ Sesión activa - Tus datos están guardados
+              <p className="text-gray-700 text-sm" style={{ fontWeight: '500', margin: '0 0 10px 0' }}>
+                ¿Ya tienes cuenta?
               </p>
+              <button 
+                onClick={() => setShowLogin(true)}
+                className="tap-effect"
+                style={{
+                  background: 'white',
+                  color: '#3b82f6',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #3b82f6',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Iniciar Sesión
+              </button>
             </div>
-          ) : (
+          )}
+
+          {/* Auth badge for logged in users */}
+          {isAuthenticated && user && (
             <div 
-              className="mb-4"
               style={{
-                background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
-                borderRadius: '16px',
-                padding: '16px',
-                border: '1px solid rgba(59, 130, 246, 0.2)',
-                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
+                background: '#d1fae5',
+                borderRadius: '12px',
+                padding: '12px 16px',
+                marginBottom: '20px',
+                border: '1px solid #6ee7b7'
               }}
             >
-              <p className="text-blue-900 text-xs" style={{ fontWeight: '600', margin: 0 }}>
-                💡 ¿Ya tienes cuenta? 
-                <button 
-                  onClick={() => setShowLogin(true)}
-                  className="text-blue-600 hover:text-blue-800 ml-1 underline font-bold"
-                >
-                  Iniciar Sesión
-                </button>
+              <p className="text-green-900 text-sm font-bold" style={{ margin: 0 }}>
+                👤 {user.firstName || user.displayName?.split(' ')[0] || 'Usuario'}
+              </p>
+              <p className="text-green-700 text-xs" style={{ fontWeight: '500', margin: '4px 0 0 0' }}>
+                Sesión activa
               </p>
             </div>
           )}
@@ -322,11 +339,11 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           {/* Error Message */}
           {error && (
             <div 
-              className="mb-3"
               style={{
                 background: '#fee2e2',
-                borderRadius: '12px',
-                padding: '12px',
+                borderRadius: '8px',
+                padding: '10px 12px',
+                marginBottom: '16px',
                 border: '1px solid #fca5a5'
               }}
             >
@@ -335,12 +352,12 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           )}
 
           {/* Form */}
-          <form style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {/* Name */}
             <div>
               <label 
-                className="block text-xs font-bold text-gray-700 mb-2" 
-                style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}
+                className="block text-xs font-semibold text-gray-600 mb-1" 
+                style={{ letterSpacing: '0.3px' }}
               >
                 Nombre completo
               </label>
@@ -351,16 +368,16 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 onChange={handleInputChange}
                 style={{
                   width: '100%',
-                  background: '#f9fafb',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '14px 16px',
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  padding: '11px 14px',
                   fontSize: '15px',
-                  fontWeight: '500',
+                  fontWeight: '400',
                   transition: 'all 0.2s ease',
                   outline: 'none'
                 }}
-                className="focus:bg-white focus:border-orange-500"
+                className="focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 placeholder="Tu nombre completo"
                 required
               />
@@ -369,8 +386,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
             {/* Address */}
             <div>
               <label 
-                className="block text-xs font-bold text-gray-700 mb-2" 
-                style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}
+                className="block text-xs font-semibold text-gray-600 mb-1" 
+                style={{ letterSpacing: '0.3px' }}
               >
                 Dirección de entrega
               </label>
@@ -380,18 +397,19 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 onChange={handleInputChange}
                 style={{
                   width: '100%',
-                  background: '#f9fafb',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '14px 16px',
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  padding: '11px 14px',
                   fontSize: '15px',
-                  fontWeight: '500',
+                  fontWeight: '400',
                   transition: 'all 0.2s ease',
                   outline: 'none',
                   resize: 'vertical',
-                  minHeight: '80px'
+                  minHeight: '70px',
+                  fontFamily: 'inherit'
                 }}
-                className="focus:bg-white focus:border-orange-500"
+                className="focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 placeholder="Col. Palmira, Tegucigalpa"
                 required
               />
@@ -400,8 +418,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
             {/* Notes */}
             <div>
               <label 
-                className="block text-xs font-bold text-gray-700 mb-2" 
-                style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}
+                className="block text-xs font-semibold text-gray-600 mb-1" 
+                style={{ letterSpacing: '0.3px' }}
               >
                 Notas adicionales (opcional)
               </label>
@@ -411,18 +429,19 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 onChange={handleInputChange}
                 style={{
                   width: '100%',
-                  background: '#f9fafb',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '14px 16px',
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  padding: '11px 14px',
                   fontSize: '15px',
-                  fontWeight: '500',
+                  fontWeight: '400',
                   transition: 'all 0.2s ease',
                   outline: 'none',
                   resize: 'vertical',
-                  minHeight: '80px'
+                  minHeight: '70px',
+                  fontFamily: 'inherit'
                 }}
-                className="focus:bg-white focus:border-orange-500"
+                className="focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 placeholder="Instrucciones especiales..."
               />
             </div>
@@ -430,33 +449,33 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
             {/* Order Summary */}
             <div 
               style={{
-                background: 'white',
-                borderRadius: '16px',
-                padding: '20px',
+                background: '#f9fafb',
+                borderRadius: '12px',
+                padding: '16px',
                 border: '1px solid #e5e7eb',
-                marginTop: '8px'
+                marginTop: '6px'
               }}
             >
               <h3 
-                className="text-xs font-bold text-gray-700 mb-3" 
-                style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}
+                className="text-xs font-semibold text-gray-600 mb-2" 
+                style={{ letterSpacing: '0.3px' }}
               >
                 Resumen del pedido
               </h3>
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '12px' }}>
                 {cartItems.map((item, index) => (
                   <div 
                     key={index} 
                     className="flex justify-between text-sm"
                     style={{
-                      padding: '10px 0',
-                      borderBottom: index < cartItems.length - 1 ? '1px solid #f3f4f6' : 'none'
+                      padding: '8px 0',
+                      borderBottom: index < cartItems.length - 1 ? '1px solid #e5e7eb' : 'none'
                     }}
                   >
-                    <span style={{ fontWeight: '500', color: '#6b7280', flex: 1 }}>
+                    <span style={{ fontWeight: '400', color: '#6b7280', flex: 1 }}>
                       {item.name} <span style={{ color: '#9ca3af' }}>×{item.quantity}</span>
                     </span>
-                    <span style={{ fontWeight: '700', color: '#111827', whiteSpace: 'nowrap', marginLeft: '12px' }}>
+                    <span style={{ fontWeight: '600', color: '#111827', whiteSpace: 'nowrap', marginLeft: '12px' }}>
                       L{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
@@ -465,15 +484,15 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
               <div 
                 className="flex justify-between items-center"
                 style={{
-                  paddingTop: '16px',
-                  borderTop: '2px solid #f3f4f6'
+                  paddingTop: '12px',
+                  borderTop: '2px solid #e5e7eb'
                 }}
               >
-                <span style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>Total</span>
+                <span style={{ fontSize: '15px', fontWeight: '600', color: '#111827' }}>Total</span>
                 <span 
                   style={{ 
-                    fontSize: '24px',
-                    fontWeight: '800',
+                    fontSize: '20px',
+                    fontWeight: '700',
                     color: '#f97316'
                   }}
                 >
@@ -570,7 +589,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         {/* Footer */}
         <div 
           style={{
-            padding: '20px 24px',
+            padding: '16px 20px',
             borderTop: '1px solid #e5e7eb',
             background: 'white'
           }}
@@ -583,31 +602,31 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
               width: '100%',
               background: isLoading ? '#9ca3af' : '#10b981',
               color: 'white',
-              padding: '16px',
-              borderRadius: '12px',
+              padding: '14px',
+              borderRadius: '10px',
               border: 'none',
-              fontSize: '16px',
-              fontWeight: '700',
+              fontSize: '15px',
+              fontWeight: '600',
               cursor: isLoading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '10px',
-              boxShadow: isLoading ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
+              gap: '8px',
+              boxShadow: isLoading ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.25)',
               transition: 'all 0.2s ease'
             }}
           >
             {isLoading ? (
               <>
                 <div 
-                  className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"
+                  className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"
                   style={{ borderWidth: '2px' }}
                 ></div>
                 Procesando...
               </>
             ) : (
               <>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                 </svg>
                 Pedir por WhatsApp
