@@ -11,7 +11,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   // Form states
   const [formData, setFormData] = useState({
     name: '',
-    phone: '',
     address: '',
     notes: ''
   })
@@ -26,7 +25,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     if (isAuthenticated && user) {
       setFormData({
         name: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-        phone: user.phone || '',
         address: user.address || '',
         notes: ''
       })
@@ -48,10 +46,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       setError('El nombre es requerido')
       return false
     }
-    if (!formData.phone.trim()) {
-      setError('El teléfono es requerido')
-      return false
-    }
     if (!formData.address.trim()) {
       setError('La dirección es requerida')
       return false
@@ -71,7 +65,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       const orderData = {
         customer: {
           name: formData.name,
-          phone: formData.phone,
           address: formData.address,
           userId: null,
           isGuest: true
@@ -111,7 +104,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     
     try {
       // Update user profile if data changed
-      if (user.phone !== formData.phone || user.address !== formData.address) {
+      if (user.address !== formData.address) {
         // Update user data in Firestore
         // This would be implemented in the auth service
       }
@@ -120,7 +113,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       const orderData = {
         customer: {
           name: formData.name,
-          phone: formData.phone,
           address: formData.address,
           userId: user.uid,
           isGuest: false
@@ -157,17 +149,16 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     let message = `¡Hola! Soy ${customerName} y quiero hacer un pedido:\n\n`
     
     items.forEach(item => {
-      message += `• ${item.name} x${item.quantity} - L.${item.price * item.quantity}\n`
+      message += `• ${item.name} x${item.quantity} - L${item.price * item.quantity}\n`
     })
     
-    message += `\nTotal: L.${total}`
+    message += `\n💰 Total: L${total}`
+    
+    message += `\n\n📍 Dirección: ${formData.address}`
     
     if (notes) {
-      message += `\n\nNotas: ${notes}`
+      message += `\n\n📝 Notas: ${notes}`
     }
-    
-    message += `\n\nDirección: ${formData.address}`
-    message += `\nTeléfono: ${formData.phone}`
     
     return message
   }
@@ -212,19 +203,33 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      className="fade-in"
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(4px)',
-        WebkitBackdropFilter: 'blur(4px)'
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
       }}
     >
       <div 
-        className="bg-white max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="slide-in-bottom"
         style={{
+          backgroundColor: 'white',
+          width: '100%',
+          maxWidth: '500px',
+          maxHeight: '90vh',
           borderRadius: '24px',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-          animation: 'slideInUp 0.3s ease-out'
+          overflow: 'hidden',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
         {/* Header */}
@@ -263,36 +268,46 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6" style={{ background: '#fafafa' }}>
+        <div 
+          style={{ 
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px'
+          }}
+        >
           {isAuthenticated && user ? (
             <div 
-              className="mb-4 p-4"
+              className="mb-4"
               style={{
                 background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
                 borderRadius: '16px',
-                border: '2px solid #6ee7b7',
-                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
+                padding: '16px',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.1)'
               }}
             >
-              <p className="text-green-900 font-bold text-base" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '20px' }}>👤</span>
-                ¡Hola {user.firstName || user.displayName?.split(' ')[0] || 'Usuario'}!
-              </p>
-              <p className="text-green-700 text-sm mt-1" style={{ fontWeight: '500' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '18px' }}>👤</span>
+                <p className="text-green-900 font-bold text-sm" style={{ margin: 0 }}>
+                  ¡Hola {user.firstName || user.displayName?.split(' ')[0] || 'Usuario'}!
+                </p>
+              </div>
+              <p className="text-green-700 text-xs" style={{ fontWeight: '500', margin: 0 }}>
                 ✅ Sesión activa - Tus datos están guardados
               </p>
             </div>
           ) : (
             <div 
-              className="mb-4 p-4"
+              className="mb-4"
               style={{
                 background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
                 borderRadius: '16px',
-                border: '2px solid #93c5fd',
-                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)'
+                padding: '16px',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
               }}
             >
-              <p className="text-blue-900 text-sm" style={{ fontWeight: '500' }}>
+              <p className="text-blue-900 text-xs" style={{ fontWeight: '600', margin: 0 }}>
                 💡 ¿Ya tienes cuenta? 
                 <button 
                   onClick={() => setShowLogin(true)}
@@ -307,24 +322,27 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           {/* Error Message */}
           {error && (
             <div 
-              className="mb-4 p-4"
+              className="mb-3"
               style={{
-                background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
-                borderRadius: '16px',
-                border: '2px solid #fca5a5',
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)'
+                background: '#fee2e2',
+                borderRadius: '12px',
+                padding: '12px',
+                border: '1px solid #fca5a5'
               }}
             >
-              <p className="text-red-900 text-sm font-bold">⚠️ {error}</p>
+              <p className="text-red-800 text-xs font-bold" style={{ margin: 0 }}>⚠️ {error}</p>
             </div>
           )}
 
           {/* Form */}
-          <form className="space-y-4">
+          <form style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Name */}
             <div>
-              <label className="block text-sm font-bold text-gray-800 mb-2" style={{ letterSpacing: '0.3px' }}>
-                👤 Nombre completo
+              <label 
+                className="block text-xs font-bold text-gray-700 mb-2" 
+                style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}
+              >
+                Nombre completo
               </label>
               <input
                 type="text"
@@ -332,149 +350,134 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 value={formData.name}
                 onChange={handleInputChange}
                 style={{
-                  background: 'white',
-                  border: '2px solid #e5e7eb',
+                  width: '100%',
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '12px',
-                  padding: '12px 16px',
+                  padding: '14px 16px',
                   fontSize: '15px',
                   fontWeight: '500',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                  outline: 'none'
                 }}
-                className="w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="focus:bg-white focus:border-orange-500"
                 placeholder="Tu nombre completo"
-                required
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-bold text-gray-800 mb-2" style={{ letterSpacing: '0.3px' }}>
-                📱 Teléfono (WhatsApp)
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                style={{
-                  background: 'white',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                  fontSize: '15px',
-                  fontWeight: '500',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-                }}
-                className="w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                placeholder="+504 1234-5678"
                 required
               />
             </div>
 
             {/* Address */}
             <div>
-              <label className="block text-sm font-bold text-gray-800 mb-2" style={{ letterSpacing: '0.3px' }}>
-                📍 Dirección de entrega
+              <label 
+                className="block text-xs font-bold text-gray-700 mb-2" 
+                style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}
+              >
+                Dirección de entrega
               </label>
               <textarea
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
                 style={{
-                  background: 'white',
-                  border: '2px solid #e5e7eb',
+                  width: '100%',
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '12px',
-                  padding: '12px 16px',
+                  padding: '14px 16px',
                   fontSize: '15px',
                   fontWeight: '500',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                  resize: 'vertical'
+                  outline: 'none',
+                  resize: 'vertical',
+                  minHeight: '80px'
                 }}
-                className="w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="focus:bg-white focus:border-orange-500"
                 placeholder="Col. Palmira, Tegucigalpa"
-                rows="2"
                 required
               />
             </div>
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-bold text-gray-800 mb-2" style={{ letterSpacing: '0.3px' }}>
-                📝 Notas adicionales (opcional)
+              <label 
+                className="block text-xs font-bold text-gray-700 mb-2" 
+                style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}
+              >
+                Notas adicionales (opcional)
               </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
                 style={{
-                  background: 'white',
-                  border: '2px solid #e5e7eb',
+                  width: '100%',
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '12px',
-                  padding: '12px 16px',
+                  padding: '14px 16px',
                   fontSize: '15px',
                   fontWeight: '500',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                  resize: 'vertical'
+                  outline: 'none',
+                  resize: 'vertical',
+                  minHeight: '80px'
                 }}
-                className="w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="focus:bg-white focus:border-orange-500"
                 placeholder="Instrucciones especiales..."
-                rows="2"
               />
             </div>
 
             {/* Order Summary */}
             <div 
               style={{
-                background: 'linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)',
+                background: 'white',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '2px solid #e5e7eb',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
+                border: '1px solid #e5e7eb',
+                marginTop: '8px'
               }}
             >
-              <h3 className="font-bold text-gray-900 mb-3" style={{ fontSize: '16px', letterSpacing: '0.3px' }}>
-                📦 Resumen del pedido
+              <h3 
+                className="text-xs font-bold text-gray-700 mb-3" 
+                style={{ letterSpacing: '0.5px', textTransform: 'uppercase' }}
+              >
+                Resumen del pedido
               </h3>
-              {cartItems.map((item, index) => (
-                <div 
-                  key={index} 
-                  className="flex justify-between text-sm mb-2"
-                  style={{
-                    padding: '8px 0',
-                    borderBottom: index < cartItems.length - 1 ? '1px solid #f3f4f6' : 'none'
-                  }}
-                >
-                  <span style={{ fontWeight: '500', color: '#374151' }}>
-                    {item.name} <span style={{ color: '#9ca3af' }}>x{item.quantity}</span>
-                  </span>
-                  <span style={{ fontWeight: '700', color: '#111827' }}>L.{item.price * item.quantity}</span>
-                </div>
-              ))}
+              <div style={{ marginBottom: '16px' }}>
+                {cartItems.map((item, index) => (
+                  <div 
+                    key={index} 
+                    className="flex justify-between text-sm"
+                    style={{
+                      padding: '10px 0',
+                      borderBottom: index < cartItems.length - 1 ? '1px solid #f3f4f6' : 'none'
+                    }}
+                  >
+                    <span style={{ fontWeight: '500', color: '#6b7280', flex: 1 }}>
+                      {item.name} <span style={{ color: '#9ca3af' }}>×{item.quantity}</span>
+                    </span>
+                    <span style={{ fontWeight: '700', color: '#111827', whiteSpace: 'nowrap', marginLeft: '12px' }}>
+                      L{(item.price * item.quantity).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
               <div 
-                className="flex justify-between font-bold mt-3 pt-3"
+                className="flex justify-between items-center"
                 style={{
-                  fontSize: '20px',
-                  borderTop: '2px solid #e5e7eb',
-                  background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%)',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  marginTop: '12px'
+                  paddingTop: '16px',
+                  borderTop: '2px solid #f3f4f6'
                 }}
               >
-                <span style={{ color: '#111827' }}>Total</span>
+                <span style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>Total</span>
                 <span 
                   style={{ 
-                    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
+                    fontSize: '24px',
+                    fontWeight: '800',
+                    color: '#f97316'
                   }}
                 >
-                  L.{total}
+                  L{total.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -566,23 +569,22 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
 
         {/* Footer */}
         <div 
-          className="p-6"
           style={{
-            background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)',
-            borderTop: '2px solid #e5e7eb',
-            borderBottomLeftRadius: '24px',
-            borderBottomRightRadius: '24px'
+            padding: '20px 24px',
+            borderTop: '1px solid #e5e7eb',
+            background: 'white'
           }}
         >
           <button
             onClick={isAuthenticated ? handleAuthCheckout : handleGuestCheckout}
             disabled={isLoading}
+            className="tap-effect"
             style={{
               width: '100%',
-              background: isLoading ? '#9ca3af' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              background: isLoading ? '#9ca3af' : '#10b981',
               color: 'white',
               padding: '16px',
-              borderRadius: '16px',
+              borderRadius: '12px',
               border: 'none',
               fontSize: '16px',
               fontWeight: '700',
@@ -590,41 +592,28 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              boxShadow: isLoading ? 'none' : '0 8px 24px rgba(16, 185, 129, 0.4)',
-              transition: 'all 0.3s ease',
-              letterSpacing: '0.3px'
+              gap: '10px',
+              boxShadow: isLoading ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
+              transition: 'all 0.2s ease'
             }}
-            className={isLoading ? '' : 'hover:shadow-xl hover:scale-105'}
           >
             {isLoading ? (
               <>
                 <div 
                   className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"
-                  style={{ borderWidth: '3px' }}
+                  style={{ borderWidth: '2px' }}
                 ></div>
                 Procesando...
               </>
             ) : (
               <>
-                <span style={{ fontSize: '20px' }}>💬</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
                 Pedir por WhatsApp
               </>
             )}
           </button>
-          
-          {isAuthenticated && (
-            <button
-              onClick={() => {/* Implement logout */}}
-              className="w-full mt-3 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
-              style={{
-                padding: '8px',
-                borderRadius: '8px'
-              }}
-            >
-              Cerrar Sesión
-            </button>
-          )}
         </div>
       </div>
     </div>
