@@ -352,7 +352,7 @@ const ShoppingCart = () => {
         isOpen={showCheckout}
         onClose={() => setShowCheckout(false)}
         cartItems={cart}
-        total={fees.grandTotal}
+        total={cartTotal}
       />
     </>
   )
