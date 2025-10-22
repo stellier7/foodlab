@@ -169,20 +169,6 @@ const FitLabsPage = () => {
           }}>
             Restaurantes con Opciones Fit
           </h2>
-          <div className="badge" style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '4px',
-            backgroundColor: '#d1fae5',
-            color: '#10b981',
-            padding: '6px 12px',
-            borderRadius: '12px',
-            fontWeight: '700',
-            fontSize: '11px'
-          }}>
-            <Heart size={12} style={{ fill: '#10b981' }} />
-            <span>{filteredRestaurants.length} {filteredRestaurants.length === 1 ? 'restaurante' : 'restaurantes'}</span>
-          </div>
         </div>
 
         {filteredRestaurants.length === 0 ? (

@@ -113,7 +113,8 @@ const ShoppingCart = () => {
             zIndex: 40,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            overflow: 'visible'
           }}
         >
           <ShoppingCartIcon size={26} strokeWidth={2.5} />

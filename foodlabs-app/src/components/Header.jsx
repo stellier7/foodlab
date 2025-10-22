@@ -15,7 +15,6 @@ const Header = () => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false)
   // Stage 0: Full header with logo + toggle (0-100px)
   // Stage 1: Logo fading (100-250px)
   // Stage 2: Toggle fading (250-450px)
@@ -23,7 +22,7 @@ const Header = () => {
 
   const navItems = [
     { path: '/', name: 'FoodLab', icon: UtensilsCrossed, color: '#f97316' },
-    { path: '/fitlabs', name: 'FitLabs', icon: Dumbbell, color: '#10b981' },
+    { path: '/fitlab', name: 'FitLab', icon: Dumbbell, color: '#10b981' },
     { path: '/shop', name: 'Shop', icon: ShoppingBag, color: '#3b82f6' }
   ]
 
@@ -77,14 +76,11 @@ const Header = () => {
       if (!e.target.closest('.user-menu-container')) {
         setShowUserMenu(false)
       }
-      if (!e.target.closest('.hamburger-menu-container')) {
-        setShowHamburgerMenu(false)
-      }
     }
     
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
-  }, [showLocationDropdown, showUserMenu, showHamburgerMenu])
+  }, [showLocationDropdown, showUserMenu])
 
   // Handle logout
   const handleLogout = async () => {
@@ -175,35 +171,9 @@ const Header = () => {
               transition: 'margin-left 0.4s ease-in-out'
             }}>
               {/* City Code - Clean */}
-              <button
-                onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-                className="tap-effect"
-                style={{
-                  width: '42px',
-                  height: '42px',
-                  color: currentNav.color,
-                  border: 'none',
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  outline: 'none',
-                  letterSpacing: '0.5px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                {userLocation.city}
-              </button>
-
-              {/* Hamburger Menu */}
-              <div className="hamburger-menu-container" style={{ position: 'relative' }}>
+              <div className="location-selector-container" style={{ position: 'relative' }}>
                 <button
-                  onClick={() => setShowHamburgerMenu(!showHamburgerMenu)}
+                  onClick={() => setShowLocationDropdown(!showLocationDropdown)}
                   className="tap-effect"
                   style={{
                     width: '42px',
@@ -215,139 +185,19 @@ const Header = () => {
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    outline: 'none',
+                    letterSpacing: '0.5px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '18px',
-                    fontWeight: '600'
+                    justifyContent: 'center'
                   }}
                 >
-                  ☰
+                  {userLocation.city}
                 </button>
 
-                {/* Hamburger Menu Dropdown */}
-                {showHamburgerMenu && (
-                  <div
-                    className="fade-in"
-                    style={{
-                      position: 'absolute',
-                      top: '50px',
-                      right: '0',
-                      background: 'white',
-                      borderRadius: '12px',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-                      padding: '8px',
-                      minWidth: '160px',
-                      zIndex: 1001
-                    }}
-                  >
-                    {/* Search */}
-                    <button
-                      onClick={() => {
-                        setShowHamburgerMenu(false)
-                        // TODO: Implement search
-                      }}
-                      className="tap-effect"
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: 'none',
-                        borderRadius: '8px',
-                        background: 'transparent',
-                        color: '#111827',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <Search size={16} />
-                      Buscar
-                    </button>
-
-                    {/* Location */}
-                    <button
-                      onClick={() => {
-                        setShowHamburgerMenu(false)
-                        setShowLocationDropdown(true)
-                      }}
-                      className="tap-effect"
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: 'none',
-                        borderRadius: '8px',
-                        background: 'transparent',
-                        color: '#111827',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <span style={{ fontSize: '16px' }}>📍</span>
-                      Ubicación
-                    </button>
-
-                    {/* Cart */}
-                    <button
-                      onClick={() => {
-                        setShowHamburgerMenu(false)
-                        // TODO: Open cart
-                      }}
-                      className="tap-effect"
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: 'none',
-                        borderRadius: '8px',
-                        background: 'transparent',
-                        color: '#111827',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        transition: 'all 0.2s ease',
-                        position: 'relative'
-                      }}
-                    >
-                      <ShoppingCartIcon size={16} />
-                      Carrito
-                      {cartItemsCount > 0 && (
-                        <span
-                          style={{
-                            position: 'absolute',
-                            right: '16px',
-                            background: '#ef4444',
-                            color: 'white',
-                            borderRadius: '50%',
-                            width: '20px',
-                            height: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '11px',
-                            fontWeight: '700'
-                          }}
-                        >
-                          {cartItemsCount}
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Location Dropdown - Dos Niveles */}
-              <div className="location-selector-container" style={{ position: 'relative' }}>
+                {/* Location Dropdown - Dos Niveles */}
                 {showLocationDropdown && (
                   <div
                     className="fade-in"
@@ -472,7 +322,7 @@ const Header = () => {
 
               {/* User Menu / Login Button */}
               {isAuthenticated ? (
-                <div className="user-menu-container" style={{ position: 'relative' }}>
+                <div className="user-menu-container" style={{ position: 'relative', marginLeft: '8px' }}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="tap-effect"
@@ -635,7 +485,8 @@ const Header = () => {
                     letterSpacing: '0.5px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '6px',
+                    marginLeft: '8px'
                   }}
                 >
                   <User size={16} />

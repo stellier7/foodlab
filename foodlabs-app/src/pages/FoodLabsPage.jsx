@@ -496,7 +496,6 @@ const FoodLabsPage = () => {
             gap: '4px'
           }}>
             <Star size={12} style={{ fill: 'white' }} />
-            <span style={{ fontSize: '10px' }}>Select</span>
           </div>
         </div>
         

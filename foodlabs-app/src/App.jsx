@@ -74,7 +74,7 @@ const AppContent = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<FoodLabsPage />} />
-          <Route path="/fitlabs" element={<FitLabsPage />} />
+          <Route path="/fitlab" element={<FitLabsPage />} />
           <Route path="/shop" element={<SportsShopPage />} />
           <Route path="/sportsshop" element={<Navigate to="/shop" replace />} />
           <Route path="/restaurant/:restaurantName" element={<RestaurantDetailPage />} />
