@@ -159,5 +159,56 @@ service cloud.firestore {
       // System can write audit logs (this would be done server-side)
       allow write: if false; // Disabled for now, would be handled by Cloud Functions
     }
+    
+    // Wallets collection
+    match /wallets/{walletId} {
+      // Users can read their own wallet
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Admins can read all wallets
+      allow read: if isAdmin();
+      
+      // Only system can create/update wallets (handled by Cloud Functions)
+      allow write: if false; // Disabled for security, handled by backend services
+    }
+    
+    // Transactions collection
+    match /transactions/{transactionId} {
+      // Users can read transactions where they are involved
+      allow read: if isAuthenticated() && 
+                     (resource.data.fromWalletId == get(/databases/$(database)/documents/wallets/$(getWalletId(request.auth.uid))).id ||
+                      resource.data.toWalletId == get(/databases/$(database)/documents/wallets/$(getWalletId(request.auth.uid))).id);
+      
+      // Admins can read all transactions
+      allow read: if isAdmin();
+      
+      // Only system can create transactions (handled by Cloud Functions)
+      allow write: if false; // Disabled for security, handled by backend services
+    }
+    
+    // Topup requests collection
+    match /topup_requests/{requestId} {
+      // Users can read their own topup requests
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Users can create their own topup requests
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.amount > 0 &&
+                      request.resource.data.status == 'pending';
+      
+      // Admins can read all topup requests
+      allow read: if isAdmin();
+      
+      // Only admins can update topup requests (approve/reject)
+      allow update: if isAdmin();
+    }
+    
+    // Helper function to get wallet ID for a user
+    function getWalletId(userId) {
+      return get(/databases/$(database)/documents/wallets/$(userId)).data.id;
+    }
   }
 }

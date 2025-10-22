@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useAppStore } from '../stores/useAppStore'
 import { useOrdersStore } from '../stores/useOrdersStore'
+import { useWalletStore } from '../stores/useWalletStore'
+import { processOrder } from '../services/payment'
+import { PAYMENT_CONFIG } from '../config/payments'
 
 const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   const { user, isAuthenticated, loginWithGoogle, loginWithEmail, createAccount } = useAuthStore()
   const { businesses, getPriceForCurrency, getCurrencySymbol } = useAppStore()
   const { addOrder } = useOrdersStore()
+  const { balance, fetchBalance, error: walletError } = useWalletStore()
   
   // Form states
   const [formData, setFormData] = useState({
@@ -33,8 +37,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         address: user.address || '',
         notes: ''
       })
+      // Fetch wallet balance for authenticated users
+      fetchBalance(user.uid)
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, user, fetchBalance])
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -45,11 +51,18 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     }))
   }
 
-  // Calculate total with delivery fee
+  // Calculate total with delivery fee and commission
   const calculateTotal = () => {
     const subtotal = total
     const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
-    return subtotal + deliveryFee
+    const commission = subtotal * PAYMENT_CONFIG.commissions.default.orderFee
+    return subtotal + deliveryFee + commission
+  }
+  
+  // Check if user has sufficient balance
+  const hasSufficientBalance = () => {
+    if (!isAuthenticated) return true // Guests don't use wallet
+    return balance >= calculateTotal()
   }
 
   // Validate form
@@ -60,6 +73,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     }
     if (deliveryMethod === 'delivery' && !formData.address.trim()) {
       setError('La dirección es requerida para delivery')
+      return false
+    }
+    if (isAuthenticated && !hasSufficientBalance()) {
+      setError('Saldo insuficiente. Por favor recarga tu cuenta.')
       return false
     }
     return true
@@ -119,7 +136,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     }
   }
 
-  // Handle authenticated checkout
+  // Handle authenticated checkout with wallet
   const handleAuthCheckout = async () => {
     if (!validateForm()) return
     
@@ -127,15 +144,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     setError('')
     
     try {
-      // Update user profile if data changed
-      if (user.address !== formData.address) {
-        // Update user data in Firestore
-        // This would be implemented in the auth service
-      }
-      
       // Create order for authenticated user
       const finalTotal = calculateTotal()
-      const platformFee = total * 0.075 // 7.5% platform fee
+      const commission = total * PAYMENT_CONFIG.commissions.default.orderFee
       const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
       
       const orderData = {
@@ -149,8 +160,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         business: { id: 'foodlab', name: 'FoodLab' },
         pricing: {
           subtotal: total,
-          platformFee: platformFee,
-          serviceFee: 0,
+          commission: commission,
           deliveryFee: deliveryFee,
           discount: 0,
           total: finalTotal
@@ -158,10 +168,18 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         status: 'pending',
         notes: formData.notes,
         deliveryMethod: deliveryMethod,
+        paymentStatus: 'pending_restaurant',
         createdAt: new Date().toISOString()
       }
       
-      await addOrder(orderData)
+      // Add order to database
+      const orderRef = await addOrder(orderData)
+      
+      // Process payment with wallet
+      await processOrder(orderRef.id, user.uid, 'foodlab', finalTotal)
+      
+      // Refresh wallet balance
+      await fetchBalance(user.uid)
       
       // Generate WhatsApp message with user's first name
       const firstName = user.firstName || formData.name.split(' ')[0]
@@ -173,7 +191,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       
       onClose()
     } catch (error) {
-      setError('Error al crear la orden. Intenta de nuevo.')
+      setError('Error al procesar el pago. Intenta de nuevo.')
       console.error('Checkout error:', error)
     } finally {
       setIsLoading(false)
@@ -184,9 +202,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   const generateWhatsAppMessage = (customerName, items, subtotal, notes) => {
     const finalTotal = calculateTotal()
     const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
-    
-    // Calculate platform fee (7.5% of subtotal)
-    const platformFee = subtotal * 0.075
+    const commission = subtotal * PAYMENT_CONFIG.commissions.default.orderFee
     
     let message = `¡Hola! Soy ${customerName} y quiero hacer un pedido:\n\n`
     
@@ -196,7 +212,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     })
     
     message += `\n💰 Subtotal: L${subtotal.toFixed(2)}`
-    message += `\n🏢 FoodLab: L${platformFee.toFixed(2)}`
+    message += `\n🏢 FoodLab: L${commission.toFixed(2)} ${PAYMENT_CONFIG.ui.showTaxDisclaimer ? PAYMENT_CONFIG.ui.taxDisclaimerText : ''}`
     
     if (deliveryMethod === 'delivery') {
       message += `\n🚗 Delivery: L${deliveryFee.toFixed(2)}`
@@ -517,12 +533,26 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 border: '1px solid #6ee7b7'
               }}
             >
-              <p className="text-green-900 text-sm font-bold" style={{ margin: 0 }}>
-                👤 {user.firstName || user.displayName?.split(' ')[0] || 'Usuario'}
-              </p>
-              <p className="text-green-700 text-xs" style={{ fontWeight: '500', margin: '4px 0 0 0' }}>
-                Sesión activa
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p className="text-green-900 text-sm font-bold" style={{ margin: 0 }}>
+                    👤 {user.firstName || user.displayName?.split(' ')[0] || 'Usuario'}
+                  </p>
+                  <p className="text-green-700 text-xs" style={{ fontWeight: '500', margin: '4px 0 0 0' }}>
+                    Sesión activa
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p className="text-green-900 text-sm font-bold" style={{ margin: 0 }}>
+                    Saldo: L{balance.toFixed(2)}
+                  </p>
+                  {!hasSufficientBalance() && (
+                    <p className="text-red-600 text-xs" style={{ fontWeight: '500', margin: '2px 0 0 0' }}>
+                      Saldo insuficiente
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -749,7 +779,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 ))}
               </div>
               
-              {/* Subtotal and Delivery Fee */}
+              {/* Subtotal, Commission, and Delivery Fee */}
               <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '10px', marginBottom: '10px' }}>
                 <div style={{ 
                   display: 'flex', 
@@ -766,6 +796,25 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                     minWidth: '80px'
                   }}>
                     L{total.toFixed(2)}
+                  </span>
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: '6px' 
+                }}>
+                  <span style={{ fontWeight: '500', color: '#6b7280', fontSize: '14px' }}>
+                    FoodLab {(total * PAYMENT_CONFIG.commissions.default.orderFee).toFixed(2)} {PAYMENT_CONFIG.ui.showTaxDisclaimer ? PAYMENT_CONFIG.ui.taxDisclaimerText : ''}
+                  </span>
+                  <span style={{ 
+                    fontWeight: '600', 
+                    color: '#3b82f6', 
+                    fontSize: '14px',
+                    textAlign: 'right',
+                    minWidth: '80px'
+                  }}>
+                    L{(total * PAYMENT_CONFIG.commissions.default.orderFee).toFixed(2)}
                   </span>
                 </div>
                 {deliveryMethod === 'delivery' && (

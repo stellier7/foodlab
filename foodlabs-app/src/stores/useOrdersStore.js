@@ -246,6 +246,17 @@ export const ORDER_STATUSES = {
   problem: { label: 'Problema', color: '#dc2626', icon: '⚠️' }
 }
 
+// Estados de pago con colores
+export const PAYMENT_STATUSES = {
+  pending_payment: { label: 'Pago Pendiente', color: '#ef4444', icon: '💳' },
+  pending_restaurant: { label: 'Esperando Restaurante', color: '#f59e0b', icon: '🍽️' },
+  confirmed: { label: 'Pago Confirmado', color: '#10b981', icon: '✅' },
+  preparing: { label: 'Preparando', color: '#3b82f6', icon: '👨‍🍳' },
+  ready: { label: 'Listo', color: '#8b5cf6', icon: '📦' },
+  completed: { label: 'Completado', color: '#10b981', icon: '🎉' },
+  cancelled: { label: 'Cancelado', color: '#6b7280', icon: '❌' }
+}
+
 export const useOrdersStore = create(
   persist(
     (set, get) => ({
@@ -450,6 +461,47 @@ export const useOrdersStore = create(
           set({ isLoading: false, error: null })
         } catch (error) {
           console.error('Error changing order status:', error)
+          set({ 
+            error: error.message, 
+            isLoading: false 
+          })
+          throw error
+        }
+      },
+
+      // Nueva función para cambiar estado de pago
+      changePaymentStatus: async (orderId, newPaymentStatus) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const currentUser = useAuthStore.getState().getCurrentUser()
+          const orders = get().orders
+          const order = orders.find(o => o.id === orderId)
+          
+          if (!order) {
+            throw new Error('Order not found')
+          }
+          
+          const oldPaymentStatus = order.paymentStatus
+          
+          const updateData = {
+            paymentStatus: newPaymentStatus,
+            updatedAt: new Date().toISOString(),
+            history: [
+              {
+                action: 'payment_status_changed',
+                timestamp: new Date().toISOString(),
+                user: currentUser,
+                from: oldPaymentStatus,
+                to: newPaymentStatus
+              }
+            ]
+          }
+
+          await ordersService.updateOrder(orderId, updateData)
+          set({ isLoading: false, error: null })
+        } catch (error) {
+          console.error('Error changing payment status:', error)
           set({ 
             error: error.message, 
             isLoading: false 
