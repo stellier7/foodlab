@@ -247,10 +247,15 @@ export const createUserProfile = async (uid, userData) => {
       role = USER_ROLES.SUPER_ADMIN
     }
     
+    // Extract name parts from displayName
+    const { firstName, lastName } = extractNameParts(userData.displayName)
+    
     const profileData = {
       uid,
       email: userData.email,
       displayName: userData.displayName || '',
+      firstName,
+      lastName,
       photoURL: userData.photoURL || '',
       role,
       country: userData.country || COUNTRIES.HONDURAS,
@@ -353,6 +358,40 @@ export const canAccessBusiness = (userRole, userBusinessId, targetBusinessId) =>
   }
   
   return false
+}
+
+// ========================================
+// NAME EXTRACTION FUNCTIONS
+// ========================================
+
+// Extract first and last name from displayName
+export const extractNameParts = (displayName) => {
+  if (!displayName || typeof displayName !== 'string') {
+    return { firstName: '', lastName: '' }
+  }
+  
+  const nameParts = displayName.trim().split(' ')
+  
+  if (nameParts.length === 1) {
+    return { firstName: nameParts[0], lastName: '' }
+  }
+  
+  if (nameParts.length === 2) {
+    return { firstName: nameParts[0], lastName: nameParts[1] }
+  }
+  
+  // For names with 3+ parts, first is firstName, rest is lastName
+  return {
+    firstName: nameParts[0],
+    lastName: nameParts.slice(1).join(' ')
+  }
+}
+
+// Format full name from parts
+export const formatFullName = (firstName, lastName) => {
+  if (!firstName && !lastName) return ''
+  if (!lastName) return firstName
+  return `${firstName} ${lastName}`
 }
 
 // ========================================

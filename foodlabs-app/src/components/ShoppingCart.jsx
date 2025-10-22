@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useAppStore } from '../stores/useAppStore'
 import { useOrdersStore } from '../stores/useOrdersStore'
 import { ShoppingCart as ShoppingCartIcon, Plus, Minus, X, MessageCircle } from 'lucide-react'
+import CheckoutModal from './CheckoutModal'
 
 const ShoppingCart = () => {
   const { cart, cartTotal, addToCart, removeFromCart, clearCart, calculateFees, getPriceForCurrency, convertPrice, getCurrencySymbol } = useAppStore()
   const { addOrder } = useOrdersStore()
   const [isOpen, setIsOpen] = useState(false)
+  const [showCheckout, setShowCheckout] = useState(false)
 
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
   const fees = calculateFees(cartTotal)
@@ -14,48 +16,9 @@ const ShoppingCart = () => {
   const handleCheckout = () => {
     if (cart.length === 0) return
     
-    // Detectar el negocio principal
-    const hasFoodItems = cart.some(item => item.restaurantId && item.restaurantId !== 'sportsshop')
-    const hasSportsItems = cart.some(item => item.restaurantId === 'sportsshop')
-    
-    // Crear orden en el store
-    const newOrder = {
-      customer: {
-        name: '[Tu nombre]',
-        phone: '+504 8869-4777',
-        address: '[Tu dirección]'
-      },
-      items: cart,
-      business: {
-        id: hasSportsItems ? 'sportsshop' : (cart[0]?.restaurantId || 'general'),
-        name: hasSportsItems ? 'Shop' : (cart[0]?.restaurantName || 'FoodLabs')
-      },
-      pricing: {
-        subtotal: fees.subtotal,
-        platformFee: fees.platformFee,
-        serviceFee: fees.serviceFee,
-        deliveryFee: fees.deliveryFee,
-        discount: 0,
-        total: fees.grandTotal
-      },
-      status: 'pending',
-      paymentMethod: null,
-      notes: ''
-    }
-    
-    // Agregar orden al store
-    addOrder(newOrder)
-    
-    // Generar mensaje de WhatsApp
-    const message = generateWhatsAppMessage()
-    const whatsappUrl = `https://wa.me/50488694777?text=${encodeURIComponent(message)}`
-    
-    // Abrir WhatsApp
-    window.open(whatsappUrl, '_blank')
-    
-    // Limpiar carrito
-    clearCart()
+    // Cerrar carrito y abrir checkout modal
     setIsOpen(false)
+    setShowCheckout(true)
   }
 
   const generateWhatsAppMessage = () => {
@@ -383,6 +346,14 @@ const ShoppingCart = () => {
           </div>
         </div>
       )}
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        isOpen={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        cartItems={cart}
+        total={fees.grandTotal}
+      />
     </>
   )
 }

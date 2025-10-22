@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBag, Search } from 'lucide-react'
+import { ShoppingCart as ShoppingCartIcon, UtensilsCrossed, Dumbbell, ShoppingBag, Search, User, LogOut } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const Header = () => {
   const { cart, location: userLocation, setLocation, getLocations } = useAppStore()
+  const { user, isAuthenticated, logout, loginWithGoogle } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
@@ -12,6 +14,7 @@ const Header = () => {
   const [scrollY, setScrollY] = useState(0)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState(null)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   // Stage 0: Full header with logo + toggle (0-100px)
   // Stage 1: Logo fading (100-250px)
   // Stage 2: Toggle fading (250-450px)
@@ -63,20 +66,40 @@ const Header = () => {
   // Obtener datos de ubicaciones
   const LOCATIONS = getLocations()
   
-  // Cerrar location dropdown cuando se hace click fuera
+  // Cerrar dropdowns cuando se hace click fuera
   useEffect(() => {
-    if (!showLocationDropdown) return
-    
     const handleClickOutside = (e) => {
       if (!e.target.closest('.location-selector-container')) {
         setShowLocationDropdown(false)
         setSelectedCountry(null)
       }
+      if (!e.target.closest('.user-menu-container')) {
+        setShowUserMenu(false)
+      }
     }
     
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
-  }, [showLocationDropdown])
+  }, [showLocationDropdown, showUserMenu])
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout()
+      setShowUserMenu(false)
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
+  // Handle Google login
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle()
+    } catch (error) {
+      console.error('Login error:', error)
+    }
+  }
 
   // Hide header on restaurant, admin, and business pages (tienen sus propios headers)
   if (isRestaurantPage || isAdminPage || location.pathname.startsWith('/business')) {
@@ -311,6 +334,179 @@ const Header = () => {
               }}>
                 <Search size={20} strokeWidth={2} />
               </button>
+
+              {/* User Menu / Login Button */}
+              {isAuthenticated ? (
+                <div className="user-menu-container" style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="tap-effect"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      color: currentNav.color,
+                      border: 'none',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <User size={20} strokeWidth={2} />
+                  </button>
+                  
+                  {/* User Menu Dropdown */}
+                  {showUserMenu && (
+                    <div
+                      className="fade-in"
+                      style={{
+                        position: 'absolute',
+                        top: '50px',
+                        right: '0',
+                        background: 'white',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                        padding: '8px',
+                        minWidth: '200px',
+                        zIndex: 1000
+                      }}
+                    >
+                      {/* User Info */}
+                      <div style={{
+                        padding: '12px',
+                        borderBottom: '1px solid #f3f4f6'
+                      }}>
+                        <p style={{
+                          fontSize: '14px',
+                          fontWeight: '700',
+                          color: '#111827',
+                          margin: '0 0 4px 0'
+                        }}>
+                          {user?.firstName || user?.displayName?.split(' ')[0] || 'Usuario'}
+                        </p>
+                        <p style={{
+                          fontSize: '12px',
+                          color: '#6b7280',
+                          margin: '0'
+                        }}>
+                          {user?.email}
+                        </p>
+                      </div>
+                      
+                      {/* Menu Items */}
+                      <div style={{ padding: '4px 0' }}>
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            // Navigate to profile or orders
+                          }}
+                          className="tap-effect"
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#111827',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <User size={16} />
+                          Mi Perfil
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            // Navigate to orders
+                          }}
+                          className="tap-effect"
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#111827',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <ShoppingCartIcon size={16} />
+                          Mis Pedidos
+                        </button>
+                        
+                        <button
+                          onClick={handleLogout}
+                          className="tap-effect"
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#dc2626',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <LogOut size={16} />
+                          Cerrar Sesión
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={handleGoogleLogin}
+                  className="tap-effect"
+                  style={{
+                    height: '42px',
+                    padding: '0 16px',
+                    color: currentNav.color,
+                    border: 'none',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    outline: 'none',
+                    letterSpacing: '0.5px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <User size={16} />
+                  Iniciar
+                </button>
+              )}
 
               {/* Cart Button */}
               <button className="tap-effect" style={{
