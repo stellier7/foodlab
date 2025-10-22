@@ -23,7 +23,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   const [loginData, setLoginData] = useState({ email: '', password: '' })
   
   // Delivery fee constant
-  const DELIVERY_FEE = 100
+  const DELIVERY_FEE = 99.90
 
   // Auto-fill form for authenticated users
   useEffect(() => {
@@ -259,9 +259,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         zIndex: 100,
         display: 'flex',
         alignItems: 'center',
@@ -540,10 +540,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                     <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>
-                      🚗 Delivery
+                      Entrega a domicilio
                     </span>
                     <span style={{ fontSize: '13px', fontWeight: '600', color: '#f97316' }}>
-                      +L100
+                      +L99.90
                     </span>
                   </div>
                   <p style={{ fontSize: '11px', color: '#6b7280', margin: 0, lineHeight: '1.4' }}>
@@ -576,7 +576,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 />
                 <div style={{ flex: 1 }}>
                   <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>
-                    🏪 Take Out (recoger)
+                    Recoger en el local
                   </span>
                   <span style={{ fontSize: '13px', fontWeight: '600', color: '#10b981', marginLeft: '6px' }}>
                     Gratis
@@ -605,12 +605,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           <form style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {/* Name */}
             <div>
-              <label 
-                className="block text-xs font-semibold text-gray-600 mb-1" 
-                style={{ letterSpacing: '0.3px' }}
-              >
-                Nombre completo
-              </label>
               <input
                 type="text"
                 name="name"
@@ -636,12 +630,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
             {/* Address - Only for delivery */}
             {deliveryMethod === 'delivery' && (
               <div>
-                <label 
-                  className="block text-xs font-semibold text-gray-600 mb-1" 
-                  style={{ letterSpacing: '0.3px' }}
-                >
-                  Dirección de entrega
-                </label>
                 <textarea
                   name="address"
                   value={formData.address}
@@ -669,12 +657,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
 
             {/* Notes */}
             <div>
-              <label 
-                className="block text-xs font-semibold text-gray-600 mb-1" 
-                style={{ letterSpacing: '0.3px' }}
-              >
-                Notas adicionales (opcional)
-              </label>
               <textarea
                 name="notes"
                 value={formData.notes}
@@ -742,7 +724,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 </div>
                 {deliveryMethod === 'delivery' && (
                   <div className="flex justify-between text-sm" style={{ marginBottom: '6px' }}>
-                    <span style={{ fontWeight: '500', color: '#6b7280' }}>Delivery</span>
+                    <span style={{ fontWeight: '500', color: '#6b7280' }}>Entrega a domicilio</span>
                     <span style={{ fontWeight: '600', color: '#f97316' }}>L{DELIVERY_FEE.toFixed(2)}</span>
                   </div>
                 )}
