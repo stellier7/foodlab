@@ -15,10 +15,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     notes: ''
   })
   
+  const [deliveryMethod, setDeliveryMethod] = useState('delivery') // 'delivery' or 'takeout'
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [showLogin, setShowLogin] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
+  
+  // Delivery fee constant
+  const DELIVERY_FEE = 100
 
   // Auto-fill form for authenticated users
   useEffect(() => {
@@ -40,14 +44,21 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     }))
   }
 
+  // Calculate total with delivery fee
+  const calculateTotal = () => {
+    const subtotal = total
+    const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
+    return subtotal + deliveryFee
+  }
+
   // Validate form
   const validateForm = () => {
     if (!formData.name.trim()) {
       setError('El nombre es requerido')
       return false
     }
-    if (!formData.address.trim()) {
-      setError('La dirección es requerida')
+    if (deliveryMethod === 'delivery' && !formData.address.trim()) {
+      setError('La dirección es requerida para delivery')
       return false
     }
     return true
@@ -62,18 +73,22 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     
     try {
       // Create order for guest
+      const finalTotal = calculateTotal()
       const orderData = {
         customer: {
           name: formData.name,
-          address: formData.address,
+          address: deliveryMethod === 'delivery' ? formData.address : 'Take Out',
           userId: null,
           isGuest: true
         },
         items: cartItems,
-        total,
+        subtotal: total,
+        deliveryFee: deliveryMethod === 'delivery' ? DELIVERY_FEE : 0,
+        deliveryMethod: deliveryMethod,
+        total: finalTotal,
         status: 'pending',
         notes: formData.notes,
-        business: businesses[0] || { id: 'foodlab', name: 'FoodLab' },
+        business: { id: 'foodlab', name: 'FoodLab' },
         createdAt: new Date().toISOString()
       }
       
@@ -110,18 +125,22 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       }
       
       // Create order for authenticated user
+      const finalTotal = calculateTotal()
       const orderData = {
         customer: {
           name: formData.name,
-          address: formData.address,
+          address: deliveryMethod === 'delivery' ? formData.address : 'Take Out',
           userId: user.uid,
           isGuest: false
         },
         items: cartItems,
-        total,
+        subtotal: total,
+        deliveryFee: deliveryMethod === 'delivery' ? DELIVERY_FEE : 0,
+        deliveryMethod: deliveryMethod,
+        total: finalTotal,
         status: 'pending',
         notes: formData.notes,
-        business: businesses[0] || { id: 'foodlab', name: 'FoodLab' },
+        business: { id: 'foodlab', name: 'FoodLab' },
         createdAt: new Date().toISOString()
       }
       
@@ -145,16 +164,26 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   }
 
   // Generate WhatsApp message
-  const generateWhatsAppMessage = (customerName, items, total, notes) => {
+  const generateWhatsAppMessage = (customerName, items, subtotal, notes) => {
+    const finalTotal = calculateTotal()
+    const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
+    
     let message = `¡Hola! Soy ${customerName} y quiero hacer un pedido:\n\n`
     
     items.forEach(item => {
-      message += `• ${item.name} x${item.quantity} - L${item.price * item.quantity}\n`
+      message += `• ${item.name} x${item.quantity} - L${(item.price * item.quantity).toFixed(2)}\n`
     })
     
-    message += `\n💰 Total: L${total}`
+    message += `\n💰 Subtotal: L${subtotal.toFixed(2)}`
     
-    message += `\n\n📍 Dirección: ${formData.address}`
+    if (deliveryMethod === 'delivery') {
+      message += `\n🚗 Delivery: L${deliveryFee.toFixed(2)}`
+      message += `\n📍 Dirección: ${formData.address}`
+    } else {
+      message += `\n🏪 Take Out (recoger en tienda)`
+    }
+    
+    message += `\n\n💵 Total: L${finalTotal.toFixed(2)}`
     
     if (notes) {
       message += `\n\n📝 Notas: ${notes}`
@@ -234,19 +263,22 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       >
         {/* Header */}
         <div 
-          className="flex justify-between items-center"
           style={{
             padding: '16px 20px',
             borderBottom: '1px solid #e5e7eb',
-            background: 'white'
+            background: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
           }}
         >
           <h2 
-            className="font-bold text-gray-900" 
             style={{ 
               fontSize: '18px',
+              fontWeight: '700',
               letterSpacing: '-0.3px',
-              margin: 0
+              margin: 0,
+              color: '#111827'
             }}
           >
             Confirmar Pedido
@@ -261,12 +293,13 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '20px',
+              fontSize: '22px',
               color: '#6b7280',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              lineHeight: '1'
             }}
           >
             ×
@@ -281,14 +314,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
             padding: '20px'
           }}
         >
-          {/* Login prompt for guests */}
+          {/* Login prompt for guests - ONLY if not authenticated */}
           {!isAuthenticated && (
             <div 
               style={{
                 background: '#f9fafb',
                 borderRadius: '12px',
                 padding: '14px 16px',
-                marginBottom: '20px',
+                marginBottom: '16px',
                 border: '1px solid #e5e7eb',
                 textAlign: 'center'
               }}
@@ -316,14 +349,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
             </div>
           )}
 
-          {/* Auth badge for logged in users */}
+          {/* Auth badge for logged in users - ONLY if authenticated */}
           {isAuthenticated && user && (
             <div 
               style={{
                 background: '#d1fae5',
                 borderRadius: '12px',
                 padding: '12px 16px',
-                marginBottom: '20px',
+                marginBottom: '16px',
                 border: '1px solid #6ee7b7'
               }}
             >
@@ -335,6 +368,86 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
               </p>
             </div>
           )}
+
+          {/* Delivery Method Selector */}
+          <div style={{ marginBottom: '16px' }}>
+            <label 
+              className="block text-xs font-semibold text-gray-600 mb-2" 
+              style={{ letterSpacing: '0.3px' }}
+            >
+              Método de entrega
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Delivery Option */}
+              <label
+                className="tap-effect"
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  padding: '12px 14px',
+                  border: deliveryMethod === 'delivery' ? '2px solid #f97316' : '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  background: deliveryMethod === 'delivery' ? '#fff7ed' : 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <input
+                  type="radio"
+                  name="deliveryMethod"
+                  value="delivery"
+                  checked={deliveryMethod === 'delivery'}
+                  onChange={(e) => setDeliveryMethod(e.target.value)}
+                  style={{ marginTop: '2px', marginRight: '10px', cursor: 'pointer' }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>
+                      🚗 Delivery
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#f97316' }}>
+                      +L100
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#6b7280', margin: 0, lineHeight: '1.4' }}>
+                    📍 Distancias largas pueden tener costo adicional
+                  </p>
+                </div>
+              </label>
+
+              {/* Take Out Option */}
+              <label
+                className="tap-effect"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '12px 14px',
+                  border: deliveryMethod === 'takeout' ? '2px solid #10b981' : '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  background: deliveryMethod === 'takeout' ? '#ecfdf5' : 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <input
+                  type="radio"
+                  name="deliveryMethod"
+                  value="takeout"
+                  checked={deliveryMethod === 'takeout'}
+                  onChange={(e) => setDeliveryMethod(e.target.value)}
+                  style={{ marginTop: '0px', marginRight: '10px', cursor: 'pointer' }}
+                />
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>
+                    🏪 Take Out (recoger)
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#10b981', marginLeft: '6px' }}>
+                    Gratis
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
 
           {/* Error Message */}
           {error && (
@@ -383,37 +496,39 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
               />
             </div>
 
-            {/* Address */}
-            <div>
-              <label 
-                className="block text-xs font-semibold text-gray-600 mb-1" 
-                style={{ letterSpacing: '0.3px' }}
-              >
-                Dirección de entrega
-              </label>
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                style={{
-                  width: '100%',
-                  background: 'white',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  padding: '11px 14px',
-                  fontSize: '15px',
-                  fontWeight: '400',
-                  transition: 'all 0.2s ease',
-                  outline: 'none',
-                  resize: 'vertical',
-                  minHeight: '70px',
-                  fontFamily: 'inherit'
-                }}
-                className="focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                placeholder="Col. Palmira, Tegucigalpa"
-                required
-              />
-            </div>
+            {/* Address - Only for delivery */}
+            {deliveryMethod === 'delivery' && (
+              <div>
+                <label 
+                  className="block text-xs font-semibold text-gray-600 mb-1" 
+                  style={{ letterSpacing: '0.3px' }}
+                >
+                  Dirección de entrega
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  style={{
+                    width: '100%',
+                    background: 'white',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    padding: '11px 14px',
+                    fontSize: '15px',
+                    fontWeight: '400',
+                    transition: 'all 0.2s ease',
+                    outline: 'none',
+                    resize: 'vertical',
+                    minHeight: '70px',
+                    fontFamily: 'inherit'
+                  }}
+                  className="focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  placeholder="Col. Palmira, Tegucigalpa"
+                  required
+                />
+              </div>
+            )}
 
             {/* Notes */}
             <div>
@@ -468,7 +583,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                     key={index} 
                     className="flex justify-between text-sm"
                     style={{
-                      padding: '8px 0',
+                      padding: '6px 0',
                       borderBottom: index < cartItems.length - 1 ? '1px solid #e5e7eb' : 'none'
                     }}
                   >
@@ -481,14 +596,30 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                   </div>
                 ))}
               </div>
+              
+              {/* Subtotal and Delivery Fee */}
+              <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '10px', marginBottom: '10px' }}>
+                <div className="flex justify-between text-sm" style={{ marginBottom: '6px' }}>
+                  <span style={{ fontWeight: '500', color: '#6b7280' }}>Subtotal</span>
+                  <span style={{ fontWeight: '600', color: '#111827' }}>L{total.toFixed(2)}</span>
+                </div>
+                {deliveryMethod === 'delivery' && (
+                  <div className="flex justify-between text-sm" style={{ marginBottom: '6px' }}>
+                    <span style={{ fontWeight: '500', color: '#6b7280' }}>🚗 Delivery</span>
+                    <span style={{ fontWeight: '600', color: '#f97316' }}>L{DELIVERY_FEE.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Total */}
               <div 
                 className="flex justify-between items-center"
                 style={{
-                  paddingTop: '12px',
+                  paddingTop: '10px',
                   borderTop: '2px solid #e5e7eb'
                 }}
               >
-                <span style={{ fontSize: '15px', fontWeight: '600', color: '#111827' }}>Total</span>
+                <span style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Total</span>
                 <span 
                   style={{ 
                     fontSize: '20px',
@@ -496,7 +627,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                     color: '#f97316'
                   }}
                 >
-                  L{total.toFixed(2)}
+                  L{calculateTotal().toFixed(2)}
                 </span>
               </div>
             </div>
