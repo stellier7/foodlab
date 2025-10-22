@@ -9,7 +9,9 @@ import {
   TrendingUp, 
   Settings,
   Home,
-  Bell
+  Bell,
+  Menu,
+  X
 } from 'lucide-react'
 
 // Importar páginas (se crearán después)
