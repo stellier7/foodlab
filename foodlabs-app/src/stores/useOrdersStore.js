@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAppStore } from './useAppStore'
+import { ordersService } from '../services/firestore'
+import { useAuthStore } from './useAuthStore'
 
 // Datos mock para testing
 const MOCK_ORDERS = [
@@ -248,7 +250,7 @@ export const useOrdersStore = create(
   persist(
     (set, get) => ({
       // Estado inicial
-      orders: MOCK_ORDERS,
+      orders: [],
       currentOrder: null,
       filters: {
         status: 'all',
@@ -261,132 +263,202 @@ export const useOrdersStore = create(
         week: { sales: 0, orders: 0, commission: 0 },
         month: { sales: 0, orders: 0, commission: 0 }
       },
-      orderCounter: MOCK_ORDERS.length,
+      orderCounter: 0,
+      isLoading: false,
+      error: null,
+      isConnected: false,
+      unsubscribe: null,
+
+      // Initialize Firestore connection
+      initializeOrders: async () => {
+        const { isAuthenticated } = useAuthStore.getState()
+        if (!isAuthenticated) return
+
+        set({ isLoading: true, error: null })
+
+        try {
+          // Subscribe to real-time updates
+          const unsubscribe = ordersService.subscribeToOrders(
+            (orders) => {
+              set({ 
+                orders, 
+                isConnected: true, 
+                isLoading: false,
+                error: null 
+              })
+              get().calculateStats()
+            },
+            get().filters
+          )
+
+          set({ unsubscribe })
+        } catch (error) {
+          console.error('Error initializing orders:', error)
+          set({ 
+            error: error.message, 
+            isLoading: false,
+            isConnected: false 
+          })
+        }
+      },
+
+      // Disconnect from Firestore
+      disconnectOrders: () => {
+        const { unsubscribe } = get()
+        if (unsubscribe) {
+          unsubscribe()
+          set({ unsubscribe: null, isConnected: false })
+        }
+      },
 
       // Acciones principales
-      addOrder: (order) => {
-        const orders = get().orders
-        const orderCounter = get().orderCounter + 1
-        
-        const newOrder = {
-          ...order,
-          id: `ORD-${String(orderCounter).padStart(3, '0')}`,
-          orderNumber: orderCounter,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          history: [
-            { 
-              action: 'created', 
-              timestamp: new Date().toISOString(), 
-              user: 'system' 
-            }
-          ]
-        }
+      addOrder: async (order) => {
+        set({ isLoading: true, error: null })
 
-        set({
-          orders: [newOrder, ...orders],
-          orderCounter
-        })
-
-        get().calculateStats()
-        
-        // Trigger notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('Nuevo Pedido', {
-            body: `Orden #${orderCounter} - ${newOrder.customer.name} - $${newOrder.pricing.total}`,
-            icon: '/favicon.ico'
-          })
-        }
-
-        return newOrder
-      },
-
-      updateOrder: (orderId, updates) => {
-        const orders = get().orders
-        const currentUser = get().currentUser || 'admin-001'
-        
-        const updatedOrders = orders.map(order => {
-          if (order.id === orderId) {
-            const updatedOrder = {
-              ...order,
-              ...updates,
-              updatedAt: new Date().toISOString(),
-              history: [
-                ...order.history,
-                {
-                  action: 'updated',
-                  timestamp: new Date().toISOString(),
-                  user: currentUser,
-                  changes: updates
-                }
-              ]
-            }
-            return updatedOrder
+        try {
+          const currentUser = useAuthStore.getState().getCurrentUser()
+          
+          const newOrder = {
+            ...order,
+            orderNumber: get().orderCounter + 1,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            history: [
+              { 
+                action: 'created', 
+                timestamp: new Date().toISOString(), 
+                user: currentUser 
+              }
+            ]
           }
-          return order
-        })
 
-        set({ orders: updatedOrders })
-        get().calculateStats()
+          const orderId = await ordersService.createOrder(newOrder)
+          
+          // Update local counter
+          set({ orderCounter: get().orderCounter + 1 })
+          
+          // Trigger notification
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Nuevo Pedido', {
+              body: `Orden #${newOrder.orderNumber} - ${newOrder.customer.name} - $${newOrder.pricing.total}`,
+              icon: '/favicon.ico'
+            })
+          }
+
+          set({ isLoading: false, error: null })
+          return { ...newOrder, id: orderId }
+        } catch (error) {
+          console.error('Error adding order:', error)
+          set({ 
+            error: error.message, 
+            isLoading: false 
+          })
+          throw error
+        }
       },
 
-      deleteOrder: (orderId) => {
-        const orders = get().orders
-        const filteredOrders = orders.filter(order => order.id !== orderId)
-        
-        set({ orders: filteredOrders })
-        get().calculateStats()
+      updateOrder: async (orderId, updates) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const currentUser = useAuthStore.getState().getCurrentUser()
+          
+          const updateData = {
+            ...updates,
+            updatedAt: new Date().toISOString(),
+            history: [
+              {
+                action: 'updated',
+                timestamp: new Date().toISOString(),
+                user: currentUser,
+                changes: updates
+              }
+            ]
+          }
+
+          await ordersService.updateOrder(orderId, updateData)
+          set({ isLoading: false, error: null })
+        } catch (error) {
+          console.error('Error updating order:', error)
+          set({ 
+            error: error.message, 
+            isLoading: false 
+          })
+          throw error
+        }
       },
 
-      changeOrderStatus: (orderId, newStatus) => {
-        const orders = get().orders
-        const currentUser = get().currentUser || 'admin-001'
-        const order = orders.find(o => o.id === orderId)
-        
-        if (!order) return
-        
-        const oldStatus = order.status
-        
-        // Actualizar stock si se confirma la orden
-        if (newStatus === 'confirmed' && oldStatus === 'pending') {
-          order.items.forEach(item => {
-            useAppStore.getState().decreaseStock(item.id, item.quantity)
+      deleteOrder: async (orderId) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          await ordersService.deleteOrder(orderId)
+          set({ isLoading: false, error: null })
+        } catch (error) {
+          console.error('Error deleting order:', error)
+          set({ 
+            error: error.message, 
+            isLoading: false 
           })
+          throw error
         }
-        
-        // Devolver stock si se cancela la orden
-        if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
-          order.items.forEach(item => {
-            useAppStore.getState().updateStock(item.id, item.quantity)
-          })
-        }
-        
-        const updatedOrders = orders.map(order => {
-          if (order.id === orderId) {
-            return {
-              ...order,
-              status: newStatus,
-              updatedAt: new Date().toISOString(),
-              history: [
-                ...order.history,
-                {
-                  action: 'status_changed',
-                  timestamp: new Date().toISOString(),
-                  user: currentUser,
-                  from: oldStatus,
-                  to: newStatus
-                }
-              ]
+      },
+
+      changeOrderStatus: async (orderId, newStatus) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const currentUser = useAuthStore.getState().getCurrentUser()
+          const orders = get().orders
+          const order = orders.find(o => o.id === orderId)
+          
+          if (!order) {
+            throw new Error('Order not found')
+          }
+          
+          const oldStatus = order.status
+          
+          // Update stock if confirming order
+          if (newStatus === 'confirmed' && oldStatus === 'pending') {
+            for (const item of order.items) {
+              await useAppStore.getState().decreaseStock(item.id, item.quantity)
             }
           }
-          return order
-        })
+          
+          // Return stock if cancelling order
+          if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
+            for (const item of order.items) {
+              await useAppStore.getState().updateStock(item.id, item.quantity)
+            }
+          }
+          
+          const updateData = {
+            status: newStatus,
+            updatedAt: new Date().toISOString(),
+            history: [
+              {
+                action: 'status_changed',
+                timestamp: new Date().toISOString(),
+                user: currentUser,
+                from: oldStatus,
+                to: newStatus
+              }
+            ]
+          }
 
-        set({ orders: updatedOrders })
-        get().calculateStats()
+          await ordersService.updateOrder(orderId, updateData)
+          set({ isLoading: false, error: null })
+        } catch (error) {
+          console.error('Error changing order status:', error)
+          set({ 
+            error: error.message, 
+            isLoading: false 
+          })
+          throw error
+        }
       },
 
-      duplicateOrder: (orderId) => {
+      duplicateOrder: async (orderId) => {
         const orders = get().orders
         const originalOrder = orders.find(order => order.id === orderId)
         
@@ -403,7 +475,7 @@ export const useOrdersStore = create(
             history: [] // Will be set by addOrder
           }
 
-          get().addOrder(duplicatedOrder)
+          await get().addOrder(duplicatedOrder)
         }
       },
 
@@ -428,7 +500,18 @@ export const useOrdersStore = create(
       },
 
       setFilters: (filters) => {
-        set({ filters: { ...get().filters, ...filters } })
+        const newFilters = { ...get().filters, ...filters }
+        set({ filters: newFilters })
+        
+        // Re-subscribe with new filters if connected
+        const { isConnected, unsubscribe } = get()
+        if (isConnected && unsubscribe) {
+          // Disconnect old subscription
+          unsubscribe()
+          
+          // Reconnect with new filters
+          get().initializeOrders()
+        }
       },
 
       clearFilters: () => {
@@ -634,9 +717,9 @@ export const useOrdersStore = create(
     {
       name: 'foodlabs-orders-storage',
       partialize: (state) => ({
-        orders: state.orders,
         orderCounter: state.orderCounter,
         filters: state.filters
+        // Don't persist orders, stats, or connection state - they come from Firestore
       })
     }
   )

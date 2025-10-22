@@ -1,0 +1,159 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserRole() == 'super_admin';
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() in ['super_admin', 'admin_national', 'admin_regional'];
+    }
+    
+    function isBusiness() {
+      return isAuthenticated() && getUserRole() == 'business';
+    }
+    
+    function isCustomer() {
+      return isAuthenticated() && getUserRole() == 'customer';
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isBusinessOwner(businessId) {
+      return isAuthenticated() && 
+             getUserRole() == 'business' && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId == businessId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if isOwner(userId);
+      
+      // Super admins can read all users
+      allow read: if isSuperAdmin();
+      
+      // Users can write their own data
+      allow write: if isOwner(userId);
+      
+      // Super admins can write all users
+      allow write: if isSuperAdmin();
+    }
+    
+    // Orders collection
+    match /orders/{orderId} {
+      // Super admins and admins can read all orders
+      allow read: if isAdmin();
+      
+      // Business users can read their own orders
+      allow read: if isBusiness() && 
+                     resource.data.business.id == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+      
+      // Customers can read their own orders
+      allow read: if isCustomer() && 
+                     resource.data.customer.userId == request.auth.uid;
+      
+      // Super admins and admins can write all orders
+      allow write: if isAdmin();
+      
+      // Business users can write their own orders
+      allow write: if isBusiness() && 
+                      resource.data.business.id == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+      
+      // Customers can create orders
+      allow create: if isCustomer();
+      
+      // Customers can update their own pending orders
+      allow update: if isCustomer() && 
+                       resource.data.customer.userId == request.auth.uid &&
+                       resource.data.status == 'pending';
+    }
+    
+    // Inventory collection
+    match /inventory/{productId} {
+      // Super admins and admins can read/write all inventory
+      allow read, write: if isAdmin();
+      
+      // Business users can read/write their own inventory
+      allow read, write: if isBusiness() && 
+                           resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+      
+      // Customers can read inventory (for product availability)
+      allow read: if isCustomer();
+    }
+    
+    // Businesses collection
+    match /businesses/{businessId} {
+      // Super admins can read/write all businesses
+      allow read, write: if isSuperAdmin();
+      
+      // Admins can read businesses
+      allow read: if isAdmin();
+      
+      // Business users can read their own business
+      allow read: if isBusiness() && 
+                     resource.id == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+    }
+    
+    // Products collection
+    match /products/{productId} {
+      // Super admins and admins can read/write all products
+      allow read, write: if isAdmin();
+      
+      // Business users can read/write their own products
+      allow read, write: if isBusiness() && 
+                           resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+      
+      // Customers can read products
+      allow read: if isCustomer();
+    }
+    
+    // Analytics collection (for admin dashboards)
+    match /analytics/{document} {
+      // Only super admins and admins can access analytics
+      allow read, write: if isAdmin();
+    }
+    
+    // Settings collection
+    match /settings/{document} {
+      // Only super admins can modify settings
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Super admins and admins can create notifications
+      allow create: if isAdmin();
+      
+      // Users can update their own notifications (mark as read)
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // Audit logs collection
+    match /audit_logs/{logId} {
+      // Only super admins can read audit logs
+      allow read: if isSuperAdmin();
+      
+      // System can write audit logs (this would be done server-side)
+      allow write: if false; // Disabled for now, would be handled by Cloud Functions
+    }
+  }
+}

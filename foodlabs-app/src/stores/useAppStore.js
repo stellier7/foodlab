@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { inventoryService } from '../services/firestore'
+import { useAuthStore } from './useAuthStore'
 
 // ========================================
 // CONFIGURACIÓN GLOBAL - Sistema de Ubicaciones
@@ -83,17 +85,11 @@ export const useAppStore = create(
       exchangeRates: EXCHANGE_RATES,
       
       // Estado de inventario
-      inventory: {
-        'sp3': { stock: 20, reserved: 0, sold: 0 },  // PadelBuddy
-        'orange-chicken': { stock: 999, reserved: 0, sold: 0 },
-        'boneless': { stock: 999, reserved: 0, sold: 0 },
-        'angus-burger': { stock: 999, reserved: 0, sold: 0 },
-        'chicken-sandwich': { stock: 999, reserved: 0, sold: 0 },
-        'tallarin': { stock: 999, reserved: 0, sold: 0 },
-        'loaded-fries': { stock: 999, reserved: 0, sold: 0 },
-        'croilab': { stock: 999, reserved: 0, sold: 0 },
-        'gyozas': { stock: 999, reserved: 0, sold: 0 }
-      },
+      inventory: {},
+      inventoryLoading: false,
+      inventoryError: null,
+      inventoryConnected: false,
+      inventoryUnsubscribe: null,
       
       // Acciones para restaurantes
       setRestaurants: (restaurants) => set({ restaurants }),
@@ -225,25 +221,88 @@ export const useAppStore = create(
       
       setHasAskedLocation: (value) => set({ hasAskedLocation: value }),
       
+      // Initialize inventory connection
+      initializeInventory: async () => {
+        const { isAuthenticated } = useAuthStore.getState()
+        if (!isAuthenticated) return
+
+        set({ inventoryLoading: true, inventoryError: null })
+
+        try {
+          // Subscribe to real-time inventory updates
+          const unsubscribe = inventoryService.subscribeToInventory((inventory) => {
+            set({ 
+              inventory, 
+              inventoryConnected: true, 
+              inventoryLoading: false,
+              inventoryError: null 
+            })
+          })
+
+          set({ inventoryUnsubscribe: unsubscribe })
+        } catch (error) {
+          console.error('Error initializing inventory:', error)
+          set({ 
+            inventoryError: error.message, 
+            inventoryLoading: false,
+            inventoryConnected: false 
+          })
+        }
+      },
+
+      // Disconnect from inventory
+      disconnectInventory: () => {
+        const { inventoryUnsubscribe } = get()
+        if (inventoryUnsubscribe) {
+          inventoryUnsubscribe()
+          set({ inventoryUnsubscribe: null, inventoryConnected: false })
+        }
+      },
+
       // Acciones para inventario
-      updateStock: (productId, quantity) => {
-        const inventory = get().inventory
-        const currentItem = inventory[productId] || { stock: 0, reserved: 0, sold: 0 }
-        
-        set({
-          inventory: {
-            ...inventory,
-            [productId]: {
-              ...currentItem,
-              stock: Math.max(0, currentItem.stock + quantity),
-              sold: quantity < 0 ? currentItem.sold + Math.abs(quantity) : currentItem.sold
-            }
-          }
-        })
+      updateStock: async (productId, quantity) => {
+        set({ inventoryLoading: true, inventoryError: null })
+
+        try {
+          const currentItem = get().inventory[productId] || { stock: 0, reserved: 0, sold: 0 }
+          const newStock = Math.max(0, currentItem.stock + quantity)
+          const newSold = quantity < 0 ? currentItem.sold + Math.abs(quantity) : currentItem.sold
+
+          await inventoryService.updateStock(productId, {
+            stock: newStock,
+            sold: newSold,
+            reserved: currentItem.reserved
+          })
+
+          set({ inventoryLoading: false, inventoryError: null })
+        } catch (error) {
+          console.error('Error updating stock:', error)
+          set({ 
+            inventoryError: error.message, 
+            inventoryLoading: false 
+          })
+          throw error
+        }
       },
       
-      decreaseStock: (productId, quantity) => {
-        get().updateStock(productId, -quantity)
+      decreaseStock: async (productId, quantity) => {
+        try {
+          await inventoryService.decreaseStock(productId, quantity)
+        } catch (error) {
+          console.error('Error decreasing stock:', error)
+          set({ inventoryError: error.message })
+          throw error
+        }
+      },
+      
+      increaseStock: async (productId, quantity) => {
+        try {
+          await inventoryService.increaseStock(productId, quantity)
+        } catch (error) {
+          console.error('Error increasing stock:', error)
+          set({ inventoryError: error.message })
+          throw error
+        }
       },
       
       getProductStock: (productId) => {
@@ -251,17 +310,27 @@ export const useAppStore = create(
         return inventory[productId]?.stock || 0
       },
       
-      setProductStock: (productId, stock) => {
-        const inventory = get().inventory
-        set({
-          inventory: {
-            ...inventory,
-            [productId]: {
-              ...(inventory[productId] || { reserved: 0, sold: 0 }),
-              stock
-            }
-          }
-        })
+      setProductStock: async (productId, stock) => {
+        set({ inventoryLoading: true, inventoryError: null })
+
+        try {
+          const currentItem = get().inventory[productId] || { reserved: 0, sold: 0 }
+          
+          await inventoryService.updateStock(productId, {
+            stock,
+            reserved: currentItem.reserved,
+            sold: currentItem.sold
+          })
+
+          set({ inventoryLoading: false, inventoryError: null })
+        } catch (error) {
+          console.error('Error setting product stock:', error)
+          set({ 
+            inventoryError: error.message, 
+            inventoryLoading: false 
+          })
+          throw error
+        }
       },
       
       // Acciones para moneda
@@ -381,8 +450,8 @@ export const useAppStore = create(
         manualLocation: state.manualLocation,
         hasAskedLocation: state.hasAskedLocation,
         currency: state.currency,
-        exchangeRates: state.exchangeRates,
-        inventory: state.inventory
+        exchangeRates: state.exchangeRates
+        // Don't persist inventory - it comes from Firestore
       })
     }
   )

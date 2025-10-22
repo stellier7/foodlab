@@ -1,28 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useEffect } from 'react'
+import { authService, getUserData, hasPermission, getRoleDisplayName } from '../services/auth'
+import { USER_ROLES } from '../config/firebase'
 
-// Usuarios mock para testing
-const MOCK_USERS = [
-  {
-    id: 'admin-001',
-    email: 'admin@foodlabs.com',
-    password: 'admin123',
-    name: 'Santiago Tellier',
-    role: 'admin',
-    permissions: ['all']
-  },
-  {
-    id: 'operator-001',
-    email: 'operator@foodlabs.com',
-    password: 'operator123',
-    name: 'Operador FoodLabs',
-    role: 'operator',
-    permissions: ['view_orders', 'edit_orders', 'change_status']
-  }
-]
-
-// Comercios con credenciales
+// Legacy mock data for backward compatibility (will be removed)
 const MOCK_BUSINESSES = [
   {
     id: 'padelbuddy',
@@ -67,8 +49,10 @@ export const useAuthStore = create(
       loginAttempts: 0,
       isBlocked: false,
       blockUntil: null,
+      isLoading: false,
+      error: null,
 
-      // Acciones
+      // Acciones Firebase Auth
       login: async (email, password) => {
         const { isBlocked, blockUntil } = get()
         
@@ -78,46 +62,109 @@ export const useAuthStore = create(
           throw new Error(`Cuenta bloqueada. Intenta de nuevo en ${remainingTime} minutos.`)
         }
 
-        // Buscar usuario
-        const user = MOCK_USERS.find(u => u.email === email && u.password === password)
-        
-        if (user) {
-          // Login exitoso
-          set({
-            user: {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role
-            },
-            isAuthenticated: true,
-            role: user.role,
-            permissions: user.permissions,
-            loginAttempts: 0,
-            isBlocked: false,
-            blockUntil: null
-          })
+        set({ isLoading: true, error: null })
+
+        try {
+          const result = await authService.signInWithEmail(email, password)
           
-          return { success: true, user: user }
-        } else {
-          // Login fallido
-          const newAttempts = get().loginAttempts + 1
-          let isBlocked = false
-          let blockUntil = null
-          
-          // Bloquear después de 3 intentos fallidos
-          if (newAttempts >= 3) {
-            isBlocked = true
-            blockUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutos
+          if (result.success) {
+            set({
+              user: result.user,
+              isAuthenticated: true,
+              role: result.user.role,
+              permissions: result.user.permissions || [],
+              loginAttempts: 0,
+              isBlocked: false,
+              blockUntil: null,
+              isLoading: false,
+              error: null
+            })
+            
+            return { success: true, user: result.user }
+          } else {
+            // Login fallido
+            const newAttempts = get().loginAttempts + 1
+            let isBlocked = false
+            let blockUntil = null
+            
+            // Bloquear después de 3 intentos fallidos
+            if (newAttempts >= 3) {
+              isBlocked = true
+              blockUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutos
+            }
+            
+            set({
+              loginAttempts: newAttempts,
+              isBlocked,
+              blockUntil,
+              isLoading: false,
+              error: result.error
+            })
+            
+            throw new Error(result.error || `Credenciales incorrectas. Intentos restantes: ${3 - newAttempts}`)
           }
+        } catch (error) {
+          set({ isLoading: false, error: error.message })
+          throw error
+        }
+      },
+
+      // Login with Google
+      loginWithGoogle: async () => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const result = await authService.signInWithGoogle()
           
-          set({
-            loginAttempts: newAttempts,
-            isBlocked,
-            blockUntil
-          })
+          if (result.success) {
+            set({
+              user: result.user,
+              isAuthenticated: true,
+              role: result.user.role,
+              permissions: result.user.permissions || [],
+              loginAttempts: 0,
+              isBlocked: false,
+              blockUntil: null,
+              isLoading: false,
+              error: null
+            })
+            
+            return { success: true, user: result.user }
+          } else {
+            set({ isLoading: false, error: result.error })
+            throw new Error(result.error)
+          }
+        } catch (error) {
+          set({ isLoading: false, error: error.message })
+          throw error
+        }
+      },
+
+      // Create account
+      createAccount: async (email, password, userData) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const result = await authService.createAccount(email, password, userData)
           
-          throw new Error(`Credenciales incorrectas. Intentos restantes: ${3 - newAttempts}`)
+          if (result.success) {
+            set({
+              user: result.user,
+              isAuthenticated: true,
+              role: result.user.role,
+              permissions: result.user.permissions || [],
+              isLoading: false,
+              error: null
+            })
+            
+            return { success: true, user: result.user }
+          } else {
+            set({ isLoading: false, error: result.error })
+            throw new Error(result.error)
+          }
+        } catch (error) {
+          set({ isLoading: false, error: error.message })
+          throw error
         }
       },
 
@@ -141,16 +188,30 @@ export const useAuthStore = create(
         return false
       },
 
-      logout: () => {
-        set({
-          user: null,
-          isAuthenticated: false,
-          role: null,
-          permissions: []
-        })
+      logout: async () => {
+        try {
+          await authService.signOut()
+          set({
+            user: null,
+            isAuthenticated: false,
+            role: null,
+            permissions: [],
+            error: null
+          })
+        } catch (error) {
+          console.error('Error during logout:', error)
+          // Force logout even if Firebase fails
+          set({
+            user: null,
+            isAuthenticated: false,
+            role: null,
+            permissions: [],
+            error: null
+          })
+        }
       },
 
-      checkAuth: () => {
+      checkAuth: async () => {
         const { user, isAuthenticated } = get()
         
         // Verificar si hay un usuario en el estado
@@ -158,46 +219,77 @@ export const useAuthStore = create(
           return true
         }
         
-        // Verificar localStorage (fallback)
-        const stored = localStorage.getItem('foodlabs-auth-storage')
-        if (stored) {
+        // Verificar Firebase Auth state
+        const currentUser = authService.getCurrentUser()
+        if (currentUser) {
           try {
-            const parsed = JSON.parse(stored)
-            if (parsed.state?.user && parsed.state?.isAuthenticated) {
+            const userData = await getUserData(currentUser.uid)
+            if (userData) {
               set({
-                user: parsed.state.user,
-                isAuthenticated: parsed.state.isAuthenticated,
-                role: parsed.state.role,
-                permissions: parsed.state.permissions
+                user: {
+                  uid: currentUser.uid,
+                  email: currentUser.email,
+                  displayName: currentUser.displayName,
+                  photoURL: currentUser.photoURL,
+                  ...userData
+                },
+                isAuthenticated: true,
+                role: userData.role,
+                permissions: userData.permissions || []
               })
               return true
             }
           } catch (error) {
-            console.error('Error parsing auth storage:', error)
+            console.error('Error checking auth:', error)
           }
         }
         
         return false
       },
 
-      hasPermission: (permission) => {
-        const { permissions, role } = get()
-        
-        // Admin tiene todos los permisos
-        if (role === 'admin' || permissions.includes('all')) {
-          return true
-        }
-        
-        // Verificar permiso específico
-        return permissions.includes(permission)
+      // Initialize auth state listener
+      initializeAuth: () => {
+        authService.onAuthStateChanged((user) => {
+          if (user) {
+            set({
+              user,
+              isAuthenticated: true,
+              role: user.role,
+              permissions: user.permissions || []
+            })
+          } else {
+            set({
+              user: null,
+              isAuthenticated: false,
+              role: null,
+              permissions: []
+            })
+          }
+        })
       },
 
-      updateProfile: (updates) => {
+      hasPermission: (permission) => {
+        const { permissions, role } = get()
+        return hasPermission(role, permissions, permission)
+      },
+
+      updateProfile: async (updates) => {
         const { user } = get()
         if (user) {
-          set({
-            user: { ...user, ...updates }
-          })
+          try {
+            const result = await authService.updateUserProfile(updates)
+            if (result.success) {
+              set({
+                user: { ...user, ...updates }
+              })
+              return { success: true }
+            } else {
+              throw new Error(result.error)
+            }
+          } catch (error) {
+            set({ error: error.message })
+            throw error
+          }
         }
       },
 
@@ -210,14 +302,40 @@ export const useAuthStore = create(
       },
 
       // Funciones de utilidad
+      isSuperAdmin: () => {
+        const { role } = get()
+        return role === USER_ROLES.SUPER_ADMIN
+      },
+
+      isAdminNational: () => {
+        const { role } = get()
+        return role === USER_ROLES.ADMIN_NATIONAL
+      },
+
+      isAdminRegional: () => {
+        const { role } = get()
+        return role === USER_ROLES.ADMIN_REGIONAL
+      },
+
+      isBusiness: () => {
+        const { role } = get()
+        return role === USER_ROLES.BUSINESS
+      },
+
+      isCustomer: () => {
+        const { role } = get()
+        return role === USER_ROLES.CUSTOMER
+      },
+
+      // Legacy compatibility
       isAdmin: () => {
         const { role } = get()
-        return role === 'admin'
+        return role === USER_ROLES.SUPER_ADMIN || role === USER_ROLES.ADMIN_NATIONAL
       },
 
       isOperator: () => {
         const { role } = get()
-        return role === 'operator'
+        return role === USER_ROLES.ADMIN_REGIONAL
       },
 
       canViewOrders: () => {
@@ -247,7 +365,13 @@ export const useAuthStore = create(
       // Información del usuario para logs
       getCurrentUser: () => {
         const { user } = get()
-        return user?.id || 'system'
+        return user?.uid || user?.id || 'system'
+      },
+
+      // Get role display name
+      getRoleDisplayName: () => {
+        const { role } = get()
+        return getRoleDisplayName(role)
       },
 
       // Validación de sesión
@@ -273,11 +397,42 @@ export const useAuthStore = create(
           permissions: [],
           loginAttempts: 0,
           isBlocked: false,
-          blockUntil: null
+          blockUntil: null,
+          error: null
         })
         
         // Limpiar localStorage
         localStorage.removeItem('foodlabs-auth-storage')
+      },
+
+      // Reset password
+      resetPassword: async (email) => {
+        try {
+          const result = await authService.resetPassword(email)
+          if (result.success) {
+            return { success: true }
+          } else {
+            throw new Error(result.error)
+          }
+        } catch (error) {
+          set({ error: error.message })
+          throw error
+        }
+      },
+
+      // Change password
+      changePassword: async (currentPassword, newPassword) => {
+        try {
+          const result = await authService.changePassword(currentPassword, newPassword)
+          if (result.success) {
+            return { success: true }
+          } else {
+            throw new Error(result.error)
+          }
+        } catch (error) {
+          set({ error: error.message })
+          throw error
+        }
       },
 
       // Obtener información de debug
@@ -290,7 +445,9 @@ export const useAuthStore = create(
           permissions: state.permissions,
           loginAttempts: state.loginAttempts,
           isBlocked: state.isBlocked,
-          blockUntil: state.blockUntil
+          blockUntil: state.blockUntil,
+          isLoading: state.isLoading,
+          error: state.error
         }
       }
     }),
@@ -303,7 +460,9 @@ export const useAuthStore = create(
         permissions: state.permissions,
         loginAttempts: state.loginAttempts,
         isBlocked: state.isBlocked,
-        blockUntil: state.blockUntil
+        blockUntil: state.blockUntil,
+        isLoading: state.isLoading,
+        error: state.error
       })
     }
   )
@@ -311,14 +470,15 @@ export const useAuthStore = create(
 
 // Hook personalizado para verificar autenticación
 export const useRequireAuth = () => {
-  const { isAuthenticated, checkAuth } = useAuthStore()
+  const { isAuthenticated, checkAuth, initializeAuth } = useAuthStore()
   
-  // Verificar autenticación al montar el componente
+  // Initialize auth listener and check auth on mount
   useEffect(() => {
+    initializeAuth()
     if (!isAuthenticated) {
       checkAuth()
     }
-  }, [isAuthenticated, checkAuth])
+  }, [isAuthenticated, checkAuth, initializeAuth])
   
   return isAuthenticated
 }
@@ -338,10 +498,24 @@ export const useCurrentUser = () => {
 
 // Hook para verificar permisos
 export const usePermissions = () => {
-  const { hasPermission, isAdmin, isOperator } = useAuthStore()
+  const { 
+    hasPermission, 
+    isSuperAdmin, 
+    isAdminNational, 
+    isAdminRegional, 
+    isBusiness, 
+    isCustomer,
+    isAdmin, 
+    isOperator 
+  } = useAuthStore()
   
   return {
     hasPermission,
+    isSuperAdmin: isSuperAdmin(),
+    isAdminNational: isAdminNational(),
+    isAdminRegional: isAdminRegional(),
+    isBusiness: isBusiness(),
+    isCustomer: isCustomer(),
     isAdmin: isAdmin(),
     isOperator: isOperator(),
     canViewOrders: () => hasPermission('view_orders') || hasPermission('all'),
@@ -349,6 +523,8 @@ export const usePermissions = () => {
     canChangeStatus: () => hasPermission('change_status') || hasPermission('all'),
     canManageUsers: () => hasPermission('manage_users') || hasPermission('all'),
     canViewAnalytics: () => hasPermission('view_analytics') || hasPermission('all'),
-    canExportData: () => hasPermission('export_data') || hasPermission('all')
+    canExportData: () => hasPermission('export_data') || hasPermission('all'),
+    canManageBusinesses: () => hasPermission('manage_businesses') || hasPermission('all'),
+    canManageInventory: () => hasPermission('manage_inventory') || hasPermission('all')
   }
 }
