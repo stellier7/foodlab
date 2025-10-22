@@ -41,7 +41,7 @@ const SportsShopPage = () => {
               image: '/images/products/phoneMount-PadelBuddy.jpeg',
               stock: 20,
               isNew: true,
-              features: ['12 ventosas', 'Forma de raqueta', 'Para vidrio', 'Grabación HD'],
+              features: [],
               labels: []
             }
           ]
@@ -221,7 +221,10 @@ const SportsShopPage = () => {
                     animationDelay: `${index * 0.08}s`,
                     opacity: 0,
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    height: '320px',
+                    display: 'flex',
+                    flexDirection: 'column'
                   }}
                 >
                   <div style={{ 
@@ -257,42 +260,117 @@ const SportsShopPage = () => {
                     )}
                   </div>
 
-                  <div style={{ padding: '12px' }}>
-                    <h3 style={{ 
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#111827',
-                      marginBottom: '4px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {product.name}
-                    </h3>
-                    <p style={{ 
-                      fontSize: '12px',
-                      color: '#6b7280',
-                      marginBottom: '8px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {product.businessName}
-                    </p>
+                  <div style={{ 
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%'
+                  }}>
+                    {/* Content area - grows to fill space */}
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ 
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#111827',
+                        marginBottom: '4px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {product.name}
+                      </h3>
+                      <p style={{ 
+                        fontSize: '12px',
+                        color: '#6b7280',
+                        marginBottom: '8px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {product.businessName}
+                      </p>
+                      
+                      <div style={{ 
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        color: '#3b82f6',
+                        marginBottom: '12px'
+                      }}>
+                        {getCurrencySymbol()} {getPriceForCurrency(product).toFixed(2)}
+                      </div>
+                    </div>
                     
+                    {/* Fixed bottom section - always visible */}
                     <div style={{ 
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between'
+                      justifyContent: 'space-between',
+                      marginTop: 'auto',
+                      paddingTop: '8px',
+                      borderTop: '1px solid #f3f4f6'
                     }}>
-                      <span style={{ 
-                        fontSize: '18px',
-                        fontWeight: 'bold',
-                        color: '#3b82f6'
+                      {/* Quantity selector */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
                       }}>
-                        {getCurrencySymbol()} {getPriceForCurrency(product).toFixed(2)}
-                      </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // TODO: Implement quantity decrease
+                          }}
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '6px',
+                            background: '#f3f4f6',
+                            color: '#6b7280',
+                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          −
+                        </button>
+                        <span style={{
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: '#111827',
+                          minWidth: '20px',
+                          textAlign: 'center'
+                        }}>
+                          1
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // TODO: Implement quantity increase
+                          }}
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '6px',
+                            background: '#f3f4f6',
+                            color: '#6b7280',
+                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
                       
+                      {/* Add to cart button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
