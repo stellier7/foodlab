@@ -57,7 +57,8 @@ service cloud.firestore {
       // Allow anyone (including guests) to CREATE orders with valid data
       allow create: if request.resource.data.customer != null 
                     && request.resource.data.items != null
-                    && request.resource.data.total > 0
+                    && request.resource.data.pricing != null
+                    && request.resource.data.pricing.total > 0
                     && request.resource.data.status == 'pending';
       
       // Super admins and admins can read all orders
