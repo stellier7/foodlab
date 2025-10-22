@@ -31,7 +31,8 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
 
   // Calculate current price based on selections
   const getCurrentPrice = () => {
-    let price = product.basePrice || product.price
+    // Use precio_HNL if available, otherwise use price
+    let price = product.precio_HNL || product.basePrice || product.price
     
     // Add size modifier if applicable
     if (selectedSize && product.sizes) {
@@ -73,6 +74,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
         id: product.id,
         name: displayName,
         price: finalPrice,
+        precio_HNL: finalPrice,  // Ensure precio_HNL is set for cart calculation
         description: product.description,
         selectedSize: selectedSize,
         withCombo: withCombo,

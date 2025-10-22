@@ -5,7 +5,7 @@ import { useOrdersStore } from '../stores/useOrdersStore'
 
 const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   const { user, isAuthenticated, loginWithGoogle, loginWithEmail, createAccount } = useAuthStore()
-  const { businesses } = useAppStore()
+  const { businesses, getPriceForCurrency, getCurrencySymbol } = useAppStore()
   const { addOrder } = useOrdersStore()
   
   // Form states
@@ -172,7 +172,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     let message = `¡Hola! Soy ${customerName} y quiero hacer un pedido:\n\n`
     
     items.forEach(item => {
-      message += `• ${item.name} x${item.quantity} - L${(item.price * item.quantity).toFixed(2)}\n`
+      const itemPrice = getPriceForCurrency(item)
+      message += `• ${item.name} x${item.quantity} - L${(itemPrice * item.quantity).toFixed(2)}\n`
     })
     
     message += `\n💰 Subtotal: L${subtotal.toFixed(2)}`
@@ -727,7 +728,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                       {item.name} <span style={{ color: '#9ca3af' }}>×{item.quantity}</span>
                     </span>
                     <span style={{ fontWeight: '600', color: '#111827', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
-                      L{(item.price * item.quantity).toFixed(2)}
+                      L{(getPriceForCurrency(item) * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}

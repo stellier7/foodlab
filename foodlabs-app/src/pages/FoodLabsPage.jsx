@@ -6,34 +6,19 @@ import { MapPin, Star } from 'lucide-react'
 const FoodLabsPage = () => {
   const { setLoading, setRestaurants, restaurants, location } = useAppStore()
 
-  // Helper para convertir productos con precios en Lempiras
+  // Helper para procesar productos - SIN CONVERSIONES USD
   const processProducts = (menuCategories) => {
     return menuCategories.map(category => ({
       ...category,
       items: category.items.map(item => {
-        // Si el producto tiene precios en Lempiras (actuales), agregar precio_HNL
-        // y convertir basePrice/price a USD
-        const precioLempiras = item.basePrice || item.price
-        
-        // Procesar sizes si existen
-        const processedSizes = item.sizes ? item.sizes.map(size => ({
-          ...size,
-          priceModifier: (size.priceModifier || 0) / 24.75  // Convertir modificador a USD
-        })) : undefined
-        
-        // Procesar comboOptions si existe
-        const processedCombo = item.comboOptions ? {
-          ...item.comboOptions,
-          price: (item.comboOptions.price || 0) / 24.75  // Convertir precio combo a USD
-        } : undefined
+        // Los precios ya están en Lempiras, solo agregar metadata
+        const precioHNL = item.precio_HNL || item.basePrice || item.price
         
         return {
           ...item,
-          price: precioLempiras / 24.75,  // Convertir a USD
-          basePrice: precioLempiras / 24.75,  // Convertir a USD
-          precio_HNL: precioLempiras,  // Guardar precio exacto en Lempiras
-          sizes: processedSizes,
-          comboOptions: processedCombo
+          precio_HNL: precioHNL,  // Precio en Lempiras (no conversión)
+          price: precioHNL,        // Usar el mismo valor (ya está en HNL)
+          currency: 'HNL'          // Metadata de moneda
         }
       })
     }))
@@ -75,8 +60,7 @@ const FoodLabsPage = () => {
             { 
               id: 'orange-chicken', 
               name: 'Orange Chicken', 
-              basePrice: 227.90,
-              price: 227.90,
+              precio_HNL: 227.90,
               description: 'Pollo crujiente bañado en salsa de naranja dulce',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               isPopular: true,
@@ -86,8 +70,7 @@ const FoodLabsPage = () => {
             { 
               id: 'boneless', 
               name: 'Boneless', 
-              basePrice: 193.40,
-              price: 193.40,
+              precio_HNL: 193.40,
               description: 'Deliciosos boneless de pollo crujiente',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               isPopular: true,
@@ -114,8 +97,7 @@ const FoodLabsPage = () => {
             { 
               id: 'croilab', 
               name: 'CroiLab', 
-              basePrice: 118.24,
-              price: 118.24,
+              precio_HNL: 118.24,
               description: 'Croissant artesanal relleno',
               image: '/images/products/foodLab/croissantDeDesayuno.jpeg',
               labels: ['Vegetariano']
@@ -123,8 +105,7 @@ const FoodLabsPage = () => {
             { 
               id: 'gyozas', 
               name: 'Gyozas', 
-              basePrice: 150.00,
-              price: 150.00,
+              precio_HNL: 150.00,
               description: 'Dumplings al vapor con salsa de soya y jengibre',
               image: '/images/products/foodLab/dumplings.jpeg',
               labels: ['Vegetariano']
@@ -132,8 +113,7 @@ const FoodLabsPage = () => {
             { 
               id: 'loaded-fries', 
               name: 'Loaded Fries', 
-              basePrice: 140.63,
-              price: 140.63,
+              precio_HNL: 140.63,
               description: 'Papas fritas con queso, tocino, cebollín y crema',
               image: '/images/products/foodLab/loadedFries.jpeg',
               labels: ['Vegetariano']
@@ -146,8 +126,7 @@ const FoodLabsPage = () => {
             { 
               id: 'tallarin', 
               name: 'Tallarin', 
-              basePrice: 234.58,
-              price: 234.58,
+              precio_HNL: 234.58,
               description: 'Orange Chicken con tallarines',
               image: '/images/products/foodLab/padTai.jpeg',
               labels: ['Pescaradiano']
@@ -160,8 +139,7 @@ const FoodLabsPage = () => {
             { 
               id: 'agua', 
               name: 'Agua', 
-              basePrice: 20.87,
-              price: 20.87,
+              precio_HNL: 20.87,
               description: 'Agua purificada',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano']
@@ -169,8 +147,7 @@ const FoodLabsPage = () => {
             { 
               id: 'coca-cola', 
               name: 'Coca Cola', 
-              basePrice: 41.73,
-              price: 41.73,
+              precio_HNL: 41.73,
               description: 'Coca Cola 355ml',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano']
@@ -178,8 +155,7 @@ const FoodLabsPage = () => {
             { 
               id: 'pepsi-light', 
               name: 'Pepsi Light', 
-              basePrice: 41.73,
-              price: 41.73,
+              precio_HNL: 41.73,
               description: 'Pepsi Light 355ml',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano', 'Fit']
@@ -187,8 +163,7 @@ const FoodLabsPage = () => {
             { 
               id: '7up', 
               name: '7Up', 
-              basePrice: 41.73,
-              price: 41.73,
+              precio_HNL: 41.73,
               description: '7Up 355ml',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano']
@@ -196,8 +171,7 @@ const FoodLabsPage = () => {
             { 
               id: 'natural', 
               name: 'Natural', 
-              basePrice: 55.64,
-              price: 55.64,
+              precio_HNL: 55.64,
               description: 'Jugo natural 16oz',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano', 'Fit']
@@ -205,8 +179,7 @@ const FoodLabsPage = () => {
             { 
               id: 'tamarindo', 
               name: 'Tamarindo', 
-              basePrice: 55.64,
-              price: 55.64,
+              precio_HNL: 55.64,
               description: 'Jugo de tamarindo 16oz',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano', 'Fit']
@@ -214,8 +187,7 @@ const FoodLabsPage = () => {
             { 
               id: 'limonada', 
               name: 'Limonada', 
-              basePrice: 55.64,
-              price: 55.64,
+              precio_HNL: 55.64,
               description: 'Limonada natural 16oz',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano', 'Fit']
@@ -258,8 +230,7 @@ const FoodLabsPage = () => {
             { 
               id: 'orange-chicken', 
               name: 'Orange Chicken', 
-              basePrice: 227.90,
-              price: 227.90,
+              precio_HNL: 227.90,
               description: 'Pollo crujiente bañado en salsa de naranja dulce',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               isPopular: true,
@@ -269,8 +240,7 @@ const FoodLabsPage = () => {
             { 
               id: 'boneless', 
               name: 'Boneless', 
-              basePrice: 193.40,
-              price: 193.40,
+              precio_HNL: 193.40,
               description: 'Deliciosos boneless de pollo crujiente',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               isPopular: true,
@@ -297,8 +267,7 @@ const FoodLabsPage = () => {
             { 
               id: 'loaded-fries', 
               name: 'Loaded Fries', 
-              basePrice: 140.63,
-              price: 140.63,
+              precio_HNL: 140.63,
               description: 'Papas fritas con queso, tocino, cebollín y crema',
               image: '/images/products/foodLab/loadedFries.jpeg',
               labels: ['Vegetariano']
@@ -311,8 +280,7 @@ const FoodLabsPage = () => {
             { 
               id: 'angus-burger', 
               name: 'Angus Burger', 
-              basePrice: 150.23,
-              price: 150.23,
+              precio_HNL: 150.23,
               description: 'Hamburguesa de carne Angus premium',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: []
@@ -320,8 +288,7 @@ const FoodLabsPage = () => {
             { 
               id: 'chicken-sandwich', 
               name: 'Chicken Sandwich', 
-              basePrice: 121.02,
-              price: 121.02,
+              precio_HNL: 121.02,
               description: 'Sándwich de pollo crujiente',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: []
@@ -329,8 +296,7 @@ const FoodLabsPage = () => {
             { 
               id: 'tallarin', 
               name: 'Tallarin', 
-              basePrice: 234.58,
-              price: 234.58,
+              precio_HNL: 234.58,
               description: 'Orange Chicken con tallarines',
               image: '/images/products/foodLab/padTai.jpeg',
               labels: ['Pescaradiano']
@@ -343,8 +309,7 @@ const FoodLabsPage = () => {
             { 
               id: 'agua', 
               name: 'Agua', 
-              basePrice: 20.87,
-              price: 20.87,
+              precio_HNL: 20.87,
               description: 'Agua purificada',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano']
@@ -352,8 +317,7 @@ const FoodLabsPage = () => {
             { 
               id: 'coca-cola', 
               name: 'Coca Cola', 
-              basePrice: 41.73,
-              price: 41.73,
+              precio_HNL: 41.73,
               description: 'Coca Cola 355ml',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano']
@@ -361,8 +325,7 @@ const FoodLabsPage = () => {
             { 
               id: 'pepsi-light', 
               name: 'Pepsi Light', 
-              basePrice: 41.73,
-              price: 41.73,
+              precio_HNL: 41.73,
               description: 'Pepsi Light 355ml',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano', 'Fit']
@@ -370,8 +333,7 @@ const FoodLabsPage = () => {
             { 
               id: '7up', 
               name: '7Up', 
-              basePrice: 41.73,
-              price: 41.73,
+              precio_HNL: 41.73,
               description: '7Up 355ml',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano']
@@ -379,8 +341,7 @@ const FoodLabsPage = () => {
             { 
               id: 'natural', 
               name: 'Natural', 
-              basePrice: 55.64,
-              price: 55.64,
+              precio_HNL: 55.64,
               description: 'Jugo natural 16oz',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano', 'Fit']
@@ -388,8 +349,7 @@ const FoodLabsPage = () => {
             { 
               id: 'tamarindo', 
               name: 'Tamarindo', 
-              basePrice: 55.64,
-              price: 55.64,
+              precio_HNL: 55.64,
               description: 'Jugo de tamarindo 16oz',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano', 'Fit']
@@ -397,8 +357,7 @@ const FoodLabsPage = () => {
             { 
               id: 'limonada', 
               name: 'Limonada', 
-              basePrice: 55.64,
-              price: 55.64,
+              precio_HNL: 55.64,
               description: 'Limonada natural 16oz',
               image: '/images/products/foodLab/orangeChicken.jpeg',
               labels: ['Vegano', 'Fit']

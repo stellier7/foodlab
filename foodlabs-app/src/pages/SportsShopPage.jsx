@@ -37,6 +37,7 @@ const SportsShopPage = () => {
               name: 'Phone Mount',
               price: 13.15,
               precio_HNL: 325.00,
+              currency: 'HNL',
               description: 'Soporte para teléfono con ventosas en forma de raqueta de padel. Perfecto para grabar tus partidos.',
               image: '/images/products/phoneMount-PadelBuddy.jpeg',
               stock: 20,
@@ -114,6 +115,7 @@ const SportsShopPage = () => {
       name: product.name,
       price: product.price,
       precio_HNL: product.precio_HNL,
+      currency: 'HNL',
       description: product.description
     }, 'sportsshop')
   }

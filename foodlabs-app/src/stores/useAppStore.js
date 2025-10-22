@@ -161,10 +161,20 @@ export const useAppStore = create(
       
       calculateCartTotal: () => {
         const cart = get().cart
+        const { location } = get()
+        const targetCurrency = location.currency  // HNL, GTQ, or USD
+        
         const total = cart.reduce((sum, item) => {
-          // Use Lempira price if available, otherwise convert from USD
-          const priceInLempiras = item.precio_HNL || (item.price * 24.75)
-          return sum + (priceInLempiras * item.quantity)
+          // Use explicit currency field (precio_HNL, precio_GTQ, precio_USD)
+          const currencyField = `precio_${targetCurrency}`
+          const itemPrice = item[currencyField] || item.price || 0
+          
+          // Log warning if price is missing
+          if (!item[currencyField] && !item.price) {
+            console.warn(`⚠️ Missing price for item: ${item.name}`, item)
+          }
+          
+          return sum + (itemPrice * item.quantity)
         }, 0)
         set({ cartTotal: total })
       },
@@ -353,7 +363,7 @@ export const useAppStore = create(
       
       // Obtener precio con sistema de override
       getPriceForCurrency: (product, targetCurrency) => {
-        const { currency, exchangeRates } = get()
+        const { currency } = get()
         const curr = targetCurrency || currency
         
         // 1. Si hay precio específico para esta moneda, usarlo (override)
@@ -362,9 +372,15 @@ export const useAppStore = create(
           return product[overrideKey]
         }
         
-        // 2. Si no hay override, convertir desde precio base (USD)
-        const basePrice = product.price || product.basePrice
-        return basePrice * exchangeRates[curr]
+        // 2. Si no hay override, usar price directo (sin conversión)
+        // Asumimos que price está en la moneda del restaurante
+        if (product.price) {
+          return product.price
+        }
+        
+        // 3. Si tampoco hay price, log warning y retornar 0
+        console.warn(`⚠️ No price found for product in currency ${curr}:`, product.name || product.id)
+        return 0
       },
       
       // Obtener símbolo de moneda
