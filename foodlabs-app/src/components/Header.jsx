@@ -346,24 +346,8 @@ const Header = () => {
                 )}
               </div>
 
-              {/* Location Dropdown - Keep existing */}
-              {showLocationDropdown && (
-                <div
-                  className="fade-in"
-                  style={{
-                    position: 'absolute',
-                    top: '50px',
-                    right: '0',
-                    background: 'white',
-                    borderRadius: '12px',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-                    padding: '16px',
-                    minWidth: '200px',
-                    zIndex: 1002
-                  }}
-                >
-                
-                {/* Location Dropdown - Dos Niveles */}
+              {/* Location Dropdown - Dos Niveles */}
+              <div className="location-selector-container" style={{ position: 'relative' }}>
                 {showLocationDropdown && (
                   <div
                     className="fade-in"
@@ -485,24 +469,6 @@ const Header = () => {
                   </div>
                 )}
               </div>
-
-              {/* Search Button */}
-              <button className="tap-effect" style={{
-                width: '42px',
-                height: '42px',
-                color: currentNav.color,
-                border: 'none',
-                background: 'rgba(255, 255, 255, 0.9)',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Search size={20} strokeWidth={2} />
-              </button>
 
               {/* User Menu / Login Button */}
               {isAuthenticated ? (
@@ -676,46 +642,6 @@ const Header = () => {
                   Iniciar
                 </button>
               )}
-
-              {/* Cart Button */}
-              <button className="tap-effect" style={{
-                position: 'relative',
-                width: '42px',
-                height: '42px',
-                color: currentNav.color,
-                border: 'none',
-                background: 'rgba(255, 255, 255, 0.9)',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <ShoppingCartIcon size={22} strokeWidth={2} />
-                {cartItemsCount > 0 && (
-                  <span className="fade-in-scale" style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    background: `linear-gradient(135deg, ${currentNav.color} 0%, ${currentNav.color}dd 100%)`,
-                    color: 'white',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    borderRadius: '50%',
-                    width: '22px',
-                    height: '22px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: `0 2px 8px ${currentNav.color}60`,
-                    border: '2px solid white'
-                  }}>
-                    {cartItemsCount}
-                  </span>
-                )}
-              </button>
             </div>
           )}
         </div>
