@@ -555,7 +555,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
               fontWeight: '600',
               color: '#15803d'
             }}>
-              {product.stock > 10 ? `${product.stock} disponibles` : `Solo ${product.stock} disponibles`}
+              {(product.totalStock || product.stock) > 10 ? `${product.totalStock || product.stock} disponibles` : `Solo ${product.totalStock || product.stock} disponibles`}
             </span>
           </div>
 
@@ -609,7 +609,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
                 {quantity}
               </span>
               <button
-                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                onClick={() => setQuantity(Math.min(product.totalStock || product.stock, quantity + 1))}
                 className="tap-effect"
                 style={{
                   width: '40px',
