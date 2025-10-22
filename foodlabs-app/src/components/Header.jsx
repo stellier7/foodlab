@@ -4,14 +4,14 @@ import { useAppStore } from '../stores/useAppStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const Header = () => {
-  const { cart, currency, setCurrency, setManualLocation, manualLocation } = useAppStore()
+  const { cart, location: userLocation, setLocation, getLocations } = useAppStore()
   const navigate = useNavigate()
   const location = useLocation()
   const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
   const [scrollStage, setScrollStage] = useState(0)
   const [scrollY, setScrollY] = useState(0)
-  const [showCitySelector, setShowCitySelector] = useState(false)
-  const [selectedCurrency, setSelectedCurrency] = useState(null)
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const [selectedCountry, setSelectedCountry] = useState(null)
   // Stage 0: Full header with logo + toggle (0-100px)
   // Stage 1: Logo fading (100-250px)
   // Stage 2: Toggle fading (250-450px)
@@ -60,19 +60,23 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Cerrar city selector cuando se hace click fuera
+  // Obtener datos de ubicaciones
+  const LOCATIONS = getLocations()
+  
+  // Cerrar location dropdown cuando se hace click fuera
   useEffect(() => {
-    if (!showCitySelector) return
+    if (!showLocationDropdown) return
     
     const handleClickOutside = (e) => {
-      if (!e.target.closest('.city-selector-container')) {
-        setShowCitySelector(false)
+      if (!e.target.closest('.location-selector-container')) {
+        setShowLocationDropdown(false)
+        setSelectedCountry(null)
       }
     }
     
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
-  }, [showCitySelector])
+  }, [showLocationDropdown])
 
   // Hide header on restaurant, admin, and business pages (tienen sus propios headers)
   if (isRestaurantPage || isAdminPage || location.pathname.startsWith('/business')) {
@@ -143,44 +147,32 @@ const Header = () => {
               marginLeft: scrollStage >= 2 ? 'auto' : '0',
               transition: 'margin-left 0.4s ease-in-out'
             }}>
-              {/* Currency Selector */}
-              <div className="city-selector-container" style={{ position: 'relative' }}>
-                <select
-                  value={currency}
-                  onChange={(e) => {
-                    const newCurrency = e.target.value
-                    // Si es USD, cambiar inmediatamente
-                    if (newCurrency === 'USD') {
-                      setCurrency('USD')
-                      return
-                    }
-                    // Si es HNL o GTQ, mostrar selector de ciudad
-                    setSelectedCurrency(newCurrency)
-                    setShowCitySelector(true)
-                  }}
+              {/* City Code Selector */}
+              <div className="location-selector-container" style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowLocationDropdown(!showLocationDropdown)}
                   className="tap-effect"
                   style={{
                     height: '42px',
-                    padding: '0 12px',
+                    padding: '0 16px',
                     color: currentNav.color,
                     border: 'none',
                     background: 'rgba(255, 255, 255, 0.9)',
-                    borderRadius: '12px',
+                    borderRadius: '20px',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: '700',
-                    outline: 'none'
+                    outline: 'none',
+                    letterSpacing: '0.5px'
                   }}
                 >
-                  <option value="USD">$USD</option>
-                  <option value="HNL">LPS</option>
-                  <option value="GTQ">GTQ</option>
-                </select>
+                  [{userLocation.city}]
+                </button>
                 
-                {/* City Selector Popup */}
-                {showCitySelector && (
+                {/* Location Dropdown - Dos Niveles */}
+                {showLocationDropdown && (
                   <div
                     className="fade-in"
                     style={{
@@ -195,108 +187,109 @@ const Header = () => {
                       zIndex: 1000
                     }}
                   >
+                    {/* Nivel 1: Países */}
                     <div style={{
-                      fontSize: '12px',
+                      fontSize: '11px',
                       fontWeight: '700',
-                      color: '#6b7280',
-                      marginBottom: '12px',
+                      color: '#9ca3af',
+                      marginBottom: '8px',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
                     }}>
-                      Selecciona ciudad:
+                      País:
                     </div>
-                    {selectedCurrency === 'HNL' && (
+                    <div style={{ marginBottom: '16px' }}>
+                      {Object.keys(LOCATIONS).map((countryKey) => {
+                        const country = LOCATIONS[countryKey]
+                        const isSelected = userLocation.country === countryKey
+                        const isHovered = selectedCountry === countryKey
+                        
+                        return (
+                          <button
+                            key={countryKey}
+                            onClick={() => setSelectedCountry(countryKey)}
+                            onMouseEnter={() => setSelectedCountry(countryKey)}
+                            className="tap-effect"
+                            style={{
+                              width: '100%',
+                              padding: '10px 12px',
+                              marginBottom: '4px',
+                              border: 'none',
+                              borderRadius: '8px',
+                              background: isSelected ? '#e0f2fe' : (isHovered ? '#f3f4f6' : '#fafafa'),
+                              color: '#111827',
+                              fontSize: '14px',
+                              fontWeight: isSelected ? '700' : '600',
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
+                            }}
+                          >
+                            <span>{country.flag}</span>
+                            <span>{country.name}</span>
+                            {isSelected && <span style={{ marginLeft: 'auto', color: '#3b82f6' }}>✓</span>}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    
+                    {/* Nivel 2: Ciudades (si hay país seleccionado) */}
+                    {selectedCountry && (
                       <>
-                        <button
-                          onClick={() => {
-                            setCurrency('HNL')
-                            setManualLocation('Honduras', 'Tegucigalpa')
-                            setShowCitySelector(false)
-                          }}
-                          className="tap-effect"
-                          style={{
-                            width: '100%',
-                            padding: '12px',
-                            marginBottom: '8px',
-                            border: 'none',
-                            borderRadius: '8px',
-                            background: manualLocation?.city === 'Tegucigalpa' ? '#f0f9ff' : '#f9fafb',
-                            color: '#111827',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                            transition: 'all 0.3s ease'
-                          }}
-                        >
-                          Tegucigalpa
-                        </button>
-                        <button
-                          onClick={() => {
-                            setCurrency('HNL')
-                            setManualLocation('Honduras', 'San Pedro Sula')
-                            setShowCitySelector(false)
-                          }}
-                          className="tap-effect"
-                          style={{
-                            width: '100%',
-                            padding: '12px',
-                            border: 'none',
-                            borderRadius: '8px',
-                            background: manualLocation?.city === 'San Pedro Sula' ? '#f0f9ff' : '#f9fafb',
-                            color: '#111827',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                            transition: 'all 0.3s ease'
-                          }}
-                        >
-                          San Pedro Sula
-                        </button>
+                        <div style={{
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: '#9ca3af',
+                          marginBottom: '8px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          borderTop: '1px solid #f3f4f6',
+                          paddingTop: '12px'
+                        }}>
+                          Ciudad:
+                        </div>
+                        <div>
+                          {LOCATIONS[selectedCountry].cities.map((city) => {
+                            const isCurrentCity = userLocation.city === city.code && userLocation.country === selectedCountry
+                            
+                            return (
+                              <button
+                                key={city.code}
+                                onClick={() => {
+                                  setLocation(selectedCountry, city.code)
+                                  setShowLocationDropdown(false)
+                                  setSelectedCountry(null)
+                                }}
+                                className="tap-effect"
+                                style={{
+                                  width: '100%',
+                                  padding: '10px 12px',
+                                  marginBottom: '4px',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  background: isCurrentCity ? '#dbeafe' : '#f9fafb',
+                                  color: '#111827',
+                                  fontSize: '14px',
+                                  fontWeight: isCurrentCity ? '700' : '600',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                  transition: 'all 0.2s ease',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between'
+                                }}
+                              >
+                                <span>{city.name}</span>
+                                {isCurrentCity && <span style={{ color: '#3b82f6', fontSize: '12px' }}>✓</span>}
+                              </button>
+                            )
+                          })}
+                        </div>
                       </>
                     )}
-                    {selectedCurrency === 'GTQ' && (
-                      <button
-                        onClick={() => {
-                          setCurrency('GTQ')
-                          setManualLocation('Guatemala', 'Ciudad de Guatemala')
-                          setShowCitySelector(false)
-                        }}
-                        className="tap-effect"
-                        style={{
-                          width: '100%',
-                          padding: '12px',
-                          border: 'none',
-                          borderRadius: '8px',
-                          background: '#f9fafb',
-                          color: '#111827',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        Ciudad de Guatemala
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setShowCitySelector(false)}
-                      style={{
-                        width: '100%',
-                        marginTop: '8px',
-                        padding: '8px',
-                        border: 'none',
-                        background: 'transparent',
-                        color: '#9ca3af',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Cancelar
-                    </button>
                   </div>
                 )}
               </div>

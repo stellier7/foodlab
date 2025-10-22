@@ -2,11 +2,45 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 // ========================================
-// CONFIGURACIÓN GLOBAL - Modificar aquí
+// CONFIGURACIÓN GLOBAL - Sistema de Ubicaciones
 // ========================================
-const DEFAULT_CURRENCY = 'HNL'  // 'USD', 'HNL', 'GTQ'
-const DEFAULT_COUNTRY = 'Honduras'
-const DEFAULT_CITY = 'Tegucigalpa'
+const LOCATIONS = {
+  honduras: {
+    name: 'Honduras',
+    flag: '🇭🇳',
+    currency: 'HNL',
+    currencySymbol: 'L',
+    cities: [
+      { code: 'TGU', name: 'Tegucigalpa' },
+      { code: 'SPS', name: 'San Pedro Sula' }
+    ]
+  },
+  guatemala: {
+    name: 'Guatemala',
+    flag: '🇬🇹',
+    currency: 'GTQ',
+    currencySymbol: 'Q',
+    cities: [
+      { code: 'GUA', name: 'Ciudad de Guatemala' },
+      { code: 'ANT', name: 'Antigua' }
+    ]
+  },
+  salvador: {
+    name: 'El Salvador',
+    flag: '🇸🇻',
+    currency: 'USD',
+    currencySymbol: '$',
+    cities: [
+      { code: 'SLV', name: 'San Salvador' },
+      { code: 'SMA', name: 'Santa Ana' }
+    ]
+  }
+}
+
+const DEFAULT_COUNTRY = 'honduras'
+const DEFAULT_CITY = 'TGU'
+const DEFAULT_CURRENCY = LOCATIONS[DEFAULT_COUNTRY].currency
+
 const EXCHANGE_RATES = {
   USD: 1,
   HNL: 24.75,  // Lempiras hondureñas
@@ -31,9 +65,17 @@ export const useAppStore = create(
       isLoading: false,
       error: null,
       
-      // Estado de ubicación
+      // Estado de ubicación (nuevo sistema)
+      location: {
+        country: DEFAULT_COUNTRY,
+        countryName: LOCATIONS[DEFAULT_COUNTRY].name,
+        city: DEFAULT_CITY,
+        cityName: LOCATIONS[DEFAULT_COUNTRY].cities[0].name,
+        currency: LOCATIONS[DEFAULT_COUNTRY].currency,
+        currencySymbol: LOCATIONS[DEFAULT_COUNTRY].currencySymbol
+      },
       userLocation: null,
-      manualLocation: null,  // { country, city } o null
+      manualLocation: null,  // Mantener para compatibilidad
       hasAskedLocation: false,
       
       // Estado de moneda
@@ -132,6 +174,41 @@ export const useAppStore = create(
       setError: (error) => set({ error }),
       
       // Acciones para ubicación
+      setLocation: (country, cityCode) => {
+        const countryData = LOCATIONS[country]
+        if (!countryData) {
+          console.error('País no encontrado:', country)
+          return
+        }
+        
+        const city = countryData.cities.find(c => c.code === cityCode)
+        if (!city) {
+          console.error('Ciudad no encontrada:', cityCode)
+          return
+        }
+        
+        const newLocation = {
+          country,
+          countryName: countryData.name,
+          city: cityCode,
+          cityName: city.name,
+          currency: countryData.currency,
+          currencySymbol: countryData.currencySymbol
+        }
+        
+        set({
+          location: newLocation,
+          currency: countryData.currency,
+          // Actualizar manualLocation para compatibilidad
+          manualLocation: {
+            country: countryData.name,
+            city: city.name
+          }
+        })
+      },
+      
+      getLocations: () => LOCATIONS,
+      
       setUserLocation: (location) => set({ userLocation: location }),
       
       setManualLocation: (country, city) => {
@@ -219,13 +296,8 @@ export const useAppStore = create(
       
       // Obtener símbolo de moneda
       getCurrencySymbol: () => {
-        const currency = get().currency
-        const symbols = {
-          USD: '$',
-          HNL: 'L',
-          GTQ: 'Q'
-        }
-        return symbols[currency] || '$'
+        const { location } = get()
+        return location.currencySymbol
       },
       
       // Detectar moneda según país del restaurante
@@ -304,6 +376,7 @@ export const useAppStore = create(
       partialize: (state) => ({
         cart: state.cart,
         cartTotal: state.cartTotal,
+        location: state.location,
         userLocation: state.userLocation,
         manualLocation: state.manualLocation,
         hasAskedLocation: state.hasAskedLocation,
