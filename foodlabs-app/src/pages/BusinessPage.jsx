@@ -25,7 +25,7 @@ const BusinessPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('all')
   
   // Normalizar businessId para compatibilidad
-  const normalizedBusinessId = businessId === 'shop' ? 'sportsshop' : businessId
+  const normalizedBusinessId = (businessId === 'shop' || businessId === 'padelbuddy') ? 'sportsshop' : businessId
 
   // Verificar autenticación y permisos
   useEffect(() => {

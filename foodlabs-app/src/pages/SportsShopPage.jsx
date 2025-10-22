@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../stores/useAppStore'
 import { ShoppingBag, Plus, Star, Clock, MapPin } from 'lucide-react'
+import ProductModal from '../components/ProductModal'
 
 const SportsShopPage = () => {
   const navigate = useNavigate()
-  const { setRestaurants, restaurants } = useAppStore()
+  const { setRestaurants, restaurants, addToCart, getPriceForCurrency, getCurrencySymbol } = useAppStore()
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Tiendas de la Shop (estructura como restaurantes)
   const shopBusinesses = [
@@ -76,6 +79,17 @@ const SportsShopPage = () => {
                )
       })
   
+  // Extraer todos los productos de todas las tiendas
+  const allProducts = shopBusinesses.flatMap(business =>
+    business.menuCategories?.flatMap(category =>
+      category.items?.map(item => ({
+        ...item,
+        businessId: business.id,
+        businessName: business.name
+      })) || []
+    ) || []
+  )
+  
   // Navegar a detalle de tienda
   const handleBusinessClick = (business) => {
     navigate(`/restaurant/${business.slug}`)
@@ -86,6 +100,27 @@ const SportsShopPage = () => {
     return business.menuCategories?.reduce((count, category) => {
       return count + (category.items?.length || 0)
     }, 0) || 0
+  }
+  
+  // Handlers para productos
+  const handleProductClick = (product) => {
+    setSelectedProduct(product)
+    setIsModalOpen(true)
+  }
+  
+  const handleAddToCart = (product) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      precio_HNL: product.precio_HNL,
+      description: product.description
+    }, 'sportsshop')
+  }
+  
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedProduct(null)
   }
 
   return (
@@ -161,137 +196,266 @@ const SportsShopPage = () => {
         </div>
       </div>
 
-      {/* Businesses List */}
+      {/* Content - Dual View */}
       <div style={{ padding: '20px 16px' }}>
-        <div style={{ 
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px'
-        }}>
-          {filteredBusinesses.map((business, index) => {
-            const productCount = countProducts(business)
-            
-            return (
-              <div
-                key={business.id}
-                onClick={() => handleBusinessClick(business)}
-                className="card fade-in tap-effect"
-                style={{
-                  padding: '20px',
-                  background: 'white',
-                  borderRadius: '16px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  animationDelay: `${index * 0.1}s`,
-                  opacity: 0
-                }}
-              >
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  {/* Business Logo */}
-                  <div style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '12px',
-                    backgroundImage: `url(${business.image})`,
+        {selectedCategory === 'all' ? (
+          /* Vista de Productos (Grid 2x2) */
+          <>
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '16px'
+            }}>
+              {allProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  className="card fade-in tap-effect"
+                  onClick={() => handleProductClick(product)}
+                  style={{
+                    backgroundColor: 'white',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    padding: 0,
+                    animationDelay: `${index * 0.08}s`,
+                    opacity: 0,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <div style={{ 
+                    height: '180px',
+                    backgroundColor: '#f9fafb',
+                    backgroundImage: `url(${product.image})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    flexShrink: 0,
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                     position: 'relative'
                   }}>
-                    {business.isNew && (
+                    {product.isNew && (
                       <span className="badge badge-success" style={{
                         position: 'absolute',
-                        top: '-6px',
-                        right: '-6px',
+                        top: '12px',
+                        left: '12px',
                         fontSize: '9px',
-                        padding: '4px 8px',
+                        padding: '4px 10px',
                         fontWeight: '800'
                       }}>
                         ✨ NUEVO
                       </span>
                     )}
-                  </div>
-                  
-                  {/* Business Info */}
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      color: '#111827',
-                      marginBottom: '6px'
-                    }}>
-                      {business.name}
-                    </h3>
-                    
-                    {/* Rating and Delivery Time */}
-                    <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Star size={14} style={{ fill: '#fbbf24', color: '#fbbf24' }} />
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>
-                          {business.rating}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Clock size={14} style={{ color: '#6b7280' }} />
-                        <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
-                          {business.deliveryTime}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Address */}
-                    {business.address && (
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '4px',
-                        marginBottom: '8px'
+                    {product.stock < 10 && (
+                      <span className="badge badge-danger" style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        fontSize: '9px',
+                        padding: '4px 10px'
                       }}>
-                        <MapPin size={14} style={{ color: '#3b82f6' }} />
-                        <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
-                          {business.address}
-                        </span>
-                      </div>
+                        ¡Últimos!
+                      </span>
                     )}
-                    
-                    {/* Product Count */}
-                    <div className="badge" style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      backgroundColor: '#dbeafe',
-                      color: '#3b82f6',
-                      padding: '6px 10px',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      fontWeight: '700'
+                  </div>
+
+                  <div style={{ padding: '12px' }}>
+                    <h3 style={{ 
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#111827',
+                      marginBottom: '4px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
                     }}>
-                      <ShoppingBag size={12} />
-                      {productCount} {productCount === 1 ? 'producto' : 'productos'}
+                      {product.name}
+                    </h3>
+                    <p style={{ 
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      marginBottom: '8px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {product.businessName}
+                    </p>
+                    
+                    <div style={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
+                      <span style={{ 
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        color: '#3b82f6'
+                      }}>
+                        {getCurrencySymbol()} {getPriceForCurrency(product).toFixed(2)}
+                      </span>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleAddToCart(product)
+                        }}
+                        className="ripple"
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          color: 'white',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                        }}
+                      >
+                        <Plus size={20} strokeWidth={2.5} />
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              ))}
+            </div>
 
-        {filteredBusinesses.length === 0 && (
-          <div style={{ 
-            textAlign: 'center',
-            padding: '48px 16px',
-            color: '#6b7280'
-          }}>
-            <ShoppingBag size={48} style={{ margin: '0 auto 16px', color: '#d1d5db' }} />
-            <p>No hay tiendas en esta categoría</p>
-            <p style={{ fontSize: '14px', marginTop: '8px' }}>
-              Próximamente agregaremos más opciones
-            </p>
-          </div>
+            {allProducts.length === 0 && (
+              <div style={{ 
+                textAlign: 'center',
+                padding: '48px 16px',
+                color: '#6b7280'
+              }}>
+                <ShoppingBag size={48} style={{ margin: '0 auto 16px', color: '#d1d5db' }} />
+                <p>No hay productos disponibles</p>
+              </div>
+            )}
+          </>
+        ) : (
+          /* Vista de Tiendas (Lista) */
+          <>
+            <div style={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
+              {filteredBusinesses.map((business, index) => {
+                const productCount = countProducts(business)
+                
+                return (
+                  <div
+                    key={business.id}
+                    onClick={() => handleBusinessClick(business)}
+                    className="card fade-in tap-effect"
+                    style={{
+                      padding: '20px',
+                      background: 'white',
+                      borderRadius: '16px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      animationDelay: `${index * 0.1}s`,
+                      opacity: 0
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <div style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '12px',
+                        backgroundImage: `url(${business.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        flexShrink: 0,
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                      }}></div>
+                      
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{
+                          fontSize: '18px',
+                          fontWeight: '700',
+                          color: '#111827',
+                          marginBottom: '6px'
+                        }}>
+                          {business.name}
+                        </h3>
+                        
+                        <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Star size={14} style={{ fill: '#fbbf24', color: '#fbbf24' }} />
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>
+                              {business.rating}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Clock size={14} style={{ color: '#6b7280' }} />
+                            <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
+                              {business.deliveryTime}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {business.address && (
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '4px',
+                            marginBottom: '8px'
+                          }}>
+                            <MapPin size={14} style={{ color: '#3b82f6' }} />
+                            <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>
+                              {business.address}
+                            </span>
+                          </div>
+                        )}
+                        
+                        <div className="badge" style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          backgroundColor: '#dbeafe',
+                          color: '#3b82f6',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: '700'
+                        }}>
+                          <ShoppingBag size={12} />
+                          {productCount} {productCount === 1 ? 'producto' : 'productos'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {filteredBusinesses.length === 0 && (
+              <div style={{ 
+                textAlign: 'center',
+                padding: '48px 16px',
+                color: '#6b7280'
+              }}>
+                <ShoppingBag size={48} style={{ margin: '0 auto 16px', color: '#d1d5db' }} />
+                <p>No hay tiendas en esta categoría</p>
+                <p style={{ fontSize: '14px', marginTop: '8px' }}>
+                  Próximamente agregaremos más opciones
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
+      
+      {/* Product Modal */}
+      <ProductModal 
+        product={selectedProduct}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        restaurantId="sportsshop"
+      />
     </main>
   )
 }

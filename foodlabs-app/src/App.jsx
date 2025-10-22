@@ -75,7 +75,8 @@ const AppContent = () => {
           {/* Public Routes */}
           <Route path="/" element={<FoodLabsPage />} />
           <Route path="/fitlabs" element={<FitLabsPage />} />
-          <Route path="/sportsshop" element={<SportsShopPage />} />
+          <Route path="/shop" element={<SportsShopPage />} />
+          <Route path="/sportsshop" element={<Navigate to="/shop" replace />} />
           <Route path="/restaurant/:restaurantName" element={<RestaurantDetailPage />} />
           
           {/* Admin Routes */}

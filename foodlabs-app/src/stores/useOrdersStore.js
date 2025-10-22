@@ -414,7 +414,9 @@ export const useOrdersStore = create(
 
       getOrdersByBusiness: (businessId) => {
         const orders = get().orders
-        return orders.filter(order => order.business.id === businessId)
+        // Normalizar businessId para compatibilidad
+        const normalizedId = (businessId === 'shop' || businessId === 'padelbuddy') ? 'sportsshop' : businessId
+        return orders.filter(order => order.business.id === normalizedId || order.business.id === businessId)
       },
 
       setCurrentOrder: (order) => {

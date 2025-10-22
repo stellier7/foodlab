@@ -12,10 +12,23 @@ const BusinessLoginPage = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const businesses = [
-    { id: 'shop', name: 'Shop' },
+    { id: 'padelbuddy', name: 'PadelBuddy' },
     { id: 'foodlab-tgu', name: 'FoodLab TGU' },
     { id: 'foodlab-sps', name: 'FoodLab SPS' }
   ]
+
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  
+  const filteredBusinesses = businesses.filter(b =>
+    b.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleSelectBusiness = (business) => {
+    setBusinessId(business.id)
+    setSearchTerm(business.name)
+    setShowSuggestions(false)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -85,8 +98,8 @@ const BusinessLoginPage = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Business Selector */}
-          <div style={{ marginBottom: '20px' }}>
+          {/* Business Selector - Autocomplete */}
+          <div style={{ marginBottom: '20px', position: 'relative' }}>
             <label style={{
               display: 'block',
               fontSize: '14px',
@@ -96,39 +109,84 @@ const BusinessLoginPage = () => {
             }}>
               Comercio:
             </label>
-            <select
-              value={businessId}
-              onChange={(e) => setBusinessId(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                borderRadius: '12px',
-                border: '2px solid #e5e7eb',
-                fontSize: '16px',
-                fontWeight: '600',
-                color: '#111827',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-                outline: 'none',
-                transition: 'all 0.3s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#3b82f6'
-                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb'
-                e.target.style.boxShadow = 'none'
-              }}
-            >
-              <option value="">Selecciona tu comercio</option>
-              {businesses.map((business) => (
-                <option key={business.id} value={business.id}>
-                  {business.name}
-                </option>
-              ))}
-            </select>
+            <div style={{ position: 'relative' }}>
+              <Store size={20} style={{
+                position: 'absolute',
+                left: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af'
+              }} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setShowSuggestions(true)
+                  setBusinessId('')
+                }}
+                onFocus={(e) => {
+                  setShowSuggestions(true)
+                  e.target.style.borderColor = '#3b82f6'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
+                }}
+                onBlur={(e) => {
+                  setTimeout(() => setShowSuggestions(false), 200)
+                  e.target.style.borderColor = '#e5e7eb'
+                  e.target.style.boxShadow = 'none'
+                }}
+                placeholder="Escribe el nombre de tu comercio..."
+                required={!businessId}
+                style={{
+                  width: '100%',
+                  padding: '14px 16px 14px 48px',
+                  borderRadius: '12px',
+                  border: '2px solid #e5e7eb',
+                  fontSize: '16px',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+              />
+              
+              {/* Autocomplete Suggestions */}
+              {showSuggestions && searchTerm && filteredBusinesses.length > 0 && (
+                <div className="fade-in" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '8px',
+                  background: 'white',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                  zIndex: 10,
+                  maxHeight: '200px',
+                  overflowY: 'auto'
+                }}>
+                  {filteredBusinesses.map((business) => (
+                    <div
+                      key={business.id}
+                      onClick={() => handleSelectBusiness(business)}
+                      className="tap-effect"
+                      style={{
+                        padding: '12px 16px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f3f4f6',
+                        transition: 'background 0.2s ease',
+                        fontSize: '15px',
+                        fontWeight: '600',
+                        color: '#111827'
+                      }}
+                      onMouseEnter={(e) => e.target.style.background = '#f9fafb'}
+                      onMouseLeave={(e) => e.target.style.background = 'white'}
+                    >
+                      {business.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Password */}

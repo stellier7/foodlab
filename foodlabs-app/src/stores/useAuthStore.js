@@ -25,15 +25,21 @@ const MOCK_USERS = [
 // Comercios con credenciales
 const MOCK_BUSINESSES = [
   {
-    id: 'shop',
-    name: 'Shop',
-    password: 'shop123',
+    id: 'padelbuddy',
+    name: 'PadelBuddy',
+    password: 'padelbuddy123',
     permissions: ['view_own_orders', 'edit_own_orders', 'change_own_status']
   },
   {
     id: 'sportsshop',  // Mantener para compatibilidad con órdenes antiguas
-    name: 'Shop',
-    password: 'shop123',
+    name: 'PadelBuddy',
+    password: 'padelbuddy123',
+    permissions: ['view_own_orders', 'edit_own_orders', 'change_own_status']
+  },
+  {
+    id: 'shop',  // Mantener para compatibilidad
+    name: 'PadelBuddy',
+    password: 'padelbuddy123',
     permissions: ['view_own_orders', 'edit_own_orders', 'change_own_status']
   },
   {

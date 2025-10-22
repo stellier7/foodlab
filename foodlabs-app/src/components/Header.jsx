@@ -20,7 +20,7 @@ const Header = () => {
   const navItems = [
     { path: '/', name: 'FoodLab', icon: UtensilsCrossed, color: '#f97316' },
     { path: '/fitlabs', name: 'FitLabs', icon: Dumbbell, color: '#10b981' },
-    { path: '/sportsshop', name: 'Shop', icon: ShoppingBag, color: '#3b82f6' }
+    { path: '/shop', name: 'Shop', icon: ShoppingBag, color: '#3b82f6' }
   ]
 
   const currentNav = navItems.find(item => item.path === location.pathname) || navItems[0]
