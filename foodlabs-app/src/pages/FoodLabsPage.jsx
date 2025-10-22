@@ -4,7 +4,7 @@ import RestaurantList from '../components/RestaurantList'
 import { MapPin, Star } from 'lucide-react'
 
 const FoodLabsPage = () => {
-  const { setLoading, setRestaurants, restaurants, manualLocation } = useAppStore()
+  const { setLoading, setRestaurants, restaurants, location } = useAppStore()
 
   // Helper para convertir productos con precios en Lempiras
   const processProducts = (menuCategories) => {
@@ -434,14 +434,14 @@ const FoodLabsPage = () => {
       r.type === 'restaurant' || !r.type  // Compatibilidad: si no tiene type, asume restaurant
     )
     
-    // Si no hay ubicación manual, mostrar todos los restaurantes
-    if (!manualLocation || !manualLocation.city) {
+    // Si no hay ubicación, mostrar todos los restaurantes
+    if (!location || !location.cityName) {
       return foodRestaurants
     }
     
     // Filtrar por ciudad
-    return foodRestaurants.filter(r => r.city === manualLocation.city)
-  }, [restaurants, manualLocation])
+    return foodRestaurants.filter(r => r.city === location.cityName)
+  }, [restaurants, location])
 
   return (
     <main style={{ paddingBottom: '80px' }}>
