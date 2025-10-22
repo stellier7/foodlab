@@ -211,39 +211,92 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)'
+      }}
+    >
+      <div 
+        className="bg-white max-w-md w-full max-h-[90vh] overflow-y-auto"
+        style={{
+          borderRadius: '24px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+          animation: 'slideInUp 0.3s ease-out'
+        }}
+      >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-800">
-            {isAuthenticated ? 'Confirmar Pedido' : 'Completa tu Pedido'}
-          </h2>
+        <div 
+          className="flex justify-between items-center p-6"
+          style={{
+            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+            borderTopLeftRadius: '24px',
+            borderTopRightRadius: '24px'
+          }}
+        >
+          <div>
+            <h2 className="text-xl font-bold text-white" style={{ letterSpacing: '-0.5px' }}>
+              {isAuthenticated ? '✅ Confirmar Pedido' : '🛒 Completa tu Pedido'}
+            </h2>
+            <p className="text-white text-sm mt-1" style={{ opacity: 0.9 }}>
+              {cartItems.length} {cartItems.length === 1 ? 'producto' : 'productos'}
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-white hover:bg-white hover:bg-opacity-20 transition-all"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px',
+              fontWeight: '300'
+            }}
           >
             ×
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6" style={{ background: '#fafafa' }}>
           {isAuthenticated && user ? (
-            <div className="mb-4 p-3 bg-green-50 rounded-lg">
-              <p className="text-green-800 font-medium">
-                👤 ¡Hola {user.firstName || user.displayName?.split(' ')[0] || 'Usuario'}!
+            <div 
+              className="mb-4 p-4"
+              style={{
+                background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+                borderRadius: '16px',
+                border: '2px solid #6ee7b7',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
+              }}
+            >
+              <p className="text-green-900 font-bold text-base" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px' }}>👤</span>
+                ¡Hola {user.firstName || user.displayName?.split(' ')[0] || 'Usuario'}!
               </p>
-              <p className="text-green-600 text-sm">
-                Sesión activa - Tus datos están guardados
+              <p className="text-green-700 text-sm mt-1" style={{ fontWeight: '500' }}>
+                ✅ Sesión activa - Tus datos están guardados
               </p>
             </div>
           ) : (
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-blue-800 text-sm">
+            <div 
+              className="mb-4 p-4"
+              style={{
+                background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+                borderRadius: '16px',
+                border: '2px solid #93c5fd',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)'
+              }}
+            >
+              <p className="text-blue-900 text-sm" style={{ fontWeight: '500' }}>
                 💡 ¿Ya tienes cuenta? 
                 <button 
                   onClick={() => setShowLogin(true)}
-                  className="text-blue-600 hover:text-blue-800 ml-1 underline"
+                  className="text-blue-600 hover:text-blue-800 ml-1 underline font-bold"
                 >
                   Iniciar Sesión
                 </button>
@@ -253,8 +306,16 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div 
+              className="mb-4 p-4"
+              style={{
+                background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                borderRadius: '16px',
+                border: '2px solid #fca5a5',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)'
+              }}
+            >
+              <p className="text-red-900 text-sm font-bold">⚠️ {error}</p>
             </div>
           )}
 
@@ -262,15 +323,25 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           <form className="space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre completo
+              <label className="block text-sm font-bold text-gray-800 mb-2" style={{ letterSpacing: '0.3px' }}>
+                👤 Nombre completo
               </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{
+                  background: 'white',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  fontSize: '15px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                }}
+                className="w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 placeholder="Tu nombre completo"
                 required
               />
@@ -278,15 +349,25 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono (WhatsApp)
+              <label className="block text-sm font-bold text-gray-800 mb-2" style={{ letterSpacing: '0.3px' }}>
+                📱 Teléfono (WhatsApp)
               </label>
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{
+                  background: 'white',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  fontSize: '15px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                }}
+                className="w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 placeholder="+504 1234-5678"
                 required
               />
@@ -294,14 +375,25 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
 
             {/* Address */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dirección de entrega
+              <label className="block text-sm font-bold text-gray-800 mb-2" style={{ letterSpacing: '0.3px' }}>
+                📍 Dirección de entrega
               </label>
               <textarea
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{
+                  background: 'white',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  fontSize: '15px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                  resize: 'vertical'
+                }}
+                className="w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 placeholder="Col. Palmira, Tegucigalpa"
                 rows="2"
                 required
@@ -310,31 +402,80 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notas adicionales (opcional)
+              <label className="block text-sm font-bold text-gray-800 mb-2" style={{ letterSpacing: '0.3px' }}>
+                📝 Notas adicionales (opcional)
               </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{
+                  background: 'white',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  fontSize: '15px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                  resize: 'vertical'
+                }}
+                className="w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 placeholder="Instrucciones especiales..."
                 rows="2"
               />
             </div>
 
             {/* Order Summary */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium text-gray-800 mb-2">Resumen del pedido</h3>
+            <div 
+              style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '2px solid #e5e7eb',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
+              }}
+            >
+              <h3 className="font-bold text-gray-900 mb-3" style={{ fontSize: '16px', letterSpacing: '0.3px' }}>
+                📦 Resumen del pedido
+              </h3>
               {cartItems.map((item, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span>{item.name} x{item.quantity}</span>
-                  <span>L.{item.price * item.quantity}</span>
+                <div 
+                  key={index} 
+                  className="flex justify-between text-sm mb-2"
+                  style={{
+                    padding: '8px 0',
+                    borderBottom: index < cartItems.length - 1 ? '1px solid #f3f4f6' : 'none'
+                  }}
+                >
+                  <span style={{ fontWeight: '500', color: '#374151' }}>
+                    {item.name} <span style={{ color: '#9ca3af' }}>x{item.quantity}</span>
+                  </span>
+                  <span style={{ fontWeight: '700', color: '#111827' }}>L.{item.price * item.quantity}</span>
                 </div>
               ))}
-              <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t">
-                <span>Total</span>
-                <span>L.{total}</span>
+              <div 
+                className="flex justify-between font-bold mt-3 pt-3"
+                style={{
+                  fontSize: '20px',
+                  borderTop: '2px solid #e5e7eb',
+                  background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%)',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  marginTop: '12px'
+                }}
+              >
+                <span style={{ color: '#111827' }}>Total</span>
+                <span 
+                  style={{ 
+                    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}
+                >
+                  L.{total}
+                </span>
               </div>
             </div>
           </form>
@@ -424,20 +565,50 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t bg-gray-50">
+        <div 
+          className="p-6"
+          style={{
+            background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)',
+            borderTop: '2px solid #e5e7eb',
+            borderBottomLeftRadius: '24px',
+            borderBottomRightRadius: '24px'
+          }}
+        >
           <button
             onClick={isAuthenticated ? handleAuthCheckout : handleGuestCheckout}
             disabled={isLoading}
-            className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            style={{
+              width: '100%',
+              background: isLoading ? '#9ca3af' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+              padding: '16px',
+              borderRadius: '16px',
+              border: 'none',
+              fontSize: '16px',
+              fontWeight: '700',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: isLoading ? 'none' : '0 8px 24px rgba(16, 185, 129, 0.4)',
+              transition: 'all 0.3s ease',
+              letterSpacing: '0.3px'
+            }}
+            className={isLoading ? '' : 'hover:shadow-xl hover:scale-105'}
           >
             {isLoading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div 
+                  className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"
+                  style={{ borderWidth: '3px' }}
+                ></div>
                 Procesando...
               </>
             ) : (
               <>
-                🚀 Pedir por WhatsApp
+                <span style={{ fontSize: '20px' }}>💬</span>
+                Pedir por WhatsApp
               </>
             )}
           </button>
@@ -445,7 +616,11 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           {isAuthenticated && (
             <button
               onClick={() => {/* Implement logout */}}
-              className="w-full mt-2 text-gray-500 hover:text-gray-700 text-sm"
+              className="w-full mt-3 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
+              style={{
+                padding: '8px',
+                borderRadius: '8px'
+              }}
             >
               Cerrar Sesión
             </button>
