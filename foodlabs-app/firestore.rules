@@ -54,6 +54,12 @@ service cloud.firestore {
     
     // Orders collection
     match /orders/{orderId} {
+      // Allow anyone (including guests) to CREATE orders with valid data
+      allow create: if request.resource.data.customer != null 
+                    && request.resource.data.items != null
+                    && request.resource.data.total > 0
+                    && request.resource.data.status == 'pending';
+      
       // Super admins and admins can read all orders
       allow read: if isAdmin();
       
@@ -71,9 +77,6 @@ service cloud.firestore {
       // Business users can write their own orders
       allow write: if isBusiness() && 
                       resource.data.business.id == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
-      
-      // Customers can create orders
-      allow create: if isCustomer();
       
       // Customers can update their own pending orders
       allow update: if isCustomer() && 
