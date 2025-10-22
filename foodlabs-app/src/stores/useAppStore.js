@@ -161,7 +161,11 @@ export const useAppStore = create(
       
       calculateCartTotal: () => {
         const cart = get().cart
-        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        const total = cart.reduce((sum, item) => {
+          // Use Lempira price if available, otherwise convert from USD
+          const priceInLempiras = item.precio_HNL || (item.price * 24.75)
+          return sum + (priceInLempiras * item.quantity)
+        }, 0)
         set({ cartTotal: total })
       },
       

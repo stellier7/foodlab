@@ -18,6 +18,9 @@ import { USER_ROLES, SUPER_ADMIN_EMAILS, COUNTRIES, REGIONS } from '../config/fi
 
 // Google provider
 const googleProvider = new GoogleAuthProvider()
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+})
 
 // ========================================
 // AUTHENTICATION FUNCTIONS
