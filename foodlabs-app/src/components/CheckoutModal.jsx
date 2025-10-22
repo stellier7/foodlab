@@ -75,6 +75,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     try {
       // Create order for guest
       const finalTotal = calculateTotal()
+      const platformFee = total * 0.075 // 7.5% platform fee
+      const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
+      
       const orderData = {
         customer: {
           name: formData.name,
@@ -83,13 +86,18 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           isGuest: true
         },
         items: cartItems,
-        subtotal: total,
-        deliveryFee: deliveryMethod === 'delivery' ? DELIVERY_FEE : 0,
-        deliveryMethod: deliveryMethod,
-        total: finalTotal,
+        business: { id: 'foodlab', name: 'FoodLab' },
+        pricing: {
+          subtotal: total,
+          platformFee: platformFee,
+          serviceFee: 0,
+          deliveryFee: deliveryFee,
+          discount: 0,
+          total: finalTotal
+        },
         status: 'pending',
         notes: formData.notes,
-        business: { id: 'foodlab', name: 'FoodLab' },
+        deliveryMethod: deliveryMethod,
         createdAt: new Date().toISOString()
       }
       
@@ -127,6 +135,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       
       // Create order for authenticated user
       const finalTotal = calculateTotal()
+      const platformFee = total * 0.075 // 7.5% platform fee
+      const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
+      
       const orderData = {
         customer: {
           name: formData.name,
@@ -135,13 +146,18 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           isGuest: false
         },
         items: cartItems,
-        subtotal: total,
-        deliveryFee: deliveryMethod === 'delivery' ? DELIVERY_FEE : 0,
-        deliveryMethod: deliveryMethod,
-        total: finalTotal,
+        business: { id: 'foodlab', name: 'FoodLab' },
+        pricing: {
+          subtotal: total,
+          platformFee: platformFee,
+          serviceFee: 0,
+          deliveryFee: deliveryFee,
+          discount: 0,
+          total: finalTotal
+        },
         status: 'pending',
         notes: formData.notes,
-        business: { id: 'foodlab', name: 'FoodLab' },
+        deliveryMethod: deliveryMethod,
         createdAt: new Date().toISOString()
       }
       

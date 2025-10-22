@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firestore Test</title>
+</head>
+<body>
+    <h1>Firestore Connection Test</h1>
+    <button onclick="testConnection()">Test Firestore Connection</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js'
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjMXyjuIvRNMIfiMNP0t2FzmalpXc2dVU",
+            authDomain: "foodlab-production.firebaseapp.com",
+            projectId: "foodlab-production",
+            storageBucket: "foodlab-production.firebasestorage.app",
+            messagingSenderId: "872068459643",
+            appId: "1:872068459643:web:084af9024162056d49c6de"
+        }
+
+        const app = initializeApp(firebaseConfig)
+        const db = getFirestore(app)
+
+        window.testConnection = async () => {
+            const resultDiv = document.getElementById('result')
+            resultDiv.innerHTML = 'Testing...'
+            
+            try {
+                // Test creating a simple document
+                const testRef = collection(db, 'test')
+                const docRef = await addDoc(testRef, {
+                    message: 'Test connection',
+                    timestamp: serverTimestamp()
+                })
+                
+                resultDiv.innerHTML = `✅ SUCCESS! Document created with ID: ${docRef.id}`
+            } catch (error) {
+                resultDiv.innerHTML = `❌ ERROR: ${error.message}`
+                console.error('Firestore error:', error)
+            }
+        }
+    </script>
+</body>
+</html>
