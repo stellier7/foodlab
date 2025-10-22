@@ -232,15 +232,17 @@ const Header = () => {
                     className="fade-in"
                     style={{
                       position: 'fixed',
-                      top: '80px',
+                      top: '100px',
                       right: '16px',
                       background: 'white',
                       borderRadius: '12px',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                      boxShadow: '0 12px 32px rgba(0, 0, 0, 0.2)',
                       padding: '16px',
                       minWidth: '200px',
-                      zIndex: 99999,
-                      border: '1px solid rgba(0, 0, 0, 0.05)'
+                      zIndex: 999999,
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)'
                     }}
                   >
                     {!selectedCountry ? (
