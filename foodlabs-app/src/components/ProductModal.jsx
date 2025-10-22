@@ -448,45 +448,6 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
             </div>
           )}
 
-          {/* Features */}
-          {product.features && (
-            <div style={{ marginBottom: '24px' }}>
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: '700',
-                color: '#111827',
-                marginBottom: '12px'
-              }}>
-                🎯 Características
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '8px'
-              }}>
-                {product.features.map((feature, idx) => (
-                  <div key={idx} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 12px',
-                    backgroundColor: '#f0f9ff',
-                    borderRadius: '12px',
-                    border: '1px solid #e0f2fe'
-                  }}>
-                    <CheckCircle size={16} style={{ color: '#10b981' }} />
-                    <span style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#0277bd'
-                    }}>
-                      {feature}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Stock Info */}
           <div style={{

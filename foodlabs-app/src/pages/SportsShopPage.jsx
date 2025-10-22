@@ -150,7 +150,7 @@ const SportsShopPage = () => {
           fontSize: '15px',
           fontWeight: '500'
         }}>
-          Todo para tu deporte favorito
+          Todo lo que necesitas, a un clic
         </p>
       </div>
 
