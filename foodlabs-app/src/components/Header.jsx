@@ -198,20 +198,29 @@ const Header = () => {
                   style={{
                     width: '42px',
                     height: '42px',
-                    color: currentNav.color,
+                    color: 'white',
                     border: 'none',
-                    background: 'rgba(255, 255, 255, 0.9)',
+                    background: 'transparent',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                     fontSize: '13px',
                     fontWeight: '700',
                     outline: 'none',
                     letterSpacing: '0.5px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    // Hover effect
+                    ':hover': {
+                      background: 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.1)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'transparent'
                   }}
                 >
                   {userLocation.city}
