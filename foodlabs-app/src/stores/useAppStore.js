@@ -21,6 +21,7 @@ export const useAppStore = create(
       // Estado de restaurantes
       restaurants: [],
       selectedRestaurant: null,
+      shopBusinesses: [],  // Tiendas que aparecen en Shop
       
       // Estado del carrito
       cart: [],
@@ -55,6 +56,7 @@ export const useAppStore = create(
       // Acciones para restaurantes
       setRestaurants: (restaurants) => set({ restaurants }),
       setSelectedRestaurant: (restaurant) => set({ selectedRestaurant: restaurant }),
+      setShopBusinesses: (shopBusinesses) => set({ shopBusinesses }),
       
       // Acciones para el carrito
       addToCart: (item, restaurantId) => {

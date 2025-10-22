@@ -45,6 +45,7 @@ const FoodLabsPage = () => {
       id: 'foodlab-tgu',
       name: 'FoodLab TGU',
       slug: 'foodlab-tgu',
+      type: 'restaurant',
       city: 'Tegucigalpa',
       address: 'Col. Palmira, Blvd. Morazán',
       coordinates: {
@@ -227,6 +228,7 @@ const FoodLabsPage = () => {
       id: 'foodlab-sps',
       name: 'FoodLab SPS',
       slug: 'foodlab-sps',
+      type: 'restaurant',
       city: 'San Pedro Sula',
       address: 'Col. Trejo, Av. Circunvalación',
       coordinates: {
@@ -427,13 +429,18 @@ const FoodLabsPage = () => {
       return []
     }
     
-    // Si no hay ubicación manual, mostrar todos
+    // Filtrar solo restaurantes (no tiendas de Shop)
+    let foodRestaurants = restaurants.filter(r => 
+      r.type === 'restaurant' || !r.type  // Compatibilidad: si no tiene type, asume restaurant
+    )
+    
+    // Si no hay ubicación manual, mostrar todos los restaurantes
     if (!manualLocation || !manualLocation.city) {
-      return restaurants
+      return foodRestaurants
     }
     
     // Filtrar por ciudad
-    return restaurants.filter(r => r.city === manualLocation.city)
+    return foodRestaurants.filter(r => r.city === manualLocation.city)
   }, [restaurants, manualLocation])
 
   return (
