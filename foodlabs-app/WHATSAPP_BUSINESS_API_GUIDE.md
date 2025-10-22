@@ -471,13 +471,378 @@ const auditLog = {
 - Mensajes entrantes: Gratis
 - Webhook: Gratis
 
+## AI Chatbot con WhatsApp
+
+### Arquitectura de IA Conversacional
+
+El sistema de WhatsApp puede integrar un chatbot con inteligencia artificial para atención automática 24/7.
+
+```
+Cliente → WhatsApp → AI Bot (GPT-4/Claude) → [¿Resuelve?]
+                                               ├─ Sí: Respuesta automática
+                                               └─ No: Ticket + Escalación a humano
+```
+
+### Flujo de Conversación con IA
+
+1. **Cliente envía mensaje** → "Hola, ¿cuánto tarda mi pedido?"
+2. **IA analiza el mensaje** → Identifica intención (consulta de estado)
+3. **Bot consulta base de datos** → Busca pedido activo del cliente
+4. **Si encuentra información:**
+   - Responde automáticamente: "Tu pedido #123 está en camino, llega en 15 minutos 🚗"
+   - Actualiza contexto de conversación
+5. **Si NO encuentra información o es compleja:**
+   - Crea ticket en sistema
+   - Notifica a agente humano por WhatsApp
+   - Responde al cliente: "Un agente te responderá pronto. Ticket #456 creado ✅"
+
+### Casos de Uso del AI Bot
+
+#### Atención Automatizada (No requiere humano)
+- ✅ Consultar estado de pedido
+- ✅ Ver menú y precios
+- ✅ Horarios de restaurantes
+- ✅ Métodos de pago
+- ✅ Zonas de entrega
+- ✅ Rastrear pedido en tiempo real
+- ✅ Consultar saldo de wallet
+- ✅ FAQ general
+
+#### Escalación a Humano (Crea ticket)
+- ❌ Quejas o problemas con pedidos
+- ❌ Modificar pedido en curso
+- ❌ Solicitudes especiales
+- ❌ Problemas de pago
+- ❌ Conversaciones complejas
+- ❌ Preguntas no identificadas
+
+### Implementación Técnica
+
+#### 1. Servicio de IA
+
+```javascript
+// src/services/aiChatbot.js
+import OpenAI from 'openai'
+import { getOrderById } from './firestore'
+import { createTicket, notifySupport } from './support'
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+})
+
+class AIChatbot {
+  constructor() {
+    this.conversationHistory = new Map() // Mantener contexto por usuario
+  }
+
+  async analyzeMessage(phoneNumber, message) {
+    // Obtener contexto del usuario
+    const userContext = await this.getUserContext(phoneNumber)
+    const conversationHistory = this.conversationHistory.get(phoneNumber) || []
+
+    // Preparar prompt para la IA
+    const systemPrompt = `
+Eres un asistente de FoodLabs, plataforma de delivery en Honduras.
+Tu objetivo es ayudar a los clientes con sus pedidos.
+
+Información del usuario:
+${JSON.stringify(userContext, null, 2)}
+
+Instrucciones:
+- Si el cliente pregunta por su pedido, busca en sus órdenes activas
+- Si no puedes ayudar, indica que crearás un ticket
+- Sé amable, breve y usa emojis apropiadamente
+- Responde en español de Honduras
+`
+
+    // Llamar a la IA
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...conversationHistory,
+        { role: 'user', content: message }
+      ],
+      functions: [
+        {
+          name: 'get_order_status',
+          description: 'Obtener estado de un pedido por ID',
+          parameters: {
+            type: 'object',
+            properties: {
+              orderId: { type: 'string', description: 'ID del pedido' }
+            }
+          }
+        },
+        {
+          name: 'create_support_ticket',
+          description: 'Crear ticket de soporte cuando no puedas resolver',
+          parameters: {
+            type: 'object',
+            properties: {
+              issue: { type: 'string', description: 'Descripción del problema' },
+              category: { type: 'string', enum: ['order', 'payment', 'delivery', 'other'] }
+            }
+          }
+        }
+      ],
+      function_call: 'auto'
+    })
+
+    const aiResponse = response.choices[0].message
+
+    // Manejar function calls
+    if (aiResponse.function_call) {
+      const functionName = aiResponse.function_call.name
+      const functionArgs = JSON.parse(aiResponse.function_call.arguments)
+
+      if (functionName === 'get_order_status') {
+        return await this.handleOrderStatusRequest(phoneNumber, functionArgs.orderId)
+      } else if (functionName === 'create_support_ticket') {
+        return await this.handleTicketCreation(phoneNumber, message, functionArgs)
+      }
+    }
+
+    // Actualizar historial
+    conversationHistory.push(
+      { role: 'user', content: message },
+      { role: 'assistant', content: aiResponse.content }
+    )
+    this.conversationHistory.set(phoneNumber, conversationHistory)
+
+    return {
+      message: aiResponse.content,
+      needsHuman: false
+    }
+  }
+
+  async getUserContext(phoneNumber) {
+    // Obtener órdenes activas, historial, wallet, etc.
+    const activeOrders = await getActiveOrdersByPhone(phoneNumber)
+    const walletBalance = await getWalletBalance(phoneNumber)
+    
+    return {
+      phoneNumber,
+      activeOrders: activeOrders.length,
+      lastOrder: activeOrders[0] || null,
+      walletBalance
+    }
+  }
+
+  async handleOrderStatusRequest(phoneNumber, orderId) {
+    const order = await getOrderById(orderId)
+    
+    if (!order) {
+      return {
+        message: 'No encontré ese pedido. ¿Puedes verificar el número?',
+        needsHuman: false
+      }
+    }
+
+    const statusMessages = {
+      'pending_restaurant': 'Tu pedido está esperando confirmación del restaurante ⏳',
+      'preparing': 'El restaurante está preparando tu pedido 👨‍🍳',
+      'ready': 'Tu pedido está listo! El motorista va en camino 🚗',
+      'delivered': 'Tu pedido fue entregado! 🎉'
+    }
+
+    return {
+      message: `Pedido #${order.id}:\n${statusMessages[order.paymentStatus]}\nTotal: L${order.total}`,
+      needsHuman: false
+    }
+  }
+
+  async handleTicketCreation(phoneNumber, originalMessage, functionArgs) {
+    // Crear ticket en sistema
+    const ticket = await createTicket({
+      phoneNumber,
+      issue: functionArgs.issue,
+      category: functionArgs.category,
+      originalMessage,
+      status: 'open',
+      createdAt: new Date()
+    })
+
+    // Notificar a soporte por WhatsApp
+    await notifySupport({
+      ticketId: ticket.id,
+      phoneNumber,
+      issue: functionArgs.issue,
+      category: functionArgs.category
+    })
+
+    return {
+      message: `He creado el ticket #${ticket.id} 📋\nUn agente te contactará pronto. Gracias por tu paciencia! 🙏`,
+      needsHuman: true,
+      ticketId: ticket.id
+    }
+  }
+}
+
+export default new AIChatbot()
+```
+
+#### 2. Integrar con Webhook de WhatsApp
+
+```javascript
+// Actualizar handleIncomingMessage en webhook.js
+async function handleIncomingMessage(message, contact) {
+  const phoneNumber = contact.wa_id
+  const messageText = message.text?.body || ''
+
+  // Identificar si es cliente, restaurante o motorista
+  const userType = await identifyUserType(phoneNumber)
+  
+  if (userType === 'restaurant' || userType === 'driver') {
+    // Manejar como antes (confirmaciones, etc.)
+    await handleBusinessMessage(phoneNumber, messageText, userType)
+  } else {
+    // Cliente: usar AI chatbot
+    const response = await AIChatbot.analyzeMessage(phoneNumber, messageText)
+    await WhatsAppService.sendMessage(phoneNumber, response.message)
+    
+    // Si necesita humano, marcar conversación
+    if (response.needsHuman) {
+      await flagConversationForHuman(phoneNumber, response.ticketId)
+    }
+  }
+}
+```
+
+#### 3. Sistema de Tickets
+
+```javascript
+// src/services/support.js
+import { db } from '../config/firebase'
+import { collection, addDoc, updateDoc, doc } from 'firebase/firestore'
+import WhatsAppService from './whatsapp'
+
+export async function createTicket(ticketData) {
+  const ticket = await addDoc(collection(db, 'support_tickets'), {
+    ...ticketData,
+    status: 'open',
+    createdAt: new Date(),
+    assignedTo: null,
+    resolvedAt: null
+  })
+  
+  return { id: ticket.id, ...ticketData }
+}
+
+export async function notifySupport(ticketInfo) {
+  const SUPPORT_NUMBERS = [
+    '+50488694777', // Tu hermano o team de soporte
+    // Agregar más números según sea necesario
+  ]
+  
+  for (const supportNumber of SUPPORT_NUMBERS) {
+    await WhatsAppService.sendMessage(
+      supportNumber,
+      `🆘 Nuevo ticket #${ticketInfo.ticketId}\n\n` +
+      `Cliente: ${ticketInfo.phoneNumber}\n` +
+      `Categoría: ${ticketInfo.category}\n` +
+      `Problema: ${ticketInfo.issue}\n\n` +
+      `Responde: "Atender ${ticketInfo.ticketId}" para tomar el caso`
+    )
+  }
+}
+
+export async function assignTicket(ticketId, agentPhone) {
+  const ticketRef = doc(db, 'support_tickets', ticketId)
+  await updateDoc(ticketRef, {
+    assignedTo: agentPhone,
+    assignedAt: new Date(),
+    status: 'in_progress'
+  })
+}
+
+export async function resolveTicket(ticketId, resolution) {
+  const ticketRef = doc(db, 'support_tickets', ticketId)
+  await updateDoc(ticketRef, {
+    status: 'resolved',
+    resolution,
+    resolvedAt: new Date()
+  })
+}
+```
+
+### Panel de Admin para Tickets
+
+Agregar en `AdminWalletPage.jsx` una nueva pestaña:
+
+```javascript
+// Tab de Soporte
+{activeTab === 'support' && (
+  <div>
+    <h3>Tickets de Soporte</h3>
+    {tickets.map(ticket => (
+      <div key={ticket.id} className="ticket-card">
+        <span className={`status ${ticket.status}`}>{ticket.status}</span>
+        <p>#{ticket.id} - {ticket.category}</p>
+        <p>{ticket.issue}</p>
+        <button onClick={() => assignTicket(ticket.id)}>Atender</button>
+      </div>
+    ))}
+  </div>
+)}
+```
+
+### Configuración de Variables de Entorno
+
+```env
+# AI Chatbot
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4-turbo-preview
+
+# Alternativa: Claude
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-3-opus-20240229
+
+# Límites
+AI_MAX_TOKENS=500
+AI_TEMPERATURE=0.7
+```
+
+### Costos Estimados de IA
+
+#### OpenAI GPT-4 Turbo
+- Input: ~$0.01 por 1K tokens
+- Output: ~$0.03 por 1K tokens
+- Promedio por mensaje: ~$0.02-0.05
+
+#### Anthropic Claude 3
+- Input: ~$0.015 por 1K tokens
+- Output: ~$0.075 por 1K tokens
+- Promedio por mensaje: ~$0.03-0.08
+
+**Estimación mensual (1000 conversaciones):**
+- ~$30-80 USD/mes dependiendo del modelo
+
+### Ventajas del AI Chatbot
+
+✅ **Atención 24/7** sin costo de personal
+✅ **Respuestas instantáneas** a preguntas comunes
+✅ **Escalación inteligente** solo cuando es necesario
+✅ **Reduce carga** de equipo de soporte
+✅ **Mejora experiencia** del cliente
+✅ **Recopila datos** de conversaciones para mejorar
+
+### Métricas de Éxito
+
+- **Tasa de resolución automática**: % de conversaciones sin escalación
+- **Tiempo de respuesta**: Promedio < 3 segundos
+- **Satisfacción del cliente**: Encuestas post-conversación
+- **Tickets creados**: Cuántos requieren humano
+- **Ahorro de tiempo**: Horas de soporte ahorradas
+
 ## Próximos Pasos
 
 1. **Fase 1**: Implementar notificaciones básicas
 2. **Fase 2**: Agregar confirmaciones automáticas
-3. **Fase 3**: Integrar con sistema de motoristas
-4. **Fase 4**: Analytics y optimización
-5. **Fase 5**: IA para respuestas automáticas
+3. **Fase 3**: Integrar AI Chatbot para clientes
+4. **Fase 4**: Sistema de tickets y escalación
+5. **Fase 5**: Integrar con motoristas
+6. **Fase 6**: Analytics y optimización
 
 ## Recursos Adicionales
 
