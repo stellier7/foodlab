@@ -124,8 +124,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       const whatsappMessage = generateWhatsAppMessage(formData.name, cartItems, total, formData.notes)
       
       // Open WhatsApp
-      const whatsappUrl = `https://wa.me/50488694777?text=${encodeURIComponent(whatsappMessage)}`
-      window.open(whatsappUrl, '_blank')
+      openWhatsApp(whatsappMessage)
       
       onClose()
     } catch (error) {
@@ -186,8 +185,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       const whatsappMessage = generateWhatsAppMessage(firstName, cartItems, total, formData.notes)
       
       // Open WhatsApp
-      const whatsappUrl = `https://wa.me/50488694777?text=${encodeURIComponent(whatsappMessage)}`
-      window.open(whatsappUrl, '_blank')
+      openWhatsApp(whatsappMessage)
       
       onClose()
     } catch (error) {
@@ -195,6 +193,54 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       console.error('Checkout error:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Open WhatsApp with mobile-friendly fallbacks
+  const openWhatsApp = (message) => {
+    const phoneNumber = '50488694777' // Tu número de WhatsApp
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+    
+    console.log('Opening WhatsApp URL:', whatsappUrl) // Debug
+    
+    // Detect if it's mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    
+    if (isMobile) {
+      // For mobile, try different approaches
+      console.log('Mobile detected, using mobile-friendly approach')
+      
+      // Method 1: Try to open WhatsApp app directly
+      const whatsappAppUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`
+      
+      // Create a temporary link and click it
+      const link = document.createElement('a')
+      link.href = whatsappAppUrl
+      link.target = '_blank'
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Fallback after a short delay
+      setTimeout(() => {
+        // If WhatsApp app didn't open, try web version
+        window.location.href = whatsappUrl
+      }, 1000)
+      
+    } else {
+      // For desktop, use the original method
+      try {
+        const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+        
+        if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+          console.log('Popup blocked, redirecting current window')
+          window.location.href = whatsappUrl
+        }
+      } catch (error) {
+        console.error('Error opening WhatsApp:', error)
+        window.location.href = whatsappUrl
+      }
     }
   }
 
