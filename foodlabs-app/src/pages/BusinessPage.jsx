@@ -21,8 +21,11 @@ const BusinessPage = () => {
   const { businessId } = useParams()
   const { user, logout, role } = useAuthStore()
   const { getOrdersByBusiness, changeOrderStatus, calculateStats } = useOrdersStore()
-  const { inventory, getProductStock } = useAppStore()
+  const { inventory, getProductStock, getPriceForCurrency, getCurrencySymbol } = useAppStore()
   const [selectedFilter, setSelectedFilter] = useState('all')
+  
+  // Normalizar businessId para compatibilidad
+  const normalizedBusinessId = businessId === 'shop' ? 'sportsshop' : businessId
 
   // Verificar autenticación y permisos
   useEffect(() => {
@@ -35,7 +38,7 @@ const BusinessPage = () => {
     return null
   }
 
-  const businessOrders = getOrdersByBusiness(businessId)
+  const businessOrders = getOrdersByBusiness(normalizedBusinessId)
   
   // Filtrar órdenes
   const filteredOrders = selectedFilter === 'all'
@@ -56,7 +59,7 @@ const BusinessPage = () => {
   // Obtener productos del negocio
   const businessProducts = Object.entries(inventory).filter(([productId]) => {
     // Para Shop, filtrar productos que empiezan con 'sp'
-    if (businessId === 'sportsshop') {
+    if (normalizedBusinessId === 'sportsshop') {
       return productId.startsWith('sp')
     }
     // Para FoodLabs, todos los productos de comida
@@ -162,7 +165,7 @@ const BusinessPage = () => {
               Ventas Hoy
             </div>
             <div style={{ fontSize: '24px', fontWeight: '800' }}>
-              L {todaySales.toFixed(2)}
+              {getCurrencySymbol()} {getPriceForCurrency({ price: todaySales }).toFixed(2)}
             </div>
           </div>
         </div>
@@ -171,7 +174,7 @@ const BusinessPage = () => {
       {/* Content */}
       <div style={{ padding: '20px 16px' }}>
         {/* Inventory Section */}
-        {businessId === 'sportsshop' && (
+        {normalizedBusinessId === 'sportsshop' && (
           <div className="card" style={{ marginBottom: '20px', padding: '20px' }}>
             <h2 style={{
               fontSize: '18px',
@@ -364,7 +367,7 @@ const BusinessPage = () => {
                     color: '#3b82f6',
                     marginBottom: '16px'
                   }}>
-                    Total: L {order.pricing.total.toFixed(2)}
+                    Total: {getCurrencySymbol()} {getPriceForCurrency({ price: order.pricing.total }).toFixed(2)}
                   </div>
 
                   {/* Actions */}
@@ -454,6 +457,29 @@ const BusinessPage = () => {
                     >
                       <CheckCircle size={18} strokeWidth={2.5} />
                       Marcar como Listo
+                    </button>
+                  )}
+                  
+                  {/* Botón cancelar - disponible en cualquier momento */}
+                  {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                    <button
+                      onClick={() => changeOrderStatus(order.id, 'cancelled')}
+                      className="tap-effect"
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        marginTop: '8px',
+                        background: '#fef2f2',
+                        color: '#dc2626',
+                        border: '1px solid #fecaca',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      ❌ Cancelar Orden
                     </button>
                   )}
                 </div>

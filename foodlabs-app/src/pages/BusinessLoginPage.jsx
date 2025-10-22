@@ -12,7 +12,7 @@ const BusinessLoginPage = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const businesses = [
-    { id: 'sportsshop', name: 'Shop' },
+    { id: 'shop', name: 'Shop' },
     { id: 'foodlab-tgu', name: 'FoodLab TGU' },
     { id: 'foodlab-sps', name: 'FoodLab SPS' }
   ]

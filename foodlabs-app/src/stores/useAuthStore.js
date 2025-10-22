@@ -25,7 +25,13 @@ const MOCK_USERS = [
 // Comercios con credenciales
 const MOCK_BUSINESSES = [
   {
-    id: 'sportsshop',
+    id: 'shop',
+    name: 'Shop',
+    password: 'shop123',
+    permissions: ['view_own_orders', 'edit_own_orders', 'change_own_status']
+  },
+  {
+    id: 'sportsshop',  // Mantener para compatibilidad con órdenes antiguas
     name: 'Shop',
     password: 'shop123',
     permissions: ['view_own_orders', 'edit_own_orders', 'change_own_status']

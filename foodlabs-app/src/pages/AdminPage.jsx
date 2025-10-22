@@ -161,7 +161,11 @@ const AdminPage = () => {
           </div>
 
           {/* Quick Stats */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ 
+            display: window.innerWidth < 768 ? 'none' : 'flex',
+            alignItems: 'center', 
+            gap: '16px' 
+          }}>
             <QuickStats />
             
             {/* Notifications */}
@@ -248,7 +252,7 @@ const AdminPage = () => {
       <main style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '24px 20px'
+        padding: window.innerWidth < 768 ? '16px 12px' : '24px 20px'
       }}>
         {/* Page Header */}
         <div style={{
@@ -359,8 +363,8 @@ const AdminPage = () => {
         {/* Content Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '2fr 1fr',
-          gap: '24px',
+          gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '2fr 1fr',
+          gap: window.innerWidth < 768 ? '16px' : '24px',
           alignItems: 'start'
         }}>
           {/* Recent Orders */}
