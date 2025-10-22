@@ -231,15 +231,16 @@ const Header = () => {
                   <div
                     className="fade-in"
                     style={{
-                      position: 'absolute',
-                      top: '50px',
-                      right: '0',
+                      position: 'fixed',
+                      top: '80px',
+                      right: '16px',
                       background: 'white',
                       borderRadius: '12px',
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
                       padding: '16px',
                       minWidth: '200px',
-                      zIndex: 9999
+                      zIndex: 99999,
+                      border: '1px solid rgba(0, 0, 0, 0.05)'
                     }}
                   >
                     {!selectedCountry ? (
