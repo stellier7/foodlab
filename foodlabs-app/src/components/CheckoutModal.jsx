@@ -169,6 +169,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     const finalTotal = calculateTotal()
     const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
     
+    // Calculate platform fee (7.5% of subtotal)
+    const platformFee = subtotal * 0.075
+    
     let message = `¡Hola! Soy ${customerName} y quiero hacer un pedido:\n\n`
     
     items.forEach(item => {
@@ -177,6 +180,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     })
     
     message += `\n💰 Subtotal: L${subtotal.toFixed(2)}`
+    message += `\n🏢 FoodLab: L${platformFee.toFixed(2)}`
     
     if (deliveryMethod === 'delivery') {
       message += `\n🚗 Delivery: L${deliveryFee.toFixed(2)}`
@@ -676,7 +680,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                   fontFamily: 'inherit'
                 }}
                 className="focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                placeholder="Instrucciones especiales..."
+                placeholder="Instrucciones especiales (opcional)"
               />
             </div>
 
@@ -700,16 +704,29 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                 {cartItems.map((item, index) => (
                   <div 
                     key={index} 
-                    className="flex justify-between text-sm"
                     style={{
-                      padding: '6px 0',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '8px 0',
                       borderBottom: index < cartItems.length - 1 ? '1px solid #e5e7eb' : 'none'
                     }}
                   >
-                    <span style={{ fontWeight: '400', color: '#6b7280', flex: 1 }}>
-                      {item.name} <span style={{ color: '#9ca3af' }}>×{item.quantity}</span>
-                    </span>
-                    <span style={{ fontWeight: '600', color: '#111827', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontWeight: '500', color: '#374151', fontSize: '14px' }}>
+                        {item.name}
+                      </span>
+                      <span style={{ color: '#9ca3af', fontSize: '13px', marginLeft: '6px' }}>
+                        ×{item.quantity}
+                      </span>
+                    </div>
+                    <span style={{ 
+                      fontWeight: '600', 
+                      color: '#111827', 
+                      fontSize: '14px',
+                      textAlign: 'right',
+                      minWidth: '80px'
+                    }}>
                       L{(getPriceForCurrency(item) * item.quantity).toFixed(2)}
                     </span>
                   </div>
@@ -718,22 +735,50 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
               
               {/* Subtotal and Delivery Fee */}
               <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '10px', marginBottom: '10px' }}>
-                <div className="flex justify-between text-sm" style={{ marginBottom: '6px' }}>
-                  <span style={{ fontWeight: '500', color: '#6b7280' }}>Subtotal</span>
-                  <span style={{ fontWeight: '600', color: '#111827' }}>L{total.toFixed(2)}</span>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: '6px' 
+                }}>
+                  <span style={{ fontWeight: '500', color: '#6b7280', fontSize: '14px' }}>Subtotal</span>
+                  <span style={{ 
+                    fontWeight: '600', 
+                    color: '#111827', 
+                    fontSize: '14px',
+                    textAlign: 'right',
+                    minWidth: '80px'
+                  }}>
+                    L{total.toFixed(2)}
+                  </span>
                 </div>
                 {deliveryMethod === 'delivery' && (
-                  <div className="flex justify-between text-sm" style={{ marginBottom: '6px' }}>
-                    <span style={{ fontWeight: '500', color: '#6b7280' }}>Entrega a domicilio</span>
-                    <span style={{ fontWeight: '600', color: '#f97316' }}>L{DELIVERY_FEE.toFixed(2)}</span>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: '6px' 
+                  }}>
+                    <span style={{ fontWeight: '500', color: '#6b7280', fontSize: '14px' }}>Entrega a domicilio</span>
+                    <span style={{ 
+                      fontWeight: '600', 
+                      color: '#f97316', 
+                      fontSize: '14px',
+                      textAlign: 'right',
+                      minWidth: '80px'
+                    }}>
+                      L{DELIVERY_FEE.toFixed(2)}
+                    </span>
                   </div>
                 )}
               </div>
               
               {/* Total */}
               <div 
-                className="flex justify-between items-center"
                 style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                   paddingTop: '10px',
                   borderTop: '2px solid #e5e7eb'
                 }}
@@ -743,7 +788,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                   style={{ 
                     fontSize: '20px',
                     fontWeight: '700',
-                    color: '#f97316'
+                    color: '#f97316',
+                    textAlign: 'right',
+                    minWidth: '100px'
                   }}
                 >
                   L{calculateTotal().toFixed(2)}
