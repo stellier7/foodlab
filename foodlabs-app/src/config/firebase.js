@@ -26,11 +26,17 @@ export const storage = getStorage(app)
 export default app
 
 // Development mode - connect to emulators if needed
-if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
-  // Uncomment these lines if you want to use Firebase emulators for development
-  // connectFirestoreEmulator(db, 'localhost', 8080)
-  // connectAuthEmulator(auth, 'http://localhost:9099')
-  // connectStorageEmulator(storage, 'localhost', 9199)
+if (import.meta.env.DEV) {
+  // Use Firebase emulators for development
+  try {
+    connectFirestoreEmulator(db, 'localhost', 8080)
+    connectAuthEmulator(auth, 'http://localhost:9099')
+    connectStorageEmulator(storage, 'localhost', 9199)
+    console.log('🔥 Firebase emulators connected')
+  } catch (error) {
+    // Emulators already connected or not available
+    console.log('Firebase emulators not available, using production')
+  }
 }
 
 // User roles system
