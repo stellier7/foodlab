@@ -146,16 +146,19 @@ service cloud.firestore {
     
     // Notifications collection
     match /notifications/{notificationId} {
-      // Users can read their own notifications
-      allow read: if isAuthenticated() && 
-                     resource.data.userId == request.auth.uid;
+      // Business users can read their own notifications
+      allow read: if isBusiness() && 
+                     resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+      
+      // Super admins and admins can read all notifications
+      allow read: if isAdmin();
       
       // Super admins and admins can create notifications
       allow create: if isAdmin();
       
-      // Users can update their own notifications (mark as read)
-      allow update: if isAuthenticated() && 
-                       resource.data.userId == request.auth.uid;
+      // Business users can update their own notifications (mark as read)
+      allow update: if isBusiness() && 
+                       resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
     }
     
     // Audit logs collection

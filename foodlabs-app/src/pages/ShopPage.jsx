@@ -367,7 +367,7 @@ const ShopPage = () => {
                         color: '#3b82f6',
                         marginBottom: '12px'
                       }}>
-                        {getCurrencySymbol()} {product && getPriceForCurrency(product).toFixed(2)}
+                        {getCurrencySymbol()} {product?.price ? product.price.toFixed(2) : '0.00'}
                       </div>
                     </div>
                     
