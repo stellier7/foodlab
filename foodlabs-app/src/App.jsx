@@ -5,7 +5,7 @@ import ShoppingCart from './components/ShoppingCart'
 import LocationSelector from './components/LocationSelector'
 import FoodLabsPage from './pages/FoodLabsPage'
 import FitLabsPage from './pages/FitLabsPage'
-import SportsShopPage from './pages/SportsShopPage'
+import ShopPage from './pages/ShopPage'
 import RestaurantDetailPage from './pages/RestaurantDetailPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminRouter from './components/admin/AdminRouter'
@@ -75,7 +75,7 @@ const AppContent = () => {
           {/* Public Routes */}
           <Route path="/" element={<FoodLabsPage />} />
           <Route path="/fitlab" element={<FitLabsPage />} />
-          <Route path="/shop" element={<SportsShopPage />} />
+          <Route path="/shop" element={<ShopPage />} />
           <Route path="/sportsshop" element={<Navigate to="/shop" replace />} />
           <Route path="/restaurant/:restaurantName" element={<RestaurantDetailPage />} />
           
@@ -99,6 +99,7 @@ const AppContent = () => {
           />
           
           {/* Comercio Routes */}
+          <Route path="/comercio" element={<Navigate to="/comercio/login" replace />} />
           <Route path="/comercio/login" element={<ComercioLoginPage />} />
           <Route 
             path="/comercio/:businessId/*" 

@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../stores/useAppStore'
 import { ShoppingBag, Plus, Star, Clock, MapPin } from 'lucide-react'
 import ProductModal from '../components/ProductModal'
 
-const SportsShopPage = () => {
+const ShopPage = () => {
   const navigate = useNavigate()
   const { 
     setRestaurants, 
@@ -36,7 +36,7 @@ const SportsShopPage = () => {
   ]
 
   // Crear tiendas dinámicamente desde productos de Firestore
-  const shopBusinesses = React.useMemo(() => {
+  const shopBusinesses = useMemo(() => {
     if (!products || products.length === 0) return []
     
     // Agrupar productos por businessId
@@ -605,5 +605,5 @@ const SportsShopPage = () => {
   )
 }
 
-export default SportsShopPage
+export default ShopPage
 

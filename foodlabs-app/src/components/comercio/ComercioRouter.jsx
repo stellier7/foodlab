@@ -90,6 +90,17 @@ const ComercioRouter = () => {
     }
   }, [location.pathname])
 
+  // Redirección automática al dashboard si estamos en la ruta base
+  useEffect(() => {
+    const currentPath = location.pathname
+    const basePath = `/comercio/${businessId}`
+    
+    // Si estamos exactamente en /comercio/:businessId (sin sub-ruta), redirigir al dashboard
+    if (currentPath === basePath) {
+      navigate(`${basePath}/dashboard`, { replace: true })
+    }
+  }, [location.pathname, businessId, navigate])
+
   return (
     <div style={{ 
       minHeight: '100vh', 
