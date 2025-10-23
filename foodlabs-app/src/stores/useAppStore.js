@@ -372,6 +372,12 @@ export const useAppStore = create(
         const { currency } = get()
         const curr = targetCurrency || currency
         
+        // Check if product is valid
+        if (!product) {
+          console.warn(`⚠️ Product is undefined for currency ${curr}`)
+          return 0
+        }
+        
         // 1. Si hay precio específico para esta moneda, usarlo (override)
         const overrideKey = `precio_${curr}`
         if (product[overrideKey] && product[overrideKey] > 0) {
@@ -380,12 +386,12 @@ export const useAppStore = create(
         
         // 2. Si no hay override, usar price directo (sin conversión)
         // Asumimos que price está en la moneda del restaurante
-        if (product.price) {
+        if (product.price && product.price > 0) {
           return product.price
         }
         
         // 3. Si tampoco hay price, log warning y retornar 0
-        console.warn(`⚠️ No price found for product in currency ${curr}:`, product.name || product.id)
+        console.warn(`⚠️ No price found for product in currency ${curr}:`, product.name || product.id || 'unknown')
         return 0
       },
       

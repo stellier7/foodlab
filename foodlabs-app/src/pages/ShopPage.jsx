@@ -102,8 +102,12 @@ const ShopPage = () => {
                )
       })
   
-  // Usar solo productos de Firestore
-  const allProducts = products?.filter(p => p.businessType === 'shop' && p.isActive) || []
+  // Usar solo productos de Firestore con precios válidos
+  const allProducts = products?.filter(p => 
+    p.businessType === 'shop' && 
+    p.isActive && 
+    (p.price > 0 || p.precio_HNL > 0)
+  ) || []
   
   // Navegar a detalle de tienda
   const handleBusinessClick = (business) => {
@@ -363,7 +367,7 @@ const ShopPage = () => {
                         color: '#3b82f6',
                         marginBottom: '12px'
                       }}>
-                        {getCurrencySymbol()} {getPriceForCurrency(product).toFixed(2)}
+                        {getCurrencySymbol()} {product && getPriceForCurrency(product).toFixed(2)}
                       </div>
                     </div>
                     
