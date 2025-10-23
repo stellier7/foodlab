@@ -88,7 +88,7 @@ const ComercioProductsPage = () => {
     if (user?.businessId) {
       fetchProducts(businessType, user.businessId)
     }
-  }, [user?.businessId, businessType, fetchProducts])
+  }, [user?.businessId, businessType])
 
   const handleDeleteProduct = async (productId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {

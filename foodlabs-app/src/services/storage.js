@@ -54,44 +54,79 @@ export const deleteImage = async (imageUrl) => {
  * @returns {Promise<File>} Archivo comprimido
  */
 const compressImage = async (file, maxSizeKB = 1024) => {
+  // Skip compression on mobile if file is already small enough
+  if (file.size <= maxSizeKB * 1024 * 2) {
+    return file
+  }
+
   return new Promise((resolve) => {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    const img = new Image()
-
-    img.onload = () => {
-      // Calcular nuevas dimensiones manteniendo aspect ratio
-      let { width, height } = img
-      const maxDimension = 1920 // Máximo 1920px en cualquier dimensión
-
-      if (width > height && width > maxDimension) {
-        height = (height * maxDimension) / width
-        width = maxDimension
-      } else if (height > maxDimension) {
-        width = (width * maxDimension) / height
-        height = maxDimension
+    try {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      if (!ctx) {
+        // Canvas not supported, return original
+        console.warn('Canvas not supported, using original file')
+        resolve(file)
+        return
       }
 
-      canvas.width = width
-      canvas.height = height
+      const img = new Image()
 
-      // Dibujar imagen redimensionada
-      ctx.drawImage(img, 0, 0, width, height)
+      img.onerror = () => {
+        // Image load failed, return original
+        console.warn('Image load failed, using original file')
+        resolve(file)
+      }
 
-      // Convertir a blob con calidad ajustable
-      canvas.toBlob((blob) => {
-        if (blob.size <= maxSizeKB * 1024) {
-          resolve(new File([blob], file.name, { type: 'image/jpeg' }))
-        } else {
-          // Si sigue siendo muy grande, reducir calidad
-          canvas.toBlob((compressedBlob) => {
-            resolve(new File([compressedBlob], file.name, { type: 'image/jpeg' }))
-          }, 'image/jpeg', 0.7)
+      img.onload = () => {
+        try {
+          // Calcular nuevas dimensiones manteniendo aspect ratio
+          let { width, height } = img
+          const maxDimension = 1920 // Máximo 1920px en cualquier dimensión
+
+          if (width > height && width > maxDimension) {
+            height = (height * maxDimension) / width
+            width = maxDimension
+          } else if (height > maxDimension) {
+            width = (width * maxDimension) / height
+            height = maxDimension
+          }
+
+          canvas.width = width
+          canvas.height = height
+
+          // Dibujar imagen redimensionada
+          ctx.drawImage(img, 0, 0, width, height)
+
+          // Convertir a blob con calidad ajustable
+          canvas.toBlob((blob) => {
+            if (blob && blob.size <= maxSizeKB * 1024) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }))
+            } else if (blob) {
+              // Si sigue siendo muy grande, reducir calidad
+              canvas.toBlob((compressedBlob) => {
+                if (compressedBlob) {
+                  resolve(new File([compressedBlob], file.name, { type: 'image/jpeg' }))
+                } else {
+                  resolve(file) // Fallback to original
+                }
+              }, 'image/jpeg', 0.7)
+            } else {
+              resolve(file) // Fallback to original
+            }
+          }, 'image/jpeg', 0.8)
+        } catch (error) {
+          console.error('Compression error:', error)
+          resolve(file) // Return original on error
         }
-      }, 'image/jpeg', 0.8)
-    }
+      }
 
-    img.src = URL.createObjectURL(file)
+      img.src = URL.createObjectURL(file)
+    } catch (error) {
+      console.error('Canvas creation error:', error)
+      resolve(file) // Return original file on any error
+    }
   })
 }
 

@@ -354,7 +354,7 @@ const ComercioDashboard = () => {
             return (
               <button
                 key={index}
-                onClick={() => navigate(action.path)}
+                onClick={() => navigate(`/comercio/${user?.businessId}${action.path}`)}
                 className="tap-effect ripple"
                 style={{
                   padding: '20px',
