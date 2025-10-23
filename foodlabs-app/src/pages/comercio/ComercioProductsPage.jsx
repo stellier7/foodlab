@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useAppStore } from '../../stores/useAppStore'
+import ImageUploader from '../../components/admin/ImageUploader'
 import { 
   Plus, 
   Search, 
@@ -679,6 +680,28 @@ const ComercioProductsPage = () => {
                 />
               </div>
 
+              {/* Image Upload */}
+              <div style={{ marginBottom: '16px' }}>
+                <ImageUploader
+                  onImageUploaded={(imageUrl) => {
+                    if (imageUrl) {
+                      setFormData(prev => ({
+                        ...prev,
+                        images: [...prev.images, imageUrl]
+                      }))
+                    } else {
+                      setFormData(prev => ({
+                        ...prev,
+                        images: []
+                      }))
+                    }
+                  }}
+                  currentImage={formData.images?.[0] || null}
+                  label="Imagen Principal"
+                  required={true}
+                />
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
                   <label style={{
@@ -827,33 +850,49 @@ const ComercioProductsPage = () => {
                     </div>
 
                     {businessType === 'shop' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <input
-                          type="number"
-                          placeholder="Stock"
-                          value={variant.stock}
-                          onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
-                          style={{
-                            padding: '8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            outline: 'none'
-                          }}
-                        />
-                        <input
-                          type="text"
-                          placeholder="URL de imagen (opcional)"
-                          value={variant.image}
-                          onChange={(e) => updateVariant(index, 'image', e.target.value)}
-                          style={{
-                            padding: '8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            outline: 'none'
-                          }}
-                        />
+                      <div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                          <input
+                            type="number"
+                            placeholder="Stock"
+                            value={variant.stock}
+                            onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
+                            style={{
+                              padding: '8px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              outline: 'none'
+                            }}
+                          />
+                          <input
+                            type="text"
+                            placeholder="URL de imagen (opcional)"
+                            value={variant.image}
+                            onChange={(e) => updateVariant(index, 'image', e.target.value)}
+                            style={{
+                              padding: '8px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              outline: 'none'
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Image Upload for Variant */}
+                        <div style={{ marginTop: '8px' }}>
+                          <ImageUploader
+                            onImageUploaded={(imageUrl) => {
+                              updateVariant(index, 'image', imageUrl || '')
+                            }}
+                            currentImage={variant.image || null}
+                            label="Imagen de Variante"
+                            required={false}
+                            type="variant"
+                            variantId={variant.id}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>

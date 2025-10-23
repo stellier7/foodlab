@@ -80,22 +80,27 @@ export const getProduct = async (productId) => {
  * @returns {Promise<Array>} Lista de productos
  */
 export const getProducts = async (businessType = null, businessId = null) => {
+  // Start with a simple query to avoid complex index requirements
   let q = query(
     collection(db, PRODUCTS_COLLECTION),
-    where('isActive', '==', true),
-    orderBy('createdAt', 'desc')
+    where('isActive', '==', true)
   )
 
+  // Add businessType filter if specified
   if (businessType) {
     q = query(q, where('businessType', '==', businessType))
   }
 
+  // Add businessId filter if specified
   if (businessId) {
     q = query(q, where('businessId', '==', businessId))
   }
 
   const querySnapshot = await getDocs(q)
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  
+  // Sort in JavaScript to avoid Firestore index requirements
+  return products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 }
 
 /**
@@ -208,10 +213,12 @@ export const getPendingProducts = async () => {
   const q = query(
     collection(db, PRODUCTS_COLLECTION),
     where('isPublished', '==', false),
-    where('isActive', '==', true),
-    orderBy('createdAt', 'desc')
+    where('isActive', '==', true)
   )
 
   const querySnapshot = await getDocs(q)
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  
+  // Sort in JavaScript to avoid Firestore index requirements
+  return products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 }
