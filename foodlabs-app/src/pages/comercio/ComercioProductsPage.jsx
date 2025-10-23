@@ -86,9 +86,9 @@ const ComercioProductsPage = () => {
 
   useEffect(() => {
     if (user?.businessId) {
-      fetchProducts('restaurant', user.businessId)
+      fetchProducts(businessType, user.businessId)
     }
-  }, [user?.businessId, fetchProducts])
+  }, [user?.businessId, businessType, fetchProducts])
 
   const handleDeleteProduct = async (productId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {

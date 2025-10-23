@@ -120,9 +120,12 @@ service cloud.firestore {
       allow create: if isBusiness() && 
                        request.resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
       
-      // Business users can read/write their EXISTING products
-      allow read, update, delete: if isBusiness() && 
-                                     resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+      // Business users can read ALL products (needed for filtering)
+      allow read: if isBusiness();
+      
+      // Business users can write their EXISTING products
+      allow update, delete: if isBusiness() && 
+                               resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
       
       // Customers can read products
       allow read: if isCustomer();
