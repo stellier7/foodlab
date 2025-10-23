@@ -21,73 +21,12 @@ const SportsShopPage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Tiendas de la Shop (estructura como restaurantes)
-  const shopBusinesses = [
-    {
-      id: 'padelbuddy',
-      name: 'PadelBuddy',
-      slug: 'padelbuddy',
-      type: 'shop',
-      category: 'Deportes',
-      tier: 'shop',
-      rating: 5.0,
-      reviewCount: 45,
-      deliveryTime: '24-48 hrs',
-      deliveryFee: 0,
-      address: 'Entregas a domicilio',
-      image: '/images/products/padelBuddy/phoneMount_black.jpg',
-      logo: '/images/products/padelBuddy/phoneMount_black.jpg',
-      isOpen: true,
-      menuCategories: [
-        {
-          name: 'Accesorios',
-          items: [
-            {
-              id: 'sp3',
-              name: 'Phone Mount',
-              price: 17.15,
-              precio_HNL: 425.00,
-              currency: 'HNL',
-              description: 'Soporte para teléfono con ventosas en forma de raqueta de padel. Perfecto para grabar tus partidos.',
-              image: '/images/products/padelBuddy/phoneMount_black.jpg',
-              variants: [
-                {
-                  id: 'black',
-                  name: 'Negro',
-                  image: '/images/products/padelBuddy/phoneMount_black.jpg',
-                  stock: 10
-                },
-                {
-                  id: 'bicolor',
-                  name: 'Bi-Color',
-                  image: '/images/products/padelBuddy/phoneMount_bicolor.jpg',
-                  stock: 10
-                }
-              ],
-              totalStock: 20,
-              isNew: true,
-              features: [],
-              labels: []
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  // Shop businesses will be loaded from Firestore
   
-  // Cargar productos y tiendas al iniciar
+  // Cargar productos de shop al iniciar
   useEffect(() => {
-    // Cargar productos de shop desde Firestore
     fetchProducts('shop')
-    
-    // Agregar PadelBuddy a la lista global de restaurantes si no existe
-    const existingRestaurants = restaurants || []
-    const hasPadelbuddy = existingRestaurants.some(r => r.id === 'padelbuddy')
-    
-    if (!hasPadelbuddy) {
-      setRestaurants([...existingRestaurants, ...shopBusinesses])
-    }
-  }, [])
+  }, [fetchProducts])
 
   const categories = [
     { id: 'all', name: 'Todo', emoji: '🏪' },
@@ -95,6 +34,62 @@ const SportsShopPage = () => {
     { id: 'convenience', name: 'Conveniencia', emoji: '🏬' },
     { id: 'pharmacy', name: 'Farmacias', emoji: '💊' }
   ]
+
+  // Crear tiendas dinámicamente desde productos de Firestore
+  const shopBusinesses = React.useMemo(() => {
+    if (!products || products.length === 0) return []
+    
+    // Agrupar productos por businessId
+    const businessMap = new Map()
+    
+    products.forEach(product => {
+      if (!businessMap.has(product.businessId)) {
+        businessMap.set(product.businessId, {
+          id: product.businessId,
+          name: product.businessId === 'padelbuddy' ? 'PadelBuddy' : product.businessId,
+          slug: product.businessId,
+          type: 'shop',
+          category: 'Deportes',
+          tier: 'shop',
+          rating: 5.0,
+          reviewCount: 45,
+          deliveryTime: '24-48 hrs',
+          deliveryFee: 0,
+          address: 'Entregas a domicilio',
+          image: product.images?.[0] || '/images/products/padelBuddy/phoneMount_black.jpg',
+          logo: product.images?.[0] || '/images/products/padelBuddy/phoneMount_black.jpg',
+          isOpen: true,
+          menuCategories: []
+        })
+      }
+      
+      const business = businessMap.get(product.businessId)
+      
+      // Agrupar por categoría
+      let category = business.menuCategories.find(cat => cat.name === product.category)
+      if (!category) {
+        category = { name: product.category, items: [] }
+        business.menuCategories.push(category)
+      }
+      
+      category.items.push({
+        id: product.id,
+        name: product.name,
+        price: product.price / 25, // Convertir a USD
+        precio_HNL: product.price,
+        currency: 'HNL',
+        description: product.description,
+        image: product.images?.[0] || '/images/products/padelBuddy/phoneMount_black.jpg',
+        variants: product.variants || [],
+        totalStock: product.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0,
+        isNew: true,
+        features: [],
+        labels: product.dietaryLabels || []
+      })
+    })
+    
+    return Array.from(businessMap.values())
+  }, [products])
 
   // Filtrar tiendas por categoría
   const filteredBusinesses = selectedCategory === 'all' 
@@ -107,21 +102,8 @@ const SportsShopPage = () => {
                )
       })
   
-  // Combinar productos de Firestore con productos hardcoded como fallback
-  const firestoreProducts = products?.filter(p => p.businessType === 'shop' && p.isActive) || []
-  const hardcodedProducts = shopBusinesses.flatMap(business =>
-    business.menuCategories?.flatMap(category =>
-      category.items?.map(item => ({
-        ...item,
-        businessId: business.id,
-        businessName: business.name,
-        businessType: 'shop'
-      })) || []
-    ) || []
-  )
-  
-  // Usar productos de Firestore si están disponibles, sino usar hardcoded
-  const allProducts = firestoreProducts.length > 0 ? firestoreProducts : hardcodedProducts
+  // Usar solo productos de Firestore
+  const allProducts = products?.filter(p => p.businessType === 'shop' && p.isActive) || []
   
   // Navegar a detalle de tienda
   const handleBusinessClick = (business) => {

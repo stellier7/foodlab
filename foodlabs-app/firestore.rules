@@ -124,7 +124,7 @@ service cloud.firestore {
       allow read: if isCustomer();
       
       // Anyone can read published products (for public shop)
-      allow read: if resource.data.isPublished == true;
+      allow read: if resource.data.isPublished == true || resource.data.businessType == 'shop';
     }
     
     // Analytics collection (for admin dashboards)

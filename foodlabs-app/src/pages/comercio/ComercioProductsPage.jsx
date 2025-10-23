@@ -33,6 +33,18 @@ const ComercioProductsPage = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [variants, setVariants] = useState([])
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    images: [],
+    dietaryLabels: []
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   // Detectar tipo de comercio
   const businessType = user?.businessId === 'padelbuddy' || user?.businessId === 'sportsshop' 
@@ -109,6 +121,94 @@ const ComercioProductsPage = () => {
     setVariants(variants.filter((_, i) => i !== index))
   }
 
+  // Reset form when modal opens/closes
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      category: '',
+      images: [],
+      dietaryLabels: []
+    })
+    setVariants([])
+    setSubmitError('')
+    setIsSubmitting(false)
+  }
+
+  // Handle form field changes
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Handle form submission
+  const handleFormSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setSubmitError('')
+
+    try {
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        category: formData.category,
+        businessType: businessType,
+        businessId: user.businessId,
+        images: formData.images,
+        variants: variants.length > 0 ? variants : undefined,
+        dietaryLabels: formData.dietaryLabels,
+        isPublished: false, // Requiere aprobación
+        status: 'pending',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, productData)
+      } else {
+        await createProduct(productData)
+      }
+
+      // Success - close modal and refresh
+      setShowAddModal(false)
+      setEditingProduct(null)
+      resetForm()
+      
+      // Refresh products
+      await fetchProducts('restaurant', user.businessId)
+      
+    } catch (error) {
+      console.error('Error saving product:', error)
+      setSubmitError(error.message || 'Error al guardar el producto')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Open modal for editing
+  const handleEditProduct = (product) => {
+    setEditingProduct(product)
+    setFormData({
+      name: product.name || '',
+      description: product.description || '',
+      price: product.price?.toString() || '',
+      category: product.category || '',
+      images: product.images || [],
+      dietaryLabels: product.dietaryLabels || []
+    })
+    setVariants(product.variants || [])
+    setShowAddModal(true)
+  }
+
+  // Open modal for adding
+  const handleAddProduct = () => {
+    resetForm()
+    setEditingProduct(null)
+    setShowAddModal(true)
+  }
+
   const getStatusBadge = (product) => {
     if (product.isPublished) {
       return {
@@ -158,7 +258,7 @@ const ComercioProductsPage = () => {
           </p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={handleAddProduct}
           className="btn-primary ripple"
           style={{
             padding: '12px 24px',
@@ -429,7 +529,7 @@ const ComercioProductsPage = () => {
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
-                    onClick={() => setEditingProduct(product)}
+                    onClick={() => handleEditProduct(product)}
                     className="tap-effect"
                     style={{
                       flex: 1,
@@ -526,12 +626,7 @@ const ComercioProductsPage = () => {
               {editingProduct ? 'Editar Producto' : 'Agregar Producto'}
             </h2>
             
-            <form onSubmit={(e) => {
-              e.preventDefault()
-              // TODO: Implementar lógica de guardado
-              setShowAddModal(false)
-              setEditingProduct(null)
-            }}>
+            <form onSubmit={handleFormSubmit}>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{
                   display: 'block',
@@ -544,7 +639,8 @@ const ComercioProductsPage = () => {
                 </label>
                 <input
                   type="text"
-                  defaultValue={editingProduct?.name || ''}
+                  value={formData.name}
+                  onChange={(e) => handleFormChange('name', e.target.value)}
                   required
                   style={{
                     width: '100%',
@@ -568,7 +664,8 @@ const ComercioProductsPage = () => {
                   Descripción
                 </label>
                 <textarea
-                  defaultValue={editingProduct?.description || ''}
+                  value={formData.description}
+                  onChange={(e) => handleFormChange('description', e.target.value)}
                   rows={3}
                   style={{
                     width: '100%',
@@ -596,7 +693,8 @@ const ComercioProductsPage = () => {
                   <input
                     type="number"
                     step="0.01"
-                    defaultValue={editingProduct?.price || ''}
+                    value={formData.price}
+                    onChange={(e) => handleFormChange('price', e.target.value)}
                     required
                     style={{
                       width: '100%',
@@ -619,7 +717,8 @@ const ComercioProductsPage = () => {
                     Categoría
                   </label>
                   <select
-                    defaultValue={editingProduct?.category || ''}
+                    value={formData.category}
+                    onChange={(e) => handleFormChange('category', e.target.value)}
                     required
                     style={{
                       width: '100%',
@@ -761,12 +860,28 @@ const ComercioProductsPage = () => {
                 ))}
               </div>
 
+              {/* Error Message */}
+              {submitError && (
+                <div style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  backgroundColor: '#fee2e2',
+                  border: '1px solid #fecaca',
+                  marginBottom: '16px',
+                  color: '#dc2626',
+                  fontSize: '14px'
+                }}>
+                  {submitError}
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddModal(false)
                     setEditingProduct(null)
+                    resetForm()
                   }}
                   style={{
                     padding: '12px 24px',
@@ -783,10 +898,17 @@ const ComercioProductsPage = () => {
                 </button>
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="btn-primary"
-                  style={{ padding: '12px 24px' }}
+                  style={{ 
+                    padding: '12px 24px',
+                    opacity: isSubmitting ? 0.6 : 1,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  {editingProduct ? 'Actualizar' : 'Crear'} Producto
+                  {isSubmitting 
+                    ? 'Guardando...' 
+                    : editingProduct ? 'Actualizar' : 'Crear'} Producto
                 </button>
               </div>
             </form>
