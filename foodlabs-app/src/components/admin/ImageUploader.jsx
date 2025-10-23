@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { uploadImage, validateImageFile, generateProductImagePath } from '../../services/storage'
-import { X, Upload, Image as ImageIcon, AlertCircle } from 'lucide-react'
+import { X, Upload, Image as ImageIcon, AlertCircle, ZoomIn, Move } from 'lucide-react'
 
 const ImageUploader = ({ 
   onImageUploaded, 
@@ -14,6 +14,11 @@ const ImageUploader = ({
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState(null)
   const [preview, setPreview] = useState(currentImage)
+  const [showZoom, setShowZoom] = useState(false)
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const fileInputRef = useRef(null)
 
   const handleFileSelect = async (event) => {
@@ -68,6 +73,45 @@ const ImageUploader = ({
     fileInputRef.current?.click()
   }
 
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.5, 3))
+  }
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.5, 0.5))
+  }
+
+  const handleMouseDown = (e) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true)
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+    }
+  }
+
+  const handleMouseMove = (e) => {
+    if (isDragging && zoomLevel > 1) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      })
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const resetZoom = () => {
+    setZoomLevel(1)
+    setPosition({ x: 0, y: 0 })
+  }
+
+  // Reset zoom when image changes
+  useEffect(() => {
+    setZoomLevel(1)
+    setPosition({ x: 0, y: 0 })
+  }, [preview])
+
   return (
     <div style={{ width: '100%' }}>
       <label style={{
@@ -101,16 +145,128 @@ const ImageUploader = ({
       >
         {preview ? (
           <>
-            <img
-              src={preview}
-              alt="Preview"
+            <div
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
-                borderRadius: '10px'
+                overflow: 'hidden',
+                borderRadius: '10px',
+                position: 'relative',
+                cursor: zoomLevel > 1 ? 'move' : 'pointer'
               }}
-            />
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              <img
+                src={preview}
+                alt="Preview"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  transform: `scale(${zoomLevel}) translate(${position.x / zoomLevel}px, ${position.y / zoomLevel}px)`,
+                  transition: isDragging ? 'none' : 'transform 0.2s ease',
+                  transformOrigin: 'center center'
+                }}
+              />
+            </div>
+            
+            {/* Zoom Controls */}
+            {!isUploading && (
+              <div style={{
+                position: 'absolute',
+                top: '8px',
+                left: '8px',
+                display: 'flex',
+                gap: '4px',
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                borderRadius: '6px',
+                padding: '4px'
+              }}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleZoomOut()
+                  }}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '4px',
+                    backgroundColor: 'transparent',
+                    color: 'white',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  −
+                </button>
+                <span style={{
+                  color: 'white',
+                  fontSize: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 4px'
+                }}>
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleZoomIn()
+                  }}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '4px',
+                    backgroundColor: 'transparent',
+                    color: 'white',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  +
+                </button>
+                {zoomLevel > 1 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      resetZoom()
+                    }}
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '4px',
+                      backgroundColor: 'transparent',
+                      color: 'white',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      fontSize: '10px'
+                    }}
+                    title="Reset zoom"
+                  >
+                    <Move size={12} />
+                  </button>
+                )}
+              </div>
+            )}
+            
+            {/* Remove Button */}
             {!isUploading && (
               <button
                 type="button"

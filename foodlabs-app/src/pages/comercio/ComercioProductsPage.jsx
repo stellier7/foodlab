@@ -836,7 +836,7 @@ const ComercioProductsPage = () => {
                       />
                       <input
                         type="number"
-                        placeholder="Precio"
+                        placeholder="Precio (ej: 425)"
                         value={variant.price}
                         onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
                         style={{
@@ -854,7 +854,7 @@ const ComercioProductsPage = () => {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
                           <input
                             type="number"
-                            placeholder="Stock"
+                            placeholder="Stock (ej: 10)"
                             value={variant.stock}
                             onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
                             style={{
