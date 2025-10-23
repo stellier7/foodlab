@@ -20,8 +20,10 @@ const PRODUCTS_COLLECTION = 'products'
  * @returns {Promise<string>} ID del producto creado
  */
 export const createProduct = async (productData) => {
+  const isShop = productData.businessType === 'shop'
   const productRef = await addDoc(collection(db, PRODUCTS_COLLECTION), {
     ...productData,
+    isPublished: isShop, // Shop products auto-publish, restaurants need approval
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     isActive: true
@@ -162,4 +164,54 @@ export const getProductStats = async () => {
   })
 
   return stats
+}
+
+/**
+ * Aprueba un producto
+ * @param {string} productId - ID del producto
+ * @param {string} approvedBy - ID del admin que aprueba
+ * @returns {Promise<void>}
+ */
+export const approveProduct = async (productId, approvedBy) => {
+  const productRef = doc(db, PRODUCTS_COLLECTION, productId)
+  await updateDoc(productRef, {
+    isPublished: true,
+    approvedAt: new Date().toISOString(),
+    approvedBy: approvedBy,
+    updatedAt: new Date().toISOString()
+  })
+}
+
+/**
+ * Rechaza un producto
+ * @param {string} productId - ID del producto
+ * @param {string} rejectedBy - ID del admin que rechaza
+ * @param {string} reason - Razón del rechazo
+ * @returns {Promise<void>}
+ */
+export const rejectProduct = async (productId, rejectedBy, reason) => {
+  const productRef = doc(db, PRODUCTS_COLLECTION, productId)
+  await updateDoc(productRef, {
+    isPublished: false,
+    rejectedAt: new Date().toISOString(),
+    rejectedBy: rejectedBy,
+    rejectionReason: reason,
+    updatedAt: new Date().toISOString()
+  })
+}
+
+/**
+ * Obtiene productos pendientes de aprobación
+ * @returns {Promise<Array>} Lista de productos pendientes
+ */
+export const getPendingProducts = async () => {
+  const q = query(
+    collection(db, PRODUCTS_COLLECTION),
+    where('isPublished', '==', false),
+    where('isActive', '==', true),
+    orderBy('createdAt', 'desc')
+  )
+
+  const querySnapshot = await getDocs(q)
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
 }

@@ -116,14 +116,18 @@ service cloud.firestore {
       // Super admins and admins can read/write all products
       allow read, write: if isAdmin();
       
-      // Business users can read/write their own products
-      allow read, write: if isBusiness() && 
-                           resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+      // Business users can CREATE products
+      allow create: if isBusiness() && 
+                       request.resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+      
+      // Business users can read/write their EXISTING products
+      allow read, update, delete: if isBusiness() && 
+                                     resource.data.businessId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
       
       // Customers can read products
       allow read: if isCustomer();
       
-      // Anyone can read published products (for public shop)
+      // Anyone can read published products or shop products
       allow read: if resource.data.isPublished == true || resource.data.businessType == 'shop';
     }
     

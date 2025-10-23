@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useOrdersStore } from '../../stores/useOrdersStore'
 import { useAppStore } from '../../stores/useAppStore'
+import { getBusinessNotifications, getUnreadCount, markAllNotificationsAsRead } from '../../services/notifications'
 import { 
   TrendingUp, 
   Package, 
@@ -12,7 +13,9 @@ import {
   Plus,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Bell,
+  X
 } from 'lucide-react'
 
 const ComercioDashboard = () => {
@@ -26,6 +29,9 @@ const ComercioDashboard = () => {
     pendingOrders: 0,
     totalProducts: 0
   })
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [showNotifications, setShowNotifications] = useState(false)
 
   // Obtener órdenes del negocio
   const businessOrders = getOrdersByBusiness(user?.businessId || '')
@@ -48,6 +54,40 @@ const ComercioDashboard = () => {
       totalProducts: 0 // Se calculará cuando tengamos productos
     })
   }, [businessOrders])
+
+  // Cargar notificaciones
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (user?.businessId) {
+        try {
+          const [notificationsData, unreadCountData] = await Promise.all([
+            getBusinessNotifications(user.businessId),
+            getUnreadCount(user.businessId)
+          ])
+          setNotifications(notificationsData)
+          setUnreadCount(unreadCountData)
+        } catch (error) {
+          console.error('Error fetching notifications:', error)
+        }
+      }
+    }
+
+    fetchNotifications()
+  }, [user?.businessId])
+
+  const handleMarkAllAsRead = async () => {
+    if (user?.businessId) {
+      try {
+        await markAllNotificationsAsRead(user.businessId)
+        setUnreadCount(0)
+        // Refresh notifications to update read status
+        const notificationsData = await getBusinessNotifications(user.businessId)
+        setNotifications(notificationsData)
+      } catch (error) {
+        console.error('Error marking notifications as read:', error)
+      }
+    }
+  }
 
   const quickActions = [
     {
@@ -95,8 +135,50 @@ const ComercioDashboard = () => {
         padding: '24px',
         color: 'white',
         marginBottom: '24px',
-        boxShadow: '0 8px 32px rgba(249, 115, 22, 0.3)'
+        boxShadow: '0 8px 32px rgba(249, 115, 22, 0.3)',
+        position: 'relative'
       }}>
+        {/* Notification Bell */}
+        <button
+          onClick={() => setShowNotifications(!showNotifications)}
+          style={{
+            position: 'absolute',
+            top: '24px',
+            right: '24px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '12px',
+            padding: '12px',
+            color: 'white',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          <Bell size={20} strokeWidth={2} />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-4px',
+              right: '-4px',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              borderRadius: '50%',
+              width: '20px',
+              height: '20px',
+              fontSize: '10px',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {unreadCount}
+            </span>
+          )}
+        </button>
+
         <h1 style={{
           fontSize: '28px',
           fontWeight: '800',
@@ -445,6 +527,153 @@ const ComercioDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Notifications Dropdown */}
+      {showNotifications && (
+        <div style={{
+          position: 'fixed',
+          top: '80px',
+          right: '20px',
+          background: 'white',
+          borderRadius: '16px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+          border: '1px solid #e2e8f0',
+          maxWidth: '400px',
+          width: '100%',
+          maxHeight: '500px',
+          overflowY: 'auto',
+          zIndex: 50
+        }}>
+          <div style={{
+            padding: '20px',
+            borderBottom: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <h3 style={{
+              fontSize: '18px',
+              fontWeight: '700',
+              color: '#1e293b',
+              margin: 0
+            }}>
+              Notificaciones
+            </h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  style={{
+                    padding: '6px 12px',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Marcar todo como leído
+                </button>
+              )}
+              <button
+                onClick={() => setShowNotifications(false)}
+                style={{
+                  padding: '6px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  borderRadius: '6px'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div style={{ padding: '0' }}>
+            {notifications.length === 0 ? (
+              <div style={{
+                padding: '40px 20px',
+                textAlign: 'center',
+                color: '#64748b'
+              }}>
+                <Bell size={32} style={{ margin: '0 auto 12px', color: '#d1d5db' }} />
+                <p style={{ margin: 0, fontSize: '14px' }}>
+                  No tienes notificaciones
+                </p>
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  style={{
+                    padding: '16px 20px',
+                    borderBottom: '1px solid #f1f5f9',
+                    background: notification.isRead ? 'white' : '#f8fafc',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#f8fafc'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = notification.isRead ? 'white' : '#f8fafc'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: notification.isRead ? 'transparent' : '#3b82f6',
+                      marginTop: '6px',
+                      flexShrink: 0
+                    }} />
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#1e293b',
+                        marginBottom: '4px',
+                        margin: 0
+                      }}>
+                        {notification.title}
+                      </h4>
+                      <p style={{
+                        fontSize: '13px',
+                        color: '#64748b',
+                        marginBottom: '8px',
+                        lineHeight: '1.4',
+                        margin: 0
+                      }}>
+                        {notification.message}
+                      </p>
+                      <div style={{
+                        fontSize: '11px',
+                        color: '#9ca3af',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <Clock size={12} />
+                        {new Date(notification.createdAt).toLocaleString('es-HN', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,25 +1,29 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { getProducts, createProduct, updateProduct, deleteProduct } from '../../services/products'
+import { getProducts, createProduct, updateProduct, deleteProduct, getPendingProducts, approveProduct, rejectProduct } from '../../services/products'
+import { notifyProductApproved, notifyProductRejected } from '../../services/notifications'
 import ProductCard from '../../components/admin/ProductCard'
+import PendingProductCard from '../../components/admin/PendingProductCard'
 import ProductModal from '../../components/admin/ProductModal'
-import { Search, Plus, Filter, Package, Utensils, BarChart3 } from 'lucide-react'
+import { Search, Plus, Filter, Package, Utensils, BarChart3, Clock, CheckCircle, XCircle } from 'lucide-react'
 
 const AdminProductsPage = () => {
   const { user, isAuthenticated, userRole } = useAuthStore()
   const [products, setProducts] = useState([])
+  const [pendingProducts, setPendingProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterType, setFilterType] = useState('all') // 'all', 'shop', 'restaurant'
+  const [filterType, setFilterType] = useState('all') // 'all', 'shop', 'restaurant', 'pending'
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [stats, setStats] = useState({
     total: 0,
     shop: 0,
     restaurant: 0,
-    active: 0
+    active: 0,
+    pending: 0
   })
 
   const isAdmin = userRole === 'admin_national' || userRole === 'super_admin'
@@ -44,15 +48,20 @@ const AdminProductsPage = () => {
     setIsLoading(true)
     setError(null)
     try {
-      const allProducts = await getProducts()
+      const [allProducts, pending] = await Promise.all([
+        getProducts(),
+        getPendingProducts()
+      ])
       setProducts(allProducts)
+      setPendingProducts(pending)
       
       // Calcular estadísticas
       const newStats = {
         total: allProducts.length,
         shop: allProducts.filter(p => p.businessType === 'shop').length,
         restaurant: allProducts.filter(p => p.businessType === 'restaurant').length,
-        active: allProducts.filter(p => p.isActive).length
+        active: allProducts.filter(p => p.isActive).length,
+        pending: pending.length
       }
       setStats(newStats)
     } catch (err) {
@@ -64,10 +73,10 @@ const AdminProductsPage = () => {
   }
 
   const filterProducts = () => {
-    let filtered = products
+    let filtered = filterType === 'pending' ? pendingProducts : products
 
     // Filtrar por tipo
-    if (filterType !== 'all') {
+    if (filterType !== 'all' && filterType !== 'pending') {
       filtered = filtered.filter(product => product.businessType === filterType)
     }
 
@@ -141,6 +150,28 @@ const AdminProductsPage = () => {
       await handleUpdateProduct(productData)
     } else {
       await handleCreateProduct(productData)
+    }
+  }
+
+  const handleApproveProduct = async (productId, productName, businessId) => {
+    try {
+      await approveProduct(productId, user.uid)
+      await notifyProductApproved(businessId, productId, productName)
+      await fetchProducts() // Refresh list
+    } catch (error) {
+      console.error('Error approving product:', error)
+      throw error
+    }
+  }
+
+  const handleRejectProduct = async (productId, productName, businessId, reason) => {
+    try {
+      await rejectProduct(productId, user.uid, reason)
+      await notifyProductRejected(businessId, productId, productName, reason)
+      await fetchProducts() // Refresh list
+    } catch (error) {
+      console.error('Error rejecting product:', error)
+      throw error
     }
   }
 
@@ -265,6 +296,22 @@ const AdminProductsPage = () => {
             {stats.active}
           </p>
         </div>
+
+        <div style={{
+          background: 'white',
+          padding: '20px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <Clock size={20} color="#f59e0b" />
+            <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Pendientes</span>
+          </div>
+          <p style={{ fontSize: '24px', fontWeight: '700', color: '#111827', margin: 0 }}>
+            {stats.pending}
+          </p>
+        </div>
       </div>
 
       {/* Filtros y búsqueda */}
@@ -366,6 +413,46 @@ const AdminProductsPage = () => {
               <Utensils size={16} />
               Restaurantes
             </button>
+            <button
+              onClick={() => setFilterType('pending')}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '8px',
+                border: `1px solid ${filterType === 'pending' ? '#3b82f6' : '#d1d5db'}`,
+                backgroundColor: filterType === 'pending' ? '#eff6ff' : 'white',
+                color: filterType === 'pending' ? '#3b82f6' : '#374151',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                position: 'relative'
+              }}
+            >
+              <Clock size={16} />
+              Pendientes
+              {stats.pending > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '20px',
+                  height: '20px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {stats.pending}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Botón agregar */}
@@ -445,15 +532,24 @@ const AdminProductsPage = () => {
             gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
             gap: '20px'
           }}>
-            {filteredProducts.map(product => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onEdit={handleEditProduct}
-                onDelete={handleDeleteProduct}
-                onToggleActive={handleToggleActive}
-              />
-            ))}
+            {filteredProducts.map(product => 
+              filterType === 'pending' ? (
+                <PendingProductCard
+                  key={product.id}
+                  product={product}
+                  onApprove={handleApproveProduct}
+                  onReject={handleRejectProduct}
+                />
+              ) : (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onEdit={handleEditProduct}
+                  onDelete={handleDeleteProduct}
+                  onToggleActive={handleToggleActive}
+                />
+              )
+            )}
           </div>
         )}
       </div>
