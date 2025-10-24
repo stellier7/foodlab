@@ -327,7 +327,9 @@ export const useOrdersStore = create(
         set({ isLoading: true, error: null })
 
         try {
+          console.log('🔍 Creating order with data:', order)
           const currentUser = useAuthStore.getState().getCurrentUser()
+          console.log('👤 Current user:', currentUser)
           
           const newOrder = {
             ...order,
@@ -343,7 +345,9 @@ export const useOrdersStore = create(
             ]
           }
 
+          console.log('📦 Final order data:', newOrder)
           const orderId = await ordersService.createOrder(newOrder)
+          console.log('✅ Order created with ID:', orderId)
           
           // Update local counter
           set({ orderCounter: get().orderCounter + 1 })

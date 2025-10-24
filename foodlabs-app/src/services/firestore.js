@@ -102,6 +102,7 @@ export const ordersService = {
 
   // Create new order
   createOrder: async (orderData) => {
+    console.log('🔥 Firestore createOrder called with:', orderData)
     const orderRef = collection(db, COLLECTIONS.ORDERS)
     const orderWithTimestamp = {
       ...orderData,
@@ -109,7 +110,9 @@ export const ordersService = {
       updatedAt: serverTimestamp()
     }
     
+    console.log('📝 Order with timestamp:', orderWithTimestamp)
     const docRef = await addDoc(orderRef, orderWithTimestamp)
+    console.log('🎉 Order created successfully with ID:', docRef.id)
     return docRef.id
   },
 
