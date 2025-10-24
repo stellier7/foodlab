@@ -34,11 +34,7 @@ const ProtectedAdminRoute = ({ children }) => {
   }
   
   if (!isAdmin()) {
-    // Si es comercio, redirigir a su panel
-    if (user?.role === 'business' && user?.comercioId) {
-      return <Navigate to={`/comercio/${user.comercioId}`} replace />
-    }
-    // Si es otro rol, redirigir al login
+    // Si no es admin, siempre redirigir al login de admin
     return <Navigate to="/admin/login" replace />
   }
   
