@@ -604,7 +604,7 @@ const AdminPage = () => {
                     <div style={{
                       width: '40px',
                       height: '40px',
-                      backgroundColor: order.business.id === 'sportsshop' ? '#3b82f6' : '#f97316',
+                      backgroundColor: order.business.id === 'shop' ? '#3b82f6' : '#f97316',
                       borderRadius: '8px',
                       display: 'flex',
                       alignItems: 'center',
@@ -613,7 +613,7 @@ const AdminPage = () => {
                       fontSize: '14px',
                       fontWeight: '600'
                     }}>
-                      {order.business.id === 'sportsshop' ? '🏆' : '🍽️'}
+                      {order.business.id === 'shop' ? '🏆' : '🍽️'}
                     </div>
                     <div>
                       <div style={{

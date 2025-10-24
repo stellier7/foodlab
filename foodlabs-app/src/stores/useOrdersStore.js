@@ -20,11 +20,11 @@ const MOCK_ORDERS = [
         name: 'PadelBuddy - Phone Mount',
         price: 24.99,
         quantity: 1,
-        restaurantId: 'sportsshop'
+        restaurantId: 'shop'
       }
     ],
     business: {
-      id: 'sportsshop',
+      id: 'shop',
       name: 'Shop'
     },
     pricing: {
@@ -58,18 +58,18 @@ const MOCK_ORDERS = [
         name: 'Paleta de Padel Pro',
         price: 89.99,
         quantity: 1,
-        restaurantId: 'sportsshop'
+        restaurantId: 'shop'
       },
       {
         id: 'sp2',
         name: 'Pelotas de Padel x3',
         price: 15.99,
         quantity: 2,
-        restaurantId: 'sportsshop'
+        restaurantId: 'shop'
       }
     ],
     business: {
-      id: 'sportsshop',
+      id: 'shop',
       name: 'Shop'
     },
     pricing: {
@@ -156,11 +156,11 @@ const MOCK_ORDERS = [
         name: 'Bolso Deportivo',
         price: 45.99,
         quantity: 1,
-        restaurantId: 'sportsshop'
+        restaurantId: 'shop'
       }
     ],
     business: {
-      id: 'sportsshop',
+      id: 'shop',
       name: 'Shop'
     },
     pricing: {
@@ -543,7 +543,7 @@ export const useOrdersStore = create(
       getOrdersByBusiness: (businessId) => {
         const orders = get().orders
         // Normalizar businessId para compatibilidad
-        const normalizedId = (businessId === 'shop' || businessId === 'padelbuddy') ? 'sportsshop' : businessId
+        const normalizedId = (businessId === 'shop' || businessId === 'padelbuddy') ? 'shop' : businessId
         return orders.filter(order => order.business.id === normalizedId || order.business.id === businessId)
       },
 

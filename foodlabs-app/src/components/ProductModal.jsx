@@ -10,7 +10,7 @@ const LABEL_CONFIG = {
   'Fit': { icon: FitIcon, color: '#f97316', bgColor: '#fed7aa', label: 'Fit' }
 }
 
-const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' }) => {
+const ProductModal = ({ product, isOpen, onClose, restaurantId = 'shop' }) => {
   const { addToCart, getPriceForCurrency, convertPrice, getCurrencySymbol } = useAppStore()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState(null)

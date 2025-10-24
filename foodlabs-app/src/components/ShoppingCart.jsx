@@ -23,8 +23,8 @@ const ShoppingCart = () => {
 
   const generateWhatsAppMessage = () => {
     // Detectar si hay items de diferentes secciones
-    const hasFoodItems = cart.some(item => item.restaurantId && item.restaurantId !== 'sportsshop')
-    const hasSportsItems = cart.some(item => item.restaurantId === 'sportsshop')
+    const hasFoodItems = cart.some(item => item.restaurantId && item.restaurantId !== 'shop')
+    const hasSportsItems = cart.some(item => item.restaurantId === 'shop')
     
     let message = ''
     
@@ -51,7 +51,7 @@ const ShoppingCart = () => {
     }, {})
 
     Object.entries(groupedBySource).forEach(([sourceId, items]) => {
-      if (sourceId === 'sportsshop') {
+      if (sourceId === 'shop') {
         message += `\n🏆 *Shop*\n`
       } else {
         const sourceName = items[0].restaurantName || 'Restaurante'

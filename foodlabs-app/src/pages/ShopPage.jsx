@@ -164,7 +164,7 @@ const ShopPage = () => {
       description: product.description,
       image: product.image,
       variants: product.variants
-    }, product.businessId || 'sportsshop')
+    }, product.businessId || 'shop')
   }
   
   const closeModal = () => {
@@ -665,7 +665,7 @@ const ShopPage = () => {
         product={selectedProduct}
         isOpen={isModalOpen}
         onClose={closeModal}
-        restaurantId="sportsshop"
+        restaurantId="shop"
       />
     </main>
   )

@@ -92,7 +92,6 @@ const AppContent = () => {
           <Route path="/" element={<FoodLabsPage />} />
           <Route path="/fitlab" element={<FitLabsPage />} />
           <Route path="/shop" element={<ShopPage />} />
-          <Route path="/sportsshop" element={<Navigate to="/shop" replace />} />
           <Route path="/tienda/:slug" element={<RestaurantDetailPage />} />
           <Route path="/restaurante/:slug" element={<RestaurantDetailPage />} />
           
