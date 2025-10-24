@@ -161,8 +161,32 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       
       onClose()
     } catch (error) {
-      setError('Error al crear la orden. Intenta de nuevo.')
-      console.error('Checkout error:', error)
+      console.error('🚨 Guest checkout error:', error)
+      
+      // Códigos de error específicos
+      let errorCode = 'E000'
+      let errorMessage = 'Error desconocido'
+      
+      if (error.message.includes('invalid data')) {
+        errorCode = 'E101'
+        errorMessage = 'Datos inválidos en la orden'
+      } else if (error.message.includes('permission')) {
+        errorCode = 'E102'
+        errorMessage = 'Sin permisos para crear orden'
+      } else if (error.message.includes('network')) {
+        errorCode = 'E103'
+        errorMessage = 'Error de conexión'
+      } else if (error.message.includes('undefined')) {
+        errorCode = 'E104'
+        errorMessage = 'Campo requerido faltante'
+      } else if (error.message.includes('FirebaseError')) {
+        errorCode = 'E105'
+        errorMessage = 'Error de Firebase'
+      }
+      
+      const detailedError = `${errorCode}: ${errorMessage} - ${error.message}`
+      console.error('🔍 Detailed error:', detailedError)
+      setError(`${errorCode}: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
@@ -222,8 +246,32 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       
       onClose()
     } catch (error) {
-      setError('Error al procesar el pago. Intenta de nuevo.')
-      console.error('Checkout error:', error)
+      console.error('🚨 Auth checkout error:', error)
+      
+      // Códigos de error específicos
+      let errorCode = 'E200'
+      let errorMessage = 'Error desconocido en checkout autenticado'
+      
+      if (error.message.includes('invalid data')) {
+        errorCode = 'E201'
+        errorMessage = 'Datos inválidos en la orden'
+      } else if (error.message.includes('permission')) {
+        errorCode = 'E202'
+        errorMessage = 'Sin permisos para crear orden'
+      } else if (error.message.includes('network')) {
+        errorCode = 'E203'
+        errorMessage = 'Error de conexión'
+      } else if (error.message.includes('undefined')) {
+        errorCode = 'E204'
+        errorMessage = 'Campo requerido faltante'
+      } else if (error.message.includes('FirebaseError')) {
+        errorCode = 'E205'
+        errorMessage = 'Error de Firebase'
+      }
+      
+      const detailedError = `${errorCode}: ${errorMessage} - ${error.message}`
+      console.error('🔍 Detailed auth error:', detailedError)
+      setError(`${errorCode}: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
