@@ -111,7 +111,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         customer: {
           name: formData.name,
           address: deliveryMethod === 'delivery' ? formData.address : 'Take Out',
-          userId: null,
           isGuest: true
         },
         items: cartItems.map(item => ({
