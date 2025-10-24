@@ -178,7 +178,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         customer: {
           name: formData.name,
           address: deliveryMethod === 'delivery' ? formData.address : 'Take Out',
-          userId: user.uid,
+          ...(user.uid && { userId: user.uid }), // Solo incluir si existe
           isGuest: false
         },
         items: cartItems,
