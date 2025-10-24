@@ -103,6 +103,14 @@ const AppContent = () => {
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route 
+            path="/admin" 
+            element={
+              <ProtectedAdminRoute>
+                <AdminRouter />
+              </ProtectedAdminRoute>
+            } 
+          />
+          <Route 
             path="/admin/*" 
             element={
               <ProtectedAdminRoute>
@@ -112,8 +120,15 @@ const AppContent = () => {
           />
           
           {/* Comercio Routes */}
-          <Route path="/comercio" element={<Navigate to="/comercio/login" replace />} />
           <Route path="/comercio/login" element={<ComercioLoginPage />} />
+          <Route 
+            path="/comercio" 
+            element={
+              <ProtectedRoute>
+                <ComercioRouter />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/comercio/:businessId/*" 
             element={
