@@ -86,10 +86,16 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     setError('')
     
     try {
+      console.log('🛒 Guest checkout started')
+      console.log('📦 Cart items:', cartItems)
+      console.log('💰 Total:', total)
+      
       // Create order for guest
       const finalTotal = calculateTotal()
       const platformFee = total * PAYMENT_CONFIG.commissions.default.customerFee // 15% platform fee
       const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
+      
+      console.log('🧮 Calculated values:', { finalTotal, platformFee, deliveryFee })
       
       // Agrupar items por comercio
       const itemsByComercio = cartItems.reduce((acc, item) => {
@@ -144,6 +150,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
         }]
       }
       
+      console.log('📋 Final order data for guest:', orderData)
       await addOrder(orderData)
       
       // Generate WhatsApp message
