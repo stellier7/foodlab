@@ -355,13 +355,13 @@ const ShopPage = () => {
                     opacity: 0,
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    height: '320px',
+                    height: '280px',
                     display: 'flex',
                     flexDirection: 'column'
                   }}
                 >
                   <div style={{ 
-                    height: '180px',
+                    height: '140px',
                     backgroundColor: '#f9fafb',
                     backgroundImage: `url(${product.image})`,
                     backgroundSize: 'cover',

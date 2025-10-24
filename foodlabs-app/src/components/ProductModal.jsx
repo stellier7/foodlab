@@ -628,30 +628,32 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div style={{
-            display: 'flex',
-            gap: '12px'
-          }}>
-            <button
-              onClick={handleAddToCart}
-              className="btn-primary ripple"
-              style={{
-                flex: 1,
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: '700',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-            >
-              <Plus size={20} strokeWidth={2.5} />
-              Agregar al Carrito
-            </button>
-          </div>
+        {/* Fixed Footer with Action Button */}
+        <div style={{
+          padding: '20px 24px',
+          borderTop: '1px solid #e5e7eb',
+          backgroundColor: 'white',
+          boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.05)'
+        }}>
+          <button
+            onClick={handleAddToCart}
+            className="btn-primary ripple"
+            style={{
+              width: '100%',
+              padding: '16px',
+              fontSize: '16px',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+          >
+            <Plus size={20} strokeWidth={2.5} />
+            Agregar al Carrito
+          </button>
         </div>
       </div>
     </div>
