@@ -12,9 +12,70 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider
 } from 'firebase/auth'
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { auth, db } from '../config/firebase'
 import { USER_ROLES, SUPER_ADMIN_EMAILS, COUNTRIES, REGIONS } from '../config/firebase'
+
+// Definir permisos por rol
+export const ROLE_PERMISSIONS = {
+  super_admin: {
+    canCreateSuperAdmin: false,
+    canCreateNationalAdmin: true,
+    canCreateRegionalAdmin: true,
+    canCreateBusiness: true,
+    canCreateDriver: true,
+    canCreateProducts: true,
+    canManageAllComercios: true,
+    canManageAllProducts: true,
+    canManageAllOrders: true,
+    canManageAllDrivers: true
+  },
+  admin_national: {
+    canCreateSuperAdmin: false,
+    canCreateNationalAdmin: false,
+    canCreateRegionalAdmin: true,
+    canCreateBusiness: true,
+    canCreateDriver: true,
+    canCreateProducts: true,
+    canManageAllComercios: true,
+    canManageAllProducts: true,
+    canManageAllOrders: true,
+    canManageAllDrivers: true
+  },
+  admin_regional: {
+    canCreateSuperAdmin: false,
+    canCreateNationalAdmin: false,
+    canCreateRegionalAdmin: false,
+    canCreateBusiness: true,
+    canCreateDriver: true,
+    canCreateProducts: true,
+    canManageRegionalComercios: true,
+    canManageRegionalProducts: true,
+    canManageRegionalOrders: true,
+    canManageRegionalDrivers: true
+  },
+  business: {
+    canCreateProducts: true,
+    canManageOwnProducts: true,
+    canManageOwnOrders: true
+  },
+  driver: {
+    canViewAssignedOrders: true,
+    canUpdateDeliveryStatus: true,
+    canViewOwnDeliveryHistory: true,
+    canManageAvailability: true
+  },
+  customer: {
+    canViewProducts: true,
+    canPlaceOrders: true,
+    canViewOwnOrders: true
+  }
+}
+
+export const checkPermission = (userRole, permission) => {
+  const permissions = ROLE_PERMISSIONS[userRole]
+  return permissions ? permissions[permission] : false
+}
 
 // Google provider
 const googleProvider = new GoogleAuthProvider()
@@ -30,11 +91,21 @@ export const authService = {
   // Sign in with email and password
   signInWithEmail: async (email, password) => {
     try {
+      console.log('🔐 Intentando login con:', email)
+      console.log('🔑 Firebase config:', {
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY?.substring(0, 10) + '...',
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID
+      })
+      
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      console.log('✅ Login exitoso en Firebase Auth:', userCredential.user.uid)
+      
       const user = userCredential.user
       
       // Get user data from Firestore
+      console.log('📄 Buscando datos en Firestore para UID:', user.uid)
       const userData = await getUserData(user.uid)
+      console.log('📊 Datos de Firestore:', userData)
       
       return {
         success: true,
@@ -47,6 +118,9 @@ export const authService = {
         }
       }
     } catch (error) {
+      console.error('❌ Error en signInWithEmail:', error)
+      console.error('❌ Error code:', error.code)
+      console.error('❌ Error message:', error.message)
       return {
         success: false,
         error: getAuthErrorMessage(error.code)
@@ -219,21 +293,79 @@ export const authService = {
 }
 
 // ========================================
+// PASSWORD FUNCTIONS
+// ========================================
+
+// Generate temporary password
+export const generateTemporaryPassword = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  let password = ''
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return password
+}
+
+// Regenerate password for existing user
+export const regeneratePassword = async (email) => {
+  try {
+    // Generate new temporary password
+    const newPassword = generateTemporaryPassword()
+    
+    // Update password in Firebase Auth (requires admin privileges)
+    // Note: This would typically be done server-side with admin SDK
+    // For now, we'll return the new password to be set manually
+    
+    // Update Firestore to mark password change required
+    const userQuery = await getDocs(query(collection(db, 'users'), where('email', '==', email)))
+    
+    if (userQuery.empty) {
+      throw new Error('Usuario no encontrado')
+    }
+    
+    const userDoc = userQuery.docs[0]
+    await updateDoc(doc(db, 'users', userDoc.id), {
+      requirePasswordChange: true,
+      updatedAt: new Date().toISOString()
+    })
+    
+    return { 
+      success: true, 
+      tempPassword: newPassword,
+      userId: userDoc.id 
+    }
+  } catch (error) {
+    console.error('Error regenerating password:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+// ========================================
 // USER DATA FUNCTIONS
 // ========================================
 
 // Get user data from Firestore
 export const getUserData = async (uid) => {
   try {
+    console.log('🔍 getUserData - Buscando usuario con UID:', uid)
     const userRef = doc(db, 'users', uid)
+    console.log('📄 getUserData - Referencia de documento creada:', userRef.path)
+    
     const userSnap = await getDoc(userRef)
+    console.log('📊 getUserData - Snapshot obtenido:', userSnap.exists())
     
     if (userSnap.exists()) {
-      return userSnap.data()
+      const userData = userSnap.data()
+      console.log('✅ getUserData - Datos encontrados:', userData)
+      return userData
+    } else {
+      console.log('❌ getUserData - Usuario NO existe en Firestore')
+      return null
     }
-    return null
   } catch (error) {
-    console.error('Error getting user data:', error)
+    console.error('💥 getUserData - Error obteniendo datos de usuario:', error)
+    console.error('💥 getUserData - Error code:', error.code)
+    console.error('💥 getUserData - Error message:', error.message)
     return null
   }
 }
@@ -404,19 +536,21 @@ export const formatFullName = (firstName, lastName) => {
 // Get user-friendly error messages
 export const getAuthErrorMessage = (errorCode) => {
   const errorMessages = {
-    'auth/user-not-found': 'No existe una cuenta con este correo electrónico',
-    'auth/wrong-password': 'Contraseña incorrecta',
+    'auth/user-not-found': 'Usuario no encontrado. Verifica el email o contacta al administrador',
+    'auth/wrong-password': 'Contraseña incorrecta. Verifica tu contraseña',
     'auth/email-already-in-use': 'Este correo electrónico ya está registrado',
     'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
-    'auth/invalid-email': 'Correo electrónico inválido',
-    'auth/user-disabled': 'Esta cuenta ha sido deshabilitada',
-    'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde',
+    'auth/invalid-email': 'Correo electrónico inválido. Verifica el formato',
+    'auth/user-disabled': 'Esta cuenta ha sido deshabilitada. Contacta al administrador',
+    'auth/too-many-requests': 'Demasiados intentos fallidos. Espera unos minutos',
     'auth/network-request-failed': 'Error de conexión. Verifica tu internet',
-    'auth/popup-closed-by-user': 'Ventana de login cerrada',
-    'auth/cancelled-popup-request': 'Login cancelado'
+    'auth/popup-closed-by-user': 'Login cancelado por el usuario',
+    'auth/cancelled-popup-request': 'Login cancelado',
+    'auth/invalid-credential': 'Credenciales inválidas. Verifica email y contraseña',
+    'auth/operation-not-allowed': 'Operación no permitida. Contacta al administrador'
   }
   
-  return errorMessages[errorCode] || 'Error de autenticación. Intenta de nuevo'
+  return errorMessages[errorCode] || 'Error de autenticación. Verifica tus credenciales'
 }
 
 // Validate user role
@@ -443,4 +577,79 @@ export const getRoleDisplayName = (role) => {
   }
   
   return roleNames[role] || 'Usuario'
+}
+
+// ========================================
+// USER CREATION WITH ROLES
+// ========================================
+
+/**
+ * Crear usuario con rol específico
+ * @param {Object} userData - Datos del usuario
+ * @param {string} userData.email - Email del usuario
+ * @param {string} userData.password - Contraseña del usuario
+ * @param {string} userData.role - Rol del usuario
+ * @param {string} userData.displayName - Nombre del usuario
+ * @param {string} userData.comercioId - ID del comercio (si es business)
+ * @param {string} userData.region - Región (si es admin_regional)
+ * @param {string} userData.country - País
+ * @returns {Promise<Object>} Resultado de la creación
+ */
+export const createUserWithRole = async (userData) => {
+  const { email, password, role, displayName, comercioId, region, country, generateTempPassword = false } = userData
+  
+  try {
+    let finalPassword = password
+    let tempPassword = null
+    
+    // Si se solicita generar contraseña temporal, generar una automáticamente
+    if (generateTempPassword) {
+      tempPassword = generateTemporaryPassword()
+      finalPassword = tempPassword
+    }
+    
+    // Crear usuario en Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, finalPassword)
+    const user = userCredential.user
+    
+    // Actualizar perfil
+    await updateProfile(user, { displayName })
+    
+    // Crear documento en Firestore
+    const userDoc = {
+      uid: user.uid,
+      email: user.email,
+      displayName: displayName,
+      role: role,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isActive: true,
+      requirePasswordChange: generateTempPassword || false // Marcar si debe cambiar contraseña
+    }
+    
+    // Agregar campos específicos según el rol
+    if (role === 'business' && comercioId) {
+      userDoc.businessId = comercioId
+      userDoc.comercioId = comercioId
+    }
+    
+    if (role === 'admin_regional' && region) {
+      userDoc.region = region
+    }
+    
+    if (country) {
+      userDoc.country = country
+    }
+    
+    await setDoc(doc(db, 'users', user.uid), userDoc)
+    
+    return { 
+      success: true, 
+      user: userDoc,
+      tempPassword: tempPassword // Retornar contraseña temporal si se generó
+    }
+  } catch (error) {
+    console.error('Error creating user:', error)
+    return { success: false, error: error.message }
+  }
 }

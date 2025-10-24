@@ -24,7 +24,7 @@ export const COLLECTIONS = {
   ORDERS: 'orders',
   INVENTORY: 'inventory',
   USERS: 'users',
-  BUSINESSES: 'businesses',
+  BUSINESSES: 'comercios',
   PRODUCTS: 'products'
 }
 
@@ -42,8 +42,8 @@ export const ordersService = {
       q = query(q, where('status', '==', filters.status))
     }
     
-    if (filters.business && filters.business !== 'all') {
-      q = query(q, where('business.id', '==', filters.business))
+    if (filters.comercio && filters.comercio !== 'all') {
+      q = query(q, where('comercio.id', '==', filters.comercio))
     }
     
     if (filters.date) {
@@ -130,11 +130,11 @@ export const ordersService = {
     await deleteDoc(orderRef)
   },
 
-  // Get orders by business
-  getOrdersByBusiness: async (businessId) => {
+  // Get orders by comercio
+  getOrdersByComercio: async (comercioId) => {
     const q = query(
       collection(db, COLLECTIONS.ORDERS),
-      where('business.id', '==', businessId),
+      where('comercio.id', '==', comercioId),
       orderBy('createdAt', 'desc')
     )
     
@@ -301,12 +301,12 @@ export const usersService = {
 }
 
 // ========================================
-// BUSINESSES SERVICE
+// COMERCIOS SERVICE
 // ========================================
 
-export const businessesService = {
-  // Get all businesses
-  getBusinesses: async () => {
+export const comerciosService = {
+  // Get all comercios
+  getComercios: async () => {
     const snapshot = await getDocs(collection(db, COLLECTIONS.BUSINESSES))
     return snapshot.docs.map(doc => ({
       id: doc.id,
@@ -314,15 +314,15 @@ export const businessesService = {
     }))
   },
 
-  // Get business by ID
-  getBusiness: async (businessId) => {
-    const businessRef = doc(db, COLLECTIONS.BUSINESSES, businessId)
-    const businessSnap = await getDoc(businessRef)
+  // Get comercio by ID
+  getComercio: async (comercioId) => {
+    const comercioRef = doc(db, COLLECTIONS.BUSINESSES, comercioId)
+    const comercioSnap = await getDoc(comercioRef)
     
-    if (businessSnap.exists()) {
+    if (comercioSnap.exists()) {
       return {
-        id: businessSnap.id,
-        ...businessSnap.data()
+        id: comercioSnap.id,
+        ...comercioSnap.data()
       }
     }
     return null

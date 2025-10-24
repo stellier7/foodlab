@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useOrdersStore } from '../../stores/useOrdersStore'
 import { useAppStore } from '../../stores/useAppStore'
 import { getBusinessNotifications, getUnreadCount, markAllNotificationsAsRead } from '../../services/notifications'
+import { getComercioById } from '../../services/comercios'
 import { 
   TrendingUp, 
   Package, 
@@ -32,9 +33,35 @@ const ComercioDashboard = () => {
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [comercio, setComercio] = useState(null)
+  const [isLoadingComercio, setIsLoadingComercio] = useState(true)
 
-  // Obtener órdenes del negocio
-  const businessOrders = getOrdersByBusiness(user?.businessId || '')
+  // Obtener ID del comercio correcto - usar el comercioId del usuario
+  const comercioId = user?.comercioId || user?.businessId || user?.uid
+  
+  // Obtener órdenes del negocio (memoized to prevent infinite renders)
+  const businessOrders = useMemo(() => {
+    return getOrdersByBusiness(comercioId)
+  }, [comercioId])
+  
+  // Cargar datos del comercio
+  useEffect(() => {
+    const loadComercio = async () => {
+      if (comercioId) {
+        try {
+          setIsLoadingComercio(true)
+          const comercioData = await getComercioById(comercioId)
+          setComercio(comercioData)
+        } catch (error) {
+          console.error('Error loading comercio:', error)
+        } finally {
+          setIsLoadingComercio(false)
+        }
+      }
+    }
+    
+    loadComercio()
+  }, [comercioId])
   
   // Calcular estadísticas
   useEffect(() => {
@@ -58,11 +85,11 @@ const ComercioDashboard = () => {
   // Cargar notificaciones
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (user?.businessId) {
+      if (comercioId) {
         try {
           const [notificationsData, unreadCountData] = await Promise.all([
-            getBusinessNotifications(user.businessId),
-            getUnreadCount(user.businessId)
+            getBusinessNotifications(comercioId),
+            getUnreadCount(comercioId)
           ])
           setNotifications(notificationsData)
           setUnreadCount(unreadCountData)
@@ -73,15 +100,15 @@ const ComercioDashboard = () => {
     }
 
     fetchNotifications()
-  }, [user?.businessId])
+  }, [comercioId])
 
   const handleMarkAllAsRead = async () => {
-    if (user?.businessId) {
+    if (comercioId) {
       try {
-        await markAllNotificationsAsRead(user.businessId)
+        await markAllNotificationsAsRead(comercioId)
         setUnreadCount(0)
         // Refresh notifications to update read status
-        const notificationsData = await getBusinessNotifications(user.businessId)
+        const notificationsData = await getBusinessNotifications(comercioId)
         setNotifications(notificationsData)
       } catch (error) {
         console.error('Error marking notifications as read:', error)
@@ -130,12 +157,12 @@ const ComercioDashboard = () => {
     <div>
       {/* Welcome Card */}
       <div style={{
-        background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
         borderRadius: '16px',
         padding: '24px',
         color: 'white',
         marginBottom: '24px',
-        boxShadow: '0 8px 32px rgba(249, 115, 22, 0.3)',
+        boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)',
         position: 'relative'
       }}>
         {/* Notification Bell */}
@@ -185,7 +212,7 @@ const ComercioDashboard = () => {
           marginBottom: '8px',
           letterSpacing: '-0.5px'
         }}>
-          ¡Hola, {user?.name || 'Comercio'}! 👋
+          ¡Hola, {comercio?.name || user?.name || 'Comercio'}! 👋
         </h1>
         <p style={{
           fontSize: '16px',
@@ -354,7 +381,9 @@ const ComercioDashboard = () => {
             return (
               <button
                 key={index}
-                onClick={() => navigate(`/comercio/${user?.businessId}${action.path}`)}
+                onClick={() => {
+                  navigate(`/comercio/${comercioId}${action.path}`)
+                }}
                 className="tap-effect ripple"
                 style={{
                   padding: '20px',

@@ -77,17 +77,18 @@ const AdminProductsPage = () => {
 
     // Filtrar por tipo
     if (filterType !== 'all' && filterType !== 'pending') {
-      filtered = filtered.filter(product => product.businessType === filterType)
+      // TODO: Filtrar por tipo de comercio cuando tengamos esa información
+      // filtered = filtered.filter(product => product.comercioType === filterType)
     }
 
     // Filtrar por búsqueda
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(term) ||
-        product.description.toLowerCase().includes(term) ||
-        product.category.toLowerCase().includes(term) ||
-        product.businessId.toLowerCase().includes(term)
+        product.nombre.toLowerCase().includes(term) ||
+        product.descripcion.toLowerCase().includes(term) ||
+        product.categoria.toLowerCase().includes(term) ||
+        product.comercioId.toLowerCase().includes(term)
       )
     }
 
@@ -147,7 +148,7 @@ const AdminProductsPage = () => {
 
   const handleSaveProduct = async (productData) => {
     if (editingProduct) {
-      await handleUpdateProduct(productData)
+      await handleUpdateProduct({ ...productData, id: editingProduct.id })
     } else {
       await handleCreateProduct(productData)
     }

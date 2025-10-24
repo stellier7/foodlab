@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useAppStore } from '../../stores/useAppStore'
-import ImageUploader from '../../components/admin/ImageUploader'
+import ProductModal from '../../components/admin/ProductModal'
 import { 
   Plus, 
   Search, 
@@ -33,24 +33,15 @@ const ComercioProductsPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
-  const [variants, setVariants] = useState([])
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    category: '',
-    images: [],
-    dietaryLabels: []
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState('')
 
-  // Detectar tipo de comercio
-  const businessType = user?.businessId === 'padelbuddy' || user?.businessId === 'sportsshop' 
+  // Detectar tipo de comercio - FIX: usar displayName cuando businessId no está disponible
+  const businessType = user?.businessId === 'padelbuddy' || user?.businessId === 'sportsshop' || user?.displayName === 'PadelBuddy'
     ? 'shop' 
     : 'restaurant'
+  
+  // Usar el comercioId del usuario (que viene de la base de datos)
+  const comercioId = user?.comercioId || user?.businessId || user?.uid
+  
 
   // Categorías dinámicas según tipo de comercio
   const categories = businessType === 'shop'
@@ -68,13 +59,13 @@ const ComercioProductsPage = () => {
 
   // Filtrar productos del comercio
   const businessProducts = products.filter(product => 
-    product.businessId === user?.businessId
+    product.comercioId === comercioId
   )
 
   // Aplicar filtros
   const filteredProducts = businessProducts.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = (product.nombre || product.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (product.categoria || product.category || '').toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesFilter = selectedFilter === 'all' || 
                          (selectedFilter === 'published' && product.isPublished) ||
@@ -85,10 +76,10 @@ const ComercioProductsPage = () => {
   })
 
   useEffect(() => {
-    if (user?.businessId) {
-      fetchProducts(businessType, user.businessId)
+    if (comercioId) {
+      fetchProducts(null, comercioId)
     }
-  }, [user?.businessId, businessType])
+  }, [comercioId, businessType])
 
   const handleDeleteProduct = async (productId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
@@ -100,112 +91,42 @@ const ComercioProductsPage = () => {
     }
   }
 
-  // Funciones para manejar variantes
-  const addVariant = () => {
-    const newVariant = {
-      id: `variant_${Date.now()}`,
-      name: '',
-      price: 0,
-      stock: businessType === 'shop' ? 0 : undefined,
-      image: ''
-    }
-    setVariants([...variants, newVariant])
-  }
-
-  const updateVariant = (index, field, value) => {
-    const updatedVariants = [...variants]
-    updatedVariants[index] = { ...updatedVariants[index], [field]: value }
-    setVariants(updatedVariants)
-  }
-
-  const removeVariant = (index) => {
-    setVariants(variants.filter((_, i) => i !== index))
-  }
-
-  // Reset form when modal opens/closes
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      price: '',
-      category: '',
-      images: [],
-      dietaryLabels: []
-    })
-    setVariants([])
-    setSubmitError('')
-    setIsSubmitting(false)
-  }
-
-  // Handle form field changes
-  const handleFormChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
-
-  // Handle form submission
-  const handleFormSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setSubmitError('')
-
+  // Handle save product using unified modal
+  const handleSaveProduct = async (productData) => {
     try {
-      const productData = {
-        name: formData.name,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        category: formData.category,
-        businessType: businessType,
-        businessId: user.businessId,
-        images: formData.images,
-        variants: variants.length > 0 ? variants : undefined,
-        dietaryLabels: formData.dietaryLabels,
-        isPublished: false, // Requiere aprobación
-        status: 'pending',
+      const finalProductData = {
+        ...productData,
+        comercioId: comercioId,
+        isPublished: false, // Todos los productos requieren aprobación
+        status: 'pendiente',
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
 
       if (editingProduct) {
-        await updateProduct(editingProduct.id, productData)
+        await updateProduct(editingProduct.id, finalProductData)
       } else {
-        await createProduct(productData)
+        await createProduct(finalProductData)
       }
 
-      // Success - close modal and refresh
-      setShowAddModal(false)
-      setEditingProduct(null)
-      resetForm()
-      
       // Refresh products
-      await fetchProducts('restaurant', user.businessId)
+      await fetchProducts(null, comercioId)
       
     } catch (error) {
       console.error('Error saving product:', error)
-      setSubmitError(error.message || 'Error al guardar el producto')
-    } finally {
-      setIsSubmitting(false)
+      throw error
     }
   }
 
   // Open modal for editing
   const handleEditProduct = (product) => {
     setEditingProduct(product)
-    setFormData({
-      name: product.name || '',
-      description: product.description || '',
-      price: product.price?.toString() || '',
-      category: product.category || '',
-      images: product.images || [],
-      dietaryLabels: product.dietaryLabels || []
-    })
-    setVariants(product.variants || [])
     setShowAddModal(true)
   }
 
   // Open modal for adding
   const handleAddProduct = () => {
-    resetForm()
     setEditingProduct(null)
     setShowAddModal(true)
   }
@@ -316,33 +237,44 @@ const ComercioProductsPage = () => {
           />
         </div>
 
-        {/* Filter Buttons */}
-        {['all', 'published', 'pending', 'rejected'].map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setSelectedFilter(filter)}
-            className="tap-effect"
+        {/* Filter Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <select
+            value={selectedFilter}
+            onChange={(e) => setSelectedFilter(e.target.value)}
             style={{
-              padding: '12px 20px',
+              width: '100%',
+              padding: '12px 16px',
               borderRadius: '10px',
               border: '1px solid #e2e8f0',
-              background: selectedFilter === filter ? '#3b82f6' : 'white',
-              color: selectedFilter === filter ? 'white' : '#64748b',
+              background: 'white',
+              color: '#64748b',
               fontSize: '14px',
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
+              outline: 'none',
+              appearance: 'none',
+              backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3e%3c/svg%3e")',
+              backgroundPosition: 'right 12px center',
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: '16px'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#3b82f6'
+              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#e2e8f0'
+              e.target.style.boxShadow = 'none'
             }}
           >
-            <Filter size={16} strokeWidth={2} />
-            {filter === 'all' ? 'Todos' :
-             filter === 'published' ? 'Publicados' :
-             filter === 'pending' ? 'Pendientes' : 'Rechazados'}
-          </button>
-        ))}
+            <option value="all">Todos los productos</option>
+            <option value="published">Publicados</option>
+            <option value="pending">Pendientes</option>
+            <option value="rejected">Rechazados</option>
+          </select>
+        </div>
       </div>
 
       {/* Products Grid */}
@@ -365,17 +297,13 @@ const ComercioProductsPage = () => {
           textAlign: 'center',
           background: 'white'
         }}>
-          <AlertCircle size={48} style={{ margin: '0 auto 16px', color: '#dc2626' }} />
-          <p style={{ color: '#dc2626', fontSize: '16px', marginBottom: '16px' }}>
-            Error al cargar productos
+          <Package size={48} style={{ margin: '0 auto 16px', color: '#6b7280' }} />
+          <p style={{ color: '#6b7280', fontSize: '16px', marginBottom: '16px' }}>
+            No hay productos disponibles
           </p>
-          <button
-            onClick={() => fetchProducts('restaurant', user?.businessId)}
-            className="btn-primary"
-            style={{ padding: '12px 24px' }}
-          >
-            Reintentar
-          </button>
+          <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '24px' }}>
+            Agrega tu primer producto usando el botón "Agregar Producto" arriba
+          </p>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="card" style={{
@@ -433,10 +361,10 @@ const ComercioProductsPage = () => {
                   justifyContent: 'center',
                   overflow: 'hidden'
                 }}>
-                  {product.images && product.images.length > 0 ? (
+                  {product.imagenes && product.imagenes.length > 0 ? (
                     <img
-                      src={product.images[0]}
-                      alt={product.name}
+                      src={product.imagenes[0]}
+                      alt={product.nombre || product.name || 'Producto'}
                       style={{
                         width: '100%',
                         height: '100%',
@@ -476,7 +404,7 @@ const ComercioProductsPage = () => {
                     marginBottom: '8px',
                     lineHeight: '1.3'
                   }}>
-                    {product.name}
+                    {product.nombre || product.name || 'Sin nombre'}
                   </h3>
                   <p style={{
                     fontSize: '14px',
@@ -484,7 +412,7 @@ const ComercioProductsPage = () => {
                     marginBottom: '8px',
                     lineHeight: '1.4'
                   }}>
-                    {product.description}
+                    {product.descripcion || product.description || 'Sin descripción'}
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     <span style={{
@@ -492,7 +420,7 @@ const ComercioProductsPage = () => {
                       fontWeight: '700',
                       color: '#1e293b'
                     }}>
-                      L {product.price.toFixed(2)}
+                      L {(product.precio_HNL || product.price || 0).toFixed(2)}
                     </span>
                     <span style={{
                       fontSize: '12px',
@@ -501,7 +429,7 @@ const ComercioProductsPage = () => {
                       padding: '2px 6px',
                       borderRadius: '4px'
                     }}>
-                      {product.category}
+                      {product.categoria || product.category || 'Sin categoría'}
                     </span>
                   </div>
                   
@@ -594,8 +522,22 @@ const ComercioProductsPage = () => {
         </div>
       )}
 
-      {/* Add/Edit Product Modal */}
-      {showAddModal && (
+      {/* Modal unificado para agregar/editar producto */}
+      <ProductModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false)
+          setEditingProduct(null)
+        }}
+        onSave={handleSaveProduct}
+        product={editingProduct}
+        comercioId={comercioId}
+        isComercioView={true}
+        forcedComercioType={businessType}
+      />
+      
+      {/* Modal anterior - comentado para referencia */}
+      {false && showAddModal && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -680,14 +622,14 @@ const ComercioProductsPage = () => {
                 />
               </div>
 
-              {/* Image Upload */}
+              {/* Image Upload - Usando ImageUploader */}
               <div style={{ marginBottom: '16px' }}>
                 <ImageUploader
                   onImageUploaded={(imageUrl) => {
                     if (imageUrl) {
                       setFormData(prev => ({
                         ...prev,
-                        images: [...prev.images, imageUrl]
+                        images: [imageUrl]
                       }))
                     } else {
                       setFormData(prev => ({
@@ -697,8 +639,11 @@ const ComercioProductsPage = () => {
                     }
                   }}
                   currentImage={formData.images?.[0] || null}
+                  comercioId={user?.businessId || 'temp'}
+                  productId={editingProduct?.id || 'temp'}
+                  type="product"
                   label="Imagen Principal"
-                  required={true}
+                  required={false}
                 />
               </div>
 
@@ -880,17 +825,21 @@ const ComercioProductsPage = () => {
                           />
                         </div>
                         
-                        {/* Image Upload for Variant */}
+                        {/* Image URL for Variant - Temporal */}
                         <div style={{ marginTop: '8px' }}>
-                          <ImageUploader
-                            onImageUploaded={(imageUrl) => {
-                              updateVariant(index, 'image', imageUrl || '')
+                          <input
+                            type="url"
+                            placeholder="URL de imagen (opcional)"
+                            value={variant.image || ''}
+                            onChange={(e) => updateVariant(index, 'image', e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              outline: 'none'
                             }}
-                            currentImage={variant.image || null}
-                            label="Imagen de Variante"
-                            required={false}
-                            type="variant"
-                            variantId={variant.id}
                           />
                         </div>
                       </div>

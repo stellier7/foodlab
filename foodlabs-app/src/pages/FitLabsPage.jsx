@@ -2,56 +2,158 @@ import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dumbbell, Heart, Calendar, Users, Star, Leaf, MapPin, Clock } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
+import { getActiveComercios } from '../services/comercios'
+import { getProductsByComercio } from '../services/products'
 
 const FitLabsPage = () => {
-  const { restaurants } = useAppStore()
   const navigate = useNavigate()
+  const { location } = useAppStore()
+  const [restaurantes, setRestaurantes] = useState([])
+  const [isLoadingRestaurants, setIsLoadingRestaurants] = useState(true)
+  const [restaurantsError, setRestaurantsError] = useState(null)
   const [selectedLabels, setSelectedLabels] = useState([])
+
+  // Cargar restaurantes fit
+  useEffect(() => {
+    const loadFitRestaurants = async () => {
+      try {
+        setIsLoadingRestaurants(true)
+        setRestaurantsError(null)
+        
+        console.log('🔄 Cargando restaurantes fit...')
+        
+        // Obtener solo restaurantes activos
+        const comercios = await getActiveComercios('restaurante')
+        console.log('🏪 Comercios activos encontrados:', comercios.length)
+        
+        // Obtener productos para cada restaurante
+        const restaurantesConProductos = await Promise.all(
+          comercios.map(async (comercio) => {
+            try {
+              const productos = await getProductsByComercio(comercio.id)
+              console.log(`📦 Productos encontrados para ${comercio.nombre}:`, productos.length)
+              
+              // Solo productos aprobados, publicados Y con etiquetas fit
+              const productosFit = productos.filter(p => {
+                const isApproved = p.status === 'aprobado' && p.isPublished
+                const hasFitLabels = p.etiquetasDietarias?.some(label => 
+                  ['vegano', 'vegetariano', 'sin-gluten', 'bajo-calorias', 'organico'].includes(label)
+                )
+                return isApproved && hasFitLabels
+              })
+              
+              console.log(`✅ Productos fit para ${comercio.nombre}:`, productosFit.length)
+              
+              // Solo incluir restaurante si tiene productos fit
+              if (productosFit.length === 0) return null
+              
+              return {
+                id: comercio.id,
+                name: comercio.nombre,
+                slug: comercio.id,
+                image: comercio.imagenes?.[0] || null,
+                category: comercio.categoria || 'Restaurante',
+                rating: comercio.rating || 4.5,
+                deliveryTime: comercio.tiempoEntrega || '30-45 min',
+                deliveryFee: comercio.costoEnvio || 0,
+                isPrime: comercio.isPrime || false,
+                direccion: comercio.direccion, // Mantener para filtrado
+                menuCategories: [{
+                  name: 'Menu Fit',
+                  items: productosFit.map(producto => ({
+                    id: producto.id,
+                    name: producto.nombre,
+                    description: producto.descripcion,
+                    price: producto.precio,
+                    currency: producto.moneda,
+                    image: producto.imagenes?.[0] || null,
+                    dietaryLabels: producto.etiquetasDietarias || [],
+                    category: producto.categoria,
+                    isAvailable: producto.estaActivo,
+                    stock: producto.stock
+                  }))
+                }],
+                productCount: productosFit.length
+              }
+            } catch (error) {
+              console.error(`Error loading products for ${comercio.nombre}:`, error)
+              return null
+            }
+          })
+        )
+        
+        // Filtrar nulls (restaurantes sin productos fit)
+        const restaurantesFit = restaurantesConProductos.filter(r => r !== null)
+        console.log('🎯 Restaurantes fit finales:', restaurantesFit.length)
+        setRestaurantes(restaurantesFit)
+      } catch (error) {
+        console.error('Error loading fit restaurants:', error)
+        setRestaurantsError('Error al cargar restaurantes fit')
+      } finally {
+        setIsLoadingRestaurants(false)
+      }
+    }
+
+    loadFitRestaurants()
+  }, [])
 
   // Labels disponibles para filtrar
   const LABEL_FILTERS = [
-    { key: 'Vegano', label: 'Vegano', icon: '🌿', color: '#10b981' },
-    { key: 'Vegetariano', label: 'Vegetariano', icon: '🌱', color: '#059669' },
-    { key: 'Pescatariano', label: 'Pescatariano', icon: '🐟', color: '#0ea5e9' }
+    { key: 'vegano', label: 'Vegano', icon: '🌿', color: '#10b981' },
+    { key: 'vegetariano', label: 'Vegetariano', icon: '🌱', color: '#059669' },
+    { key: 'sin-gluten', label: 'Sin Gluten', icon: '🌾', color: '#0ea5e9' },
+    { key: 'bajo-calorias', label: 'Bajo Calorías', icon: '🔥', color: '#f59e0b' },
+    { key: 'organico', label: 'Orgánico', icon: '🌿', color: '#10b981' }
   ]
 
-  // Restaurantes que tienen productos con labels dietarios
-  const fitRestaurants = useMemo(() => {
-    return restaurants.filter(restaurant => {
-      return restaurant.menuCategories?.some(category =>
-        category.items?.some(item =>
-          item.labels?.some(label => 
-            ['Fit', 'Vegano', 'Vegetariano', 'Pescatariano'].includes(label)
-          )
-        )
-      )
-    })
-  }, [restaurants])
-
-  // Filtrar restaurantes según labels seleccionados
+  // Filtrar restaurantes por región
   const filteredRestaurants = useMemo(() => {
-    if (selectedLabels.length === 0) {
-      return fitRestaurants
+    if (!restaurantes || restaurantes.length === 0) return []
+    
+    // Si no hay ubicación, mostrar todos los restaurantes
+    if (!location || !location.city) {
+      return restaurantes
     }
     
-    return fitRestaurants.filter(restaurant => {
+    // Filtrar por ciudad usando el nuevo sistema de ubicación
+    const filtered = restaurantes.filter(restaurant => {
+      const comercioLocation = restaurant.location
+      if (!comercioLocation || !comercioLocation.city) {
+        return false // No mostrar comercios sin ubicación
+      }
+      
+      // Comparar por código de ciudad (ej: 'TGU', 'SPS')
+      return comercioLocation.city === location.city
+    })
+    
+    console.log(`🔍 FitLabsPage - Filtrado por ciudad ${location.city}:`, filtered.length, 'de', restaurantes.length)
+    return filtered
+  }, [restaurantes, location])
+
+  // Filtrar restaurantes según labels seleccionados
+  const fitRestaurants = useMemo(() => {
+    if (selectedLabels.length === 0) {
+      return filteredRestaurants
+    }
+    
+    return filteredRestaurants.filter(restaurant => {
       return restaurant.menuCategories?.some(category =>
         category.items?.some(item =>
-          item.labels?.some(label => selectedLabels.includes(label))
+          item.dietaryLabels?.some(label => selectedLabels.includes(label))
         )
       )
     })
-  }, [fitRestaurants, selectedLabels])
+  }, [filteredRestaurants, selectedLabels])
 
   // Contar productos fit de un restaurante
   const countFitProducts = (restaurant, labels = []) => {
     const targetLabels = labels.length > 0 
       ? labels 
-      : ['Fit', 'Vegano', 'Vegetariano', 'Pescatariano']
+      : ['vegano', 'vegetariano', 'sin-gluten', 'bajo-calorias', 'organico']
     
     return restaurant.menuCategories?.reduce((count, category) => {
       return count + (category.items?.filter(item =>
-        item.labels?.some(l => targetLabels.includes(l))
+        item.dietaryLabels?.some(l => targetLabels.includes(l))
       ).length || 0)
     }, 0) || 0
   }
@@ -67,9 +169,43 @@ const FitLabsPage = () => {
 
   // Navegar a restaurante con filtro
   const handleRestaurantClick = (restaurant) => {
-    const slug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, '-')
     const labelsParam = selectedLabels.length > 0 ? `&labels=${selectedLabels.join(',')}` : ''
-    navigate(`/restaurant/${slug}?filter=fit${labelsParam}`)
+    navigate(`/restaurante/${restaurant.slug}?filter=fit${labelsParam}`, { state: { from: 'fitlabs' } })
+  }
+
+  if (isLoadingRestaurants) {
+    return (
+      <main style={{ paddingBottom: '80px' }}>
+        <div style={{ padding: '40px', textAlign: 'center' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid #e5e7eb',
+            borderTop: '3px solid #10b981',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p style={{ color: '#6b7280' }}>Cargando restaurantes fit...</p>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </main>
+    )
+  }
+
+  if (restaurantsError) {
+    return (
+      <main style={{ paddingBottom: '80px' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>
+          <p>{restaurantsError}</p>
+        </div>
+      </main>
+    )
   }
 
   return (

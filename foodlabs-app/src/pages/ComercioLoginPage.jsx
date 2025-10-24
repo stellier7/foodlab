@@ -1,34 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
-import { Store, Lock, AlertCircle } from 'lucide-react'
+import { Store, Lock, AlertCircle, Mail } from 'lucide-react'
 
 const ComercioLoginPage = () => {
   const navigate = useNavigate()
-  const { businessLogin } = useAuthStore()
-  const [businessId, setBusinessId] = useState('')
+  const { login } = useAuthStore()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-
-  const businesses = [
-    { id: 'padelbuddy', name: 'PadelBuddy' },
-    { id: 'foodlab-tgu', name: 'FoodLab TGU' },
-    { id: 'foodlab-sps', name: 'FoodLab SPS' }
-  ]
-
-  const [searchTerm, setSearchTerm] = useState('')
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  
-  const filteredBusinesses = businesses.filter(b =>
-    b.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const handleSelectBusiness = (business) => {
-    setBusinessId(business.id)
-    setSearchTerm(business.name)
-    setShowSuggestions(false)
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -36,15 +17,26 @@ const ComercioLoginPage = () => {
     setIsLoading(true)
 
     try {
-      const success = businessLogin(businessId, password)
+      if (!email || !password) {
+        throw new Error('Por favor ingresa email y contraseña')
+      }
+
+      const result = await login(email, password)
       
-      if (success) {
-        navigate(`/comercio/${businessId}`)
+      if (result.success && result.user.role === 'business') {
+        // Verificar si necesita cambiar contraseña
+        if (result.user.requirePasswordChange) {
+          navigate('/comercio/change-password')
+        } else {
+             // Usar el comercioId del usuario (que viene de la base de datos)
+             const comercioId = result.user.comercioId || result.user.businessId || result.user.uid
+          navigate(`/comercio/${comercioId}`)
+        }
       } else {
-        setError('Credenciales incorrectas')
+        setError('No tienes permisos de comercio o credenciales incorrectas')
       }
     } catch (err) {
-      setError('Error al iniciar sesión')
+      setError(err.message)
     } finally {
       setIsLoading(false)
     }
@@ -59,37 +51,38 @@ const ComercioLoginPage = () => {
       justifyContent: 'center',
       padding: '20px'
     }}>
-      <div className="slide-in-bottom" style={{
-        backgroundColor: 'white',
-        borderRadius: '24px',
-        padding: '40px 32px',
-        maxWidth: '400px',
+      <div style={{
         width: '100%',
-        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.3)'
+        maxWidth: '400px',
+        background: 'white',
+        borderRadius: '20px',
+        padding: '40px',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+        textAlign: 'center'
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{ marginBottom: '32px' }}>
           <div style={{
             width: '80px',
             height: '80px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            borderRadius: '20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 20px',
+            margin: '0 auto 24px',
             boxShadow: '0 8px 16px rgba(59, 130, 246, 0.3)'
           }}>
-            <Store size={40} style={{ color: 'white' }} strokeWidth={2} />
+            <Store size={40} color="white" />
           </div>
           <h1 style={{
             fontSize: '28px',
             fontWeight: '800',
             color: '#111827',
-            marginBottom: '8px',
-            letterSpacing: '-0.5px'
+            margin: '0 0 8px 0',
+            lineHeight: '1.2'
           }}>
-            Panel de Comercio
+            Login Comercio
           </h1>
           <p style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500' }}>
             Gestiona las órdenes de tu negocio
@@ -98,8 +91,8 @@ const ComercioLoginPage = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Business Selector - Autocomplete */}
-          <div style={{ marginBottom: '20px', position: 'relative' }}>
+          {/* Email Input */}
+          <div style={{ marginBottom: '20px' }}>
             <label style={{
               display: 'block',
               fontSize: '14px',
@@ -107,10 +100,10 @@ const ComercioLoginPage = () => {
               color: '#111827',
               marginBottom: '8px'
             }}>
-              Comercio:
+              Email:
             </label>
             <div style={{ position: 'relative' }}>
-              <Store size={20} style={{
+              <Mail size={20} style={{
                 position: 'absolute',
                 left: '16px',
                 top: '50%',
@@ -118,78 +111,37 @@ const ComercioLoginPage = () => {
                 color: '#9ca3af'
               }} />
               <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value)
-                  setShowSuggestions(true)
-                  setBusinessId('')
-                }}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 onFocus={(e) => {
-                  setShowSuggestions(true)
                   e.target.style.borderColor = '#3b82f6'
                   e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
                 }}
                 onBlur={(e) => {
-                  setTimeout(() => setShowSuggestions(false), 200)
                   e.target.style.borderColor = '#e5e7eb'
                   e.target.style.boxShadow = 'none'
                 }}
-                placeholder="Escribe el nombre de tu comercio..."
-                required={!businessId}
+                placeholder="comercio@foodlab.store"
+                required
                 style={{
                   width: '100%',
                   padding: '14px 16px 14px 48px',
-                  borderRadius: '12px',
                   border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
                   fontSize: '16px',
+                  fontWeight: '500',
+                  color: '#111827',
+                  backgroundColor: 'white',
                   outline: 'none',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
                 }}
               />
-              
-              {/* Autocomplete Suggestions */}
-              {showSuggestions && searchTerm && filteredBusinesses.length > 0 && (
-                <div className="fade-in" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  marginTop: '8px',
-                  background: 'white',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-                  zIndex: 10,
-                  maxHeight: '200px',
-                  overflowY: 'auto'
-                }}>
-                  {filteredBusinesses.map((business) => (
-                    <div
-                      key={business.id}
-                      onClick={() => handleSelectBusiness(business)}
-                      className="tap-effect"
-                      style={{
-                        padding: '12px 16px',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #f3f4f6',
-                        transition: 'background 0.2s ease',
-                        fontSize: '15px',
-                        fontWeight: '600',
-                        color: '#111827'
-                      }}
-                      onMouseEnter={(e) => e.target.style.background = '#f9fafb'}
-                      onMouseLeave={(e) => e.target.style.background = 'white'}
-                    >
-                      {business.name}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Password */}
+          {/* Password Input */}
           <div style={{ marginBottom: '24px' }}>
             <label style={{
               display: 'block',
@@ -212,17 +164,6 @@ const ComercioLoginPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ingresa tu contraseña"
-                required
-                style={{
-                  width: '100%',
-                  padding: '14px 16px 14px 48px',
-                  borderRadius: '12px',
-                  border: '2px solid #e5e7eb',
-                  fontSize: '16px',
-                  outline: 'none',
-                  transition: 'all 0.3s ease'
-                }}
                 onFocus={(e) => {
                   e.target.style.borderColor = '#3b82f6'
                   e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
@@ -231,24 +172,39 @@ const ComercioLoginPage = () => {
                   e.target.style.borderColor = '#e5e7eb'
                   e.target.style.boxShadow = 'none'
                 }}
+                placeholder="Tu contraseña"
+                required
+                style={{
+                  width: '100%',
+                  padding: '14px 16px 14px 48px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  color: '#111827',
+                  backgroundColor: 'white',
+                  outline: 'none',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
               />
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="fade-in" style={{
-              padding: '12px 16px',
-              borderRadius: '12px',
-              backgroundColor: '#fee2e2',
+            <div style={{
+              background: '#fef2f2',
               border: '1px solid #fecaca',
+              borderRadius: '8px',
+              padding: '12px',
               marginBottom: '20px',
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
             }}>
-              <AlertCircle size={18} style={{ color: '#dc2626' }} />
-              <span style={{ fontSize: '14px', color: '#dc2626', fontWeight: '600' }}>
+              <AlertCircle size={16} color="#dc2626" />
+              <span style={{ color: '#dc2626', fontSize: '14px', fontWeight: '500' }}>
                 {error}
               </span>
             </div>
@@ -258,44 +214,72 @@ const ComercioLoginPage = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="btn-primary ripple"
             style={{
               width: '100%',
               padding: '16px',
+              background: isLoading ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
               fontSize: '16px',
               fontWeight: '700',
-              opacity: isLoading ? 0.6 : 1,
-              cursor: isLoading ? 'not-allowed' : 'pointer'
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: isLoading ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.4)',
+              transform: isLoading ? 'none' : 'translateY(0)',
+              opacity: isLoading ? 0.7 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) {
+                e.target.style.transform = 'translateY(-2px)'
+                e.target.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.5)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) {
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)'
+              }
             }}
           >
-            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            {isLoading ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid #ffffff',
+                  borderTop: '2px solid transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }} />
+                Iniciando sesión...
+              </div>
+            ) : (
+              'Iniciar Sesión'
+            )}
           </button>
         </form>
 
-        {/* Back to Admin */}
-        <button
-          onClick={() => navigate('/admin/login')}
-          style={{
-            width: '100%',
-            padding: '12px',
-            marginTop: '16px',
-            border: 'none',
-            background: 'transparent',
-            color: '#6b7280',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'color 0.3s ease'
-          }}
-          onMouseEnter={(e) => (e.target.style.color = '#111827')}
-          onMouseLeave={(e) => (e.target.style.color = '#6b7280')}
-        >
-          ¿Eres admin? Inicia sesión aquí
-        </button>
+        {/* Footer */}
+        <div style={{
+          marginTop: '32px',
+          paddingTop: '24px',
+          borderTop: '1px solid #f3f4f6',
+          fontSize: '12px',
+          color: '#9ca3af'
+        }}>
+          ¿Problemas para acceder? Contacta al administrador
+        </div>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
 
 export default ComercioLoginPage
-

@@ -1,21 +1,28 @@
 // Firebase configuration for FoodLab Production
 import { initializeApp } from 'firebase/app'
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
-import { getAuth, connectAuthEmulator } from 'firebase/auth'
-import { getStorage, connectStorageEmulator } from 'firebase/storage'
+import { getFirestore } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
+import { getStorage } from 'firebase/storage'
 
-// Firebase configuration from environment variables
+// Firebase configuration - FORCING NEW API KEY
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: "AIzaSyDOPyTZBRmzoq1j-lItXFyniSlX81_6Tjs",
+  authDomain: "foodlab-production.firebaseapp.com",
+  projectId: "foodlab-production",
+  storageBucket: "foodlab-production.firebasestorage.app",
+  messagingSenderId: "872068459643",
+  appId: "1:872068459643:web:084af9024162056d49c6de"
 }
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
+
+// Log Firebase configuration for debugging
+console.log('🔥 Firebase Config:', {
+  apiKey: firebaseConfig.apiKey?.substring(0, 10) + '...',
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId
+})
 
 // Initialize Firebase services
 export const db = getFirestore(app)
@@ -25,19 +32,7 @@ export const storage = getStorage(app)
 // Export the app instance
 export default app
 
-// Development mode - connect to emulators if needed
-if (import.meta.env.DEV) {
-  // Use Firebase emulators for development
-  try {
-    connectFirestoreEmulator(db, 'localhost', 8080)
-    connectAuthEmulator(auth, 'http://localhost:9099')
-    connectStorageEmulator(storage, 'localhost', 9199)
-    console.log('🔥 Firebase emulators connected')
-  } catch (error) {
-    // Emulators already connected or not available
-    console.log('Firebase emulators not available, using production')
-  }
-}
+// Using production Firebase directly
 
 // User roles system
 export const USER_ROLES = {

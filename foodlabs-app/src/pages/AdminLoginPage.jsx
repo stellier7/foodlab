@@ -6,12 +6,14 @@ import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader } from 'lucide-react'
 const AdminLoginPage = () => {
   const navigate = useNavigate()
   const { 
+    user,
     login, 
     loginWithGoogle, 
     createAccount, 
     isAuthenticated, 
     checkAuth, 
     resetLoginAttempts,
+    resetBlock,
     isLoading: authLoading,
     error: authError
   } = useAuthStore()
@@ -34,10 +36,29 @@ const AdminLoginPage = () => {
 
   // Verificar si ya está autenticado
   useEffect(() => {
-    if (checkAuth()) {
-      navigate('/admin')
+    // Solo verificar si hay un usuario autenticado y es admin
+    if (isAuthenticated && user && user.role) {
+      const isAdmin = ['super_admin', 'admin_national', 'admin_regional'].includes(user.role)
+      if (isAdmin) {
+        navigate('/admin')
+      }
+      // Si no es admin, permitir que haga login como admin
     }
-  }, [checkAuth, navigate])
+  }, [isAuthenticated, user, navigate])
+
+  // Inicializar autenticación
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        await checkAuth()
+      } catch (error) {
+        // Ignorar errores de inicialización, el usuario puede hacer login
+        console.log('Auth initialization error (ignored):', error)
+      }
+    }
+    
+    initializeAuth()
+  }, [])
 
   // Solicitar permisos de notificación
   useEffect(() => {
@@ -72,9 +93,39 @@ const AdminLoginPage = () => {
     setError('')
 
     try {
-      await login(formData.email, formData.password)
-      navigate('/admin')
+      console.log('🚀 AdminLoginPage - Iniciando login...')
+      console.log('📧 Email:', formData.email)
+      console.log('🔑 Password:', formData.password ? '***' : 'VACÍO')
+      
+      if (!formData.email || !formData.password) {
+        console.log('❌ AdminLoginPage - Email o password vacío')
+        throw new Error('Por favor ingresa email y contraseña')
+      }
+
+      console.log('📞 AdminLoginPage - Llamando a login()...')
+      const result = await login(formData.email, formData.password)
+      
+      console.log('📊 AdminLoginPage - Resultado del login:', result)
+      
+      if (result.success) {
+        console.log('✅ AdminLoginPage - Login exitoso!')
+        console.log('👤 Usuario:', result.user)
+        console.log('🎭 Rol:', result.user.role)
+        
+        // Verificar si es admin
+        if (result.user.role === 'super_admin' || result.user.role === 'admin_national' || result.user.role === 'admin_regional') {
+          console.log('✅ AdminLoginPage - Usuario tiene permisos de admin, navegando a /admin')
+          navigate('/admin')
+        } else {
+          console.log('❌ AdminLoginPage - Usuario NO tiene permisos de admin. Rol:', result.user.role)
+          setError('No tienes permisos de administrador')
+        }
+      } else {
+        console.log('❌ AdminLoginPage - Login falló:', result.error)
+        setError(result.error || 'Error de autenticación. Verifica tus credenciales')
+      }
     } catch (err) {
+      console.log('💥 AdminLoginPage - Error capturado:', err.message)
       setError(err.message)
       if (err.message.includes('bloqueada')) {
         setIsBlocked(true)
@@ -426,6 +477,76 @@ const AdminLoginPage = () => {
               )}
             </button>
           </form>
+
+          {/* Debug Button - Temporal */}
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                console.log('🧪 Intentando crear usuario de prueba...')
+                const result = await createAccount('test@foodlab.store', 'admin123', 'test@foodlab.store')
+                if (result.success) {
+                  alert('Usuario de prueba creado exitosamente!')
+                } else {
+                  alert('Error al crear usuario: ' + result.error)
+                }
+              } catch (error) {
+                console.error('Error en createAccount:', error)
+                alert('Error: ' + error.message)
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              background: '#f3f4f6',
+              color: '#374151',
+              fontSize: '12px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              marginTop: '12px'
+            }}
+          >
+            🧪 Create Test User (Debug)
+          </button>
+
+          {/* Test Firebase Connection */}
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                console.log('🔍 Probando conexión a Firebase...')
+                const { db } = await import('../config/firebase')
+                const { collection, getDocs } = await import('firebase/firestore')
+                
+                console.log('📊 Intentando leer colección comercios...')
+                const comerciosRef = collection(db, 'comercios')
+                const snapshot = await getDocs(comerciosRef)
+                console.log('✅ Conexión exitosa! Comercios encontrados:', snapshot.size)
+                alert(`Conexión exitosa! Se encontraron ${snapshot.size} comercios.`)
+              } catch (error) {
+                console.error('❌ Error en conexión a Firebase:', error)
+                alert('Error de conexión: ' + error.message)
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              background: '#f3f4f6',
+              color: '#374151',
+              fontSize: '12px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              marginTop: '8px'
+            }}
+          >
+            🔍 Test Firebase Connection
+          </button>
 
           {/* Sign Up Toggle */}
           <div style={{

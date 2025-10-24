@@ -27,9 +27,32 @@ const Header = () => {
     { path: '/shop', name: 'Shop', icon: ShoppingBag, color: '#3b82f6' }
   ]
 
-  const currentNav = navItems.find(item => item.path === location.pathname) || navItems[0]
+  // Determine current nav based on path
+  let currentNav = navItems.find(item => item.path === location.pathname)
+  
+  // If not found, check if we're on a business detail page or comercio admin pages
+  if (!currentNav) {
+    if (location.pathname.startsWith('/tienda/')) {
+      // For shops, use shop color
+      currentNav = navItems.find(item => item.path === '/shop')
+    } else if (location.pathname.startsWith('/restaurante/')) {
+      // For restaurants, we need to determine if coming from foodlabs or fitlabs
+      // For now, default to foodlabs (orange), but this could be enhanced with location state
+      currentNav = navItems.find(item => item.path === '/')
+    } else if (location.pathname.startsWith('/comercio')) {
+      // For comercio admin pages, use FoodLab branding but with blue color to match the comercio theme
+      currentNav = { ...navItems.find(item => item.path === '/'), color: '#3b82f6' }
+    }
+  }
+  
+  // Fallback to first nav item
+  if (!currentNav) {
+    currentNav = navItems[0]
+  }
+  
   const isAdminPage = location.pathname.startsWith('/admin')
-  const isRestaurantPage = location.pathname.startsWith('/restaurant/')
+  const isRestaurantPage = location.pathname.startsWith('/restaurante/')
+  const isShopPage = location.pathname.startsWith('/tienda/')
 
   // Calculate smooth opacity values based on scroll position
   const logoOpacity = Math.max(0, Math.min(1, 1 - ((scrollY - 100) / 150)))

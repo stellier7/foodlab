@@ -1,0 +1,121 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['super_admin', 'admin_national', 'admin_regional'];
+    }
+    
+    function isBusiness() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'business';
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB limit
+    }
+    
+    function isValidPath(path) {
+      return path.matches('productos/.*') || 
+             path.matches('comercios/.*') ||
+             path.matches('users/.*');
+    }
+    
+    // Product images
+    match /productos/{comercioId}/{productId}/{fileName} {
+      // Allow all authenticated users to upload product images (temporary for testing)
+      allow write: if isAuthenticated() && isValidImage();
+      
+      // Anyone can read product images (for public display)
+      allow read: if true;
+      
+      // Allow authenticated users to delete product images
+      allow delete: if isAuthenticated();
+    }
+    
+    // Comercio logos and images
+    match /comercios/{comercioId}/{fileName} {
+      // Allow authenticated business users to upload comercio images
+      allow write: if isBusiness() && isValidImage();
+      
+      // Admins can upload images for any comercio
+      allow write: if isAdmin() && isValidImage();
+      
+      // TEMPORARY: Allow all authenticated users to upload comercio logos for testing
+      allow write: if isAuthenticated() && isValidImage();
+      
+      // Anyone can read comercio images (for public display)
+      allow read: if true;
+      
+      // Allow authenticated business users to delete comercio images
+      allow delete: if isBusiness();
+      
+      // Admins can delete any comercio images
+      allow delete: if isAdmin();
+    }
+    
+    // User profile images
+    match /users/{userId}/{fileName} {
+      // Users can upload their own profile images
+      allow write: if isOwner(userId) && isValidImage();
+      
+      // Anyone can read user profile images (for public display)
+      allow read: if true;
+      
+      // Users can delete their own profile images
+      allow delete: if isOwner(userId);
+      
+      // Admins can delete any user profile images
+      allow delete: if isAdmin();
+    }
+    
+    // Temporary uploads (for processing)
+    match /temp/{userId}/{fileName} {
+      // Users can upload temporary files
+      allow write: if isOwner(userId) && isValidImage();
+      
+      // Users can read their own temporary files
+      allow read: if isOwner(userId);
+      
+      // Users can delete their own temporary files
+      allow delete: if isOwner(userId);
+      
+      // Auto-delete after 24 hours (handled by Cloud Functions)
+    }
+    
+    // TEMPORARY: Allow unauthenticated uploads for testing
+    match /productos/{comercioId}/temp/{fileName} {
+      allow write: if isValidImage();
+      allow read: if true;
+      allow delete: if true;
+    }
+    
+    // Admin uploads (for system use)
+    match /admin/{fileName} {
+      // Only admins can upload admin files
+      allow write: if isAdmin() && isValidImage();
+      
+      // Only admins can read admin files
+      allow read: if isAdmin();
+      
+      // Only admins can delete admin files
+      allow delete: if isAdmin();
+    }
+    
+    // Deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

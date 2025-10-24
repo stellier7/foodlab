@@ -1,124 +1,151 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../stores/useAppStore'
-import { ShoppingBag, Plus, Star, Clock, MapPin } from 'lucide-react'
+import { getActiveComercios } from '../services/comercios'
+import { getProductsByComercio } from '../services/products'
+import { ShoppingBag, Plus, Star, Clock, MapPin, Store } from 'lucide-react'
 import ProductModal from '../components/ProductModal'
+import DietaryLabels from '../components/DietaryLabels'
 
 const ShopPage = () => {
   const navigate = useNavigate()
   const { 
-    setRestaurants, 
-    restaurants, 
     addToCart, 
     getPriceForCurrency, 
     getCurrencySymbol,
-    fetchProducts,
-    products,
-    productsLoading,
-    productsError
+    location,
+    isLoading,
+    error
   } = useAppStore()
+  
+  const [tiendas, setTiendas] = useState([])
+  const [isLoadingTiendas, setIsLoadingTiendas] = useState(true)
+  const [tiendasError, setTiendasError] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Shop businesses will be loaded from Firestore
-  
-  // Cargar productos de shop al iniciar
+  // Cargar tiendas activas
   useEffect(() => {
-    fetchProducts('shop')
-  }, [fetchProducts])
+    const loadTiendas = async () => {
+      try {
+        setIsLoadingTiendas(true)
+        setTiendasError(null)
+        
+        // Obtener solo tiendas activas
+        const comercios = await getActiveComercios('tienda')
+        
+        // Obtener productos para cada tienda
+        const tiendasConProductos = await Promise.all(
+          comercios.map(async (comercio) => {
+            try {
+              const productos = await getProductsByComercio(comercio.id)
+              // Solo productos aprobados y publicados
+              const productosAprobados = productos.filter(p => p.status === 'aprobado' && p.isPublished)
+              
+              return {
+                ...comercio,
+                name: comercio.nombre, // Mapear nombre para la tarjeta
+                image: comercio.configuracion?.logo || null, // Mapear logo para la tarjeta
+                products: productosAprobados.map(producto => ({
+                  id: producto.id,
+                  name: producto.nombre,
+                  description: producto.descripcion,
+                  price: producto.precio_HNL || producto.precio,
+                  precio_HNL: producto.precio_HNL || producto.precio,
+                  currency: producto.moneda || 'HNL',
+                  image: producto.imagenes?.[0] || null,
+                  dietaryLabels: producto.etiquetasDietarias || [],
+                  category: producto.categoria,
+                  isAvailable: producto.estaActivo,
+                  stock: producto.stock
+                })),
+                productCount: productosAprobados.length
+              }
+            } catch (error) {
+              console.error(`Error loading products for ${comercio.nombre}:`, error)
+              return {
+                ...comercio,
+                name: comercio.nombre, // Mapear nombre para la tarjeta
+                image: comercio.configuracion?.logo || null, // Mapear logo para la tarjeta
+                products: [],
+                productCount: 0
+              }
+            }
+          })
+        )
+        
+        setTiendas(tiendasConProductos)
+        console.log(`🏪 Tiendas cargadas:`, tiendasConProductos.length)
+        console.log(`📋 Lista de tiendas:`, tiendasConProductos.map(t => ({ id: t.id, nombre: t.nombre, productCount: t.productCount })))
+      } catch (error) {
+        console.error('Error loading tiendas:', error)
+        setTiendasError('Error al cargar las tiendas')
+      } finally {
+        setIsLoadingTiendas(false)
+      }
+    }
+
+    loadTiendas()
+  }, [])
 
   const categories = [
     { id: 'all', name: 'Todo', emoji: '🏪' },
-    { id: 'sports', name: 'Deportes', emoji: '⚽' },
-    { id: 'convenience', name: 'Conveniencia', emoji: '🏬' },
-    { id: 'pharmacy', name: 'Farmacias', emoji: '💊' }
+    { id: 'Accesorios', name: 'Accesorios', emoji: '🎯' },
+    { id: 'Conveniencia', name: 'Conveniencia', emoji: '🏬' },
+    { id: 'Farmacias', name: 'Farmacias', emoji: '💊' }
   ]
 
-  // Crear tiendas dinámicamente desde productos de Firestore
-  const shopBusinesses = useMemo(() => {
-    if (!products || products.length === 0) return []
-    
-    // Agrupar productos por businessId
-    const businessMap = new Map()
-    
-    products.forEach(product => {
-      if (!businessMap.has(product.businessId)) {
-        businessMap.set(product.businessId, {
-          id: product.businessId,
-          name: product.businessId === 'padelbuddy' ? 'PadelBuddy' : product.businessId,
-          slug: product.businessId,
-          type: 'shop',
-          category: 'Deportes',
-          tier: 'shop',
-          rating: 5.0,
-          reviewCount: 45,
-          deliveryTime: '24-48 hrs',
-          deliveryFee: 0,
-          address: 'Entregas a domicilio',
-          image: product.images?.[0] || '/images/products/padelBuddy/phoneMount_black.jpg',
-          logo: product.images?.[0] || '/images/products/padelBuddy/phoneMount_black.jpg',
-          isOpen: true,
-          menuCategories: []
+  // Filtrar tiendas por categoría y ubicación
+    const filteredBusinesses = useMemo(() => {
+      if (!tiendas || tiendas.length === 0) return []
+      
+      // Primero filtrar por ubicación
+      let filteredByLocation = tiendas
+      if (location && location.city) {
+        filteredByLocation = tiendas.filter(tienda => {
+          const comercioLocation = tienda.location
+          if (!comercioLocation || !comercioLocation.city) {
+            return false // No mostrar comercios sin ubicación
+          }
+          
+          // Comparar por código de ciudad (ej: 'TGU', 'SPS')
+          return comercioLocation.city === location.city
         })
+        
+        console.log(`🔍 ShopPage - Filtrado por ciudad ${location.city}:`, filteredByLocation.length, 'de', tiendas.length)
       }
       
-      const business = businessMap.get(product.businessId)
-      
-      // Agrupar por categoría
-      let category = business.menuCategories.find(cat => cat.name === product.category)
-      if (!category) {
-        category = { name: product.category, items: [] }
-        business.menuCategories.push(category)
+      // Luego filtrar por categoría
+      if (selectedCategory === 'all') {
+        console.log(`🔍 ShopPage - Mostrando todas las categorías:`, filteredByLocation.length)
+        return filteredByLocation
       }
       
-      category.items.push({
-        id: product.id,
-        name: product.name,
-        price: product.price / 25, // Convertir a USD
-        precio_HNL: product.price,
-        currency: 'HNL',
-        description: product.description,
-        image: product.images?.[0] || '/images/products/padelBuddy/phoneMount_black.jpg',
-        variants: product.variants || [],
-        totalStock: product.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0,
-        isNew: true,
-        features: [],
-        labels: product.dietaryLabels || []
+      const filteredByCategory = filteredByLocation.filter(tienda => {
+        // Filtrar por categoría del negocio (incluso si no tiene productos)
+        return tienda.categoria === selectedCategory
       })
-    })
-    
-    return Array.from(businessMap.values())
-  }, [products])
+      
+      console.log(`🔍 ShopPage - Filtrado por categoría ${selectedCategory}:`, filteredByCategory.length)
+      return filteredByCategory
+    }, [tiendas, selectedCategory, location])
 
-  // Filtrar tiendas por categoría
-  const filteredBusinesses = selectedCategory === 'all' 
-    ? shopBusinesses 
-    : shopBusinesses.filter(b => {
-        // Filtrar por categoría del negocio o si tiene productos de esa categoría
-        return b.category === categories.find(c => c.id === selectedCategory)?.name ||
-               b.menuCategories?.some(cat => 
-                 cat.items?.some(item => item.category === selectedCategory)
-               )
-      })
-  
-  // Usar solo productos de Firestore con precios válidos
-  const allProducts = products?.filter(p => 
-    p.businessType === 'shop' && 
-    p.isActive && 
-    (p.price > 0 || p.precio_HNL > 0)
-  ) || []
+  // Obtener todos los productos de todas las tiendas
+  const allProducts = useMemo(() => {
+    if (!tiendas || tiendas.length === 0) return []
+    
+    return tiendas.flatMap(tienda => tienda.products || [])
+  }, [tiendas])
   
   // Navegar a detalle de tienda
   const handleBusinessClick = (business) => {
-    navigate(`/restaurant/${business.slug}`)
+    navigate(`/tienda/${business.slug}`, { state: { from: 'shop' } })
   }
   
   // Contar productos de una tienda
   const countProducts = (business) => {
-    return business.menuCategories?.reduce((count, category) => {
-      return count + (category.items?.length || 0)
-    }, 0) || 0
+    return business.productCount || 0
   }
   
   // Handlers para productos
@@ -132,8 +159,8 @@ const ShopPage = () => {
       id: product.id,
       name: product.name,
       price: product.price,
-      precio_HNL: product.precio_HNL || product.price,
-      currency: 'HNL',
+      precio_HNL: product.price,
+      currency: product.currency,
       description: product.description,
       image: product.image,
       variants: product.variants
@@ -143,6 +170,41 @@ const ShopPage = () => {
   const closeModal = () => {
     setIsModalOpen(false)
     setSelectedProduct(null)
+  }
+
+  if (isLoadingTiendas) {
+    return (
+      <main style={{ paddingBottom: '80px' }}>
+        <div style={{ padding: '40px', textAlign: 'center' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid #e5e7eb',
+            borderTop: '3px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p style={{ color: '#6b7280' }}>Cargando tiendas...</p>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </main>
+    )
+  }
+
+  if (tiendasError) {
+    return (
+      <main style={{ paddingBottom: '80px' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>
+          <p>Error al cargar las tiendas: {tiendasError}</p>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -220,7 +282,7 @@ const ShopPage = () => {
 
       {/* Content - Dual View */}
       <div style={{ padding: '20px 16px' }}>
-        {productsLoading && (
+        {isLoadingTiendas && (
           <div style={{ 
             textAlign: 'center',
             padding: '48px 16px',
@@ -245,15 +307,15 @@ const ShopPage = () => {
           </div>
         )}
         
-        {productsError && (
+        {tiendasError && (
           <div style={{ 
             textAlign: 'center',
             padding: '48px 16px',
             color: '#ef4444'
           }}>
-            <p>Error al cargar productos: {productsError}</p>
+            <p>Error al cargar productos: {tiendasError}</p>
             <button
-              onClick={() => fetchProducts('shop')}
+              onClick={() => window.location.reload()}
               style={{
                 marginTop: '16px',
                 padding: '8px 16px',
@@ -269,7 +331,7 @@ const ShopPage = () => {
           </div>
         )}
         
-        {!productsLoading && !productsError && selectedCategory === 'all' ? (
+        {!isLoadingTiendas && !tiendasError && selectedCategory === 'all' ? (
           /* Vista de Productos (Grid 2x2) */
           <>
             <div style={{ 
@@ -564,15 +626,15 @@ const ShopPage = () => {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          backgroundColor: '#dbeafe',
-                          color: '#3b82f6',
+                          backgroundColor: productCount > 0 ? '#dbeafe' : '#fef3c7',
+                          color: productCount > 0 ? '#3b82f6' : '#d97706',
                           padding: '6px 10px',
                           borderRadius: '8px',
                           fontSize: '12px',
                           fontWeight: '700'
                         }}>
                           <ShoppingBag size={12} />
-                          {productCount} {productCount === 1 ? 'producto' : 'productos'}
+                          {productCount > 0 ? `${productCount} ${productCount === 1 ? 'producto' : 'productos'}` : 'Sin productos'}
                         </div>
                       </div>
                     </div>

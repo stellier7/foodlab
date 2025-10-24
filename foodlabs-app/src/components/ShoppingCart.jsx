@@ -88,9 +88,9 @@ const ShoppingCart = () => {
 
     message += `\n💰 *Resumen:*\n`
     message += `Subtotal: ${getCurrencySymbol()}${fees.subtotal.toFixed(2)}\n`
-    message += `FoodLab: ${getCurrencySymbol()}${fees.platformFee.toFixed(2)}\n`
+    message += `Comisión: ${getCurrencySymbol()}${fees.platformFee.toFixed(2)}\n`
     message += `*Total: ${getCurrencySymbol()}${fees.grandTotal.toFixed(2)}*\n\n`
-    message += `💳 *Método de pago:* Efectivo/Transferencia/Tarjeta\n\n`
+    message += `💳 *Método de pago:* Transferencia bancaria\n\n`
     
     if (hasFoodItems && hasSportsItems) {
       message += `¡Gracias por elegir Labs Platform! 🚀`
@@ -250,7 +250,7 @@ const ShoppingCart = () => {
                       
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <button
-                          onClick={() => removeFromCart(item.variantKey || item.id, item.restaurantId)}
+                          onClick={() => removeFromCart(item.variantKey || item.id, item.comercioId)}
                           className="tap-effect"
                           style={{
                             width: '36px',
@@ -277,7 +277,7 @@ const ShoppingCart = () => {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => addToCart(item, item.restaurantId)}
+                          onClick={() => addToCart(item, item.comercioId)}
                           className="tap-effect ripple"
                           style={{
                             width: '36px',
@@ -316,7 +316,7 @@ const ShoppingCart = () => {
                     <span style={{ color: '#111827' }}>{getCurrencySymbol()} {fees.subtotal.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#9ca3af', marginBottom: '12px' }}>
-                    <span>FoodLab:</span>
+                    <span>Comisión:</span>
                     <span>{getCurrencySymbol()} {fees.platformFee.toFixed(2)}</span>
                   </div>
                   <div className="card" style={{ 

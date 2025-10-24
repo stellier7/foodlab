@@ -45,6 +45,7 @@ export const useAuthStore = create(
       user: null,
       isAuthenticated: false,
       role: null,
+      userRole: null, // Agregar userRole al estado inicial
       permissions: [],
       loginAttempts: 0,
       isBlocked: false,
@@ -52,26 +53,62 @@ export const useAuthStore = create(
       isLoading: false,
       error: null,
 
+      // Helpers para verificar roles
+      isAdmin: () => {
+        const { user } = get()
+        return user && ['super_admin', 'admin_national', 'admin_regional'].includes(user.role)
+      },
+
+      isBusiness: () => {
+        const { user } = get()
+        return user && user.role === 'business'
+      },
+
+      isDriver: () => {
+        const { user } = get()
+        return user && user.role === 'driver'
+      },
+
+      // Función para resetear bloqueo (para desarrollo)
+      resetBlock: () => {
+        set({
+          loginAttempts: 0,
+          isBlocked: false,
+          blockUntil: null
+        })
+      },
+
       // Acciones Firebase Auth
       login: async (email, password) => {
+        console.log('🔐 useAuthStore - login() llamado con:', { email, password: password ? '***' : 'VACÍO' })
+        
         const { isBlocked, blockUntil } = get()
         
-        // Verificar si está bloqueado
+        // Verificar si está bloqueado (sistema simplificado para desarrollo)
         if (isBlocked && blockUntil && new Date() < new Date(blockUntil)) {
           const remainingTime = Math.ceil((new Date(blockUntil) - new Date()) / (1000 * 60))
-          throw new Error(`Cuenta bloqueada. Intenta de nuevo en ${remainingTime} minutos.`)
+          console.log('🚫 useAuthStore - Usuario bloqueado por', remainingTime, 'minutos')
+          throw new Error(`Cuenta bloqueada temporalmente. Intenta de nuevo en ${remainingTime} minutos.`)
         }
 
+        console.log('📊 useAuthStore - Estado actual:', { isBlocked, blockUntil })
         set({ isLoading: true, error: null })
 
         try {
+          console.log('📞 useAuthStore - Llamando a authService.signInWithEmail...')
           const result = await authService.signInWithEmail(email, password)
           
+          console.log('📊 useAuthStore - Resultado de authService.signInWithEmail:', result)
+          
           if (result.success) {
+            console.log('✅ useAuthStore - Login exitoso! Configurando estado...')
+            console.log('👤 Usuario completo:', result.user)
+            
             set({
               user: result.user,
               isAuthenticated: true,
               role: result.user.role,
+              userRole: result.user.role, // Asegurar que userRole esté sincronizado
               permissions: result.user.permissions || [],
               loginAttempts: 0,
               isBlocked: false,
@@ -80,6 +117,7 @@ export const useAuthStore = create(
               error: null
             })
             
+            console.log('✅ useAuthStore - Estado actualizado exitosamente')
             return { success: true, user: result.user }
           } else {
             // Login fallido
@@ -87,10 +125,10 @@ export const useAuthStore = create(
             let isBlocked = false
             let blockUntil = null
             
-            // Bloquear después de 3 intentos fallidos
-            if (newAttempts >= 3) {
+            // Bloquear después de 10 intentos fallidos (ajustado para desarrollo)
+            if (newAttempts >= 10) {
               isBlocked = true
-              blockUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutos
+              blockUntil = new Date(Date.now() + 2 * 60 * 1000).toISOString() // 2 minutos
             }
             
             set({
@@ -109,6 +147,46 @@ export const useAuthStore = create(
         }
       },
 
+      // Logout function
+      logout: async () => {
+        try {
+          console.log('🚪 useAuthStore - Iniciando logout...')
+          await authService.signOut()
+          
+          set({
+            user: null,
+            isAuthenticated: false,
+            role: null,
+            userRole: null,
+            permissions: [],
+            loginAttempts: 0,
+            isBlocked: false,
+            blockUntil: null,
+            isLoading: false,
+            error: null
+          })
+          
+          console.log('✅ useAuthStore - Logout exitoso')
+          return { success: true }
+        } catch (error) {
+          console.error('❌ useAuthStore - Error en logout:', error)
+          // Limpiar estado local aunque falle el logout de Firebase
+          set({
+            user: null,
+            isAuthenticated: false,
+            role: null,
+            userRole: null,
+            permissions: [],
+            loginAttempts: 0,
+            isBlocked: false,
+            blockUntil: null,
+            isLoading: false,
+            error: null
+          })
+          return { success: false, error: error.message }
+        }
+      },
+
       // Login with Google
       loginWithGoogle: async () => {
         set({ isLoading: true, error: null })
@@ -121,6 +199,7 @@ export const useAuthStore = create(
               user: result.user,
               isAuthenticated: true,
               role: result.user.role,
+              userRole: result.user.role,
               permissions: result.user.permissions || [],
               loginAttempts: 0,
               isBlocked: false,
@@ -196,6 +275,9 @@ export const useAuthStore = create(
             isAuthenticated: false,
             role: null,
             permissions: [],
+            loginAttempts: 0,
+            isBlocked: false,
+            blockUntil: null,
             error: null
           })
         } catch (error) {

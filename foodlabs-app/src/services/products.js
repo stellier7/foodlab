@@ -9,7 +9,8 @@ import {
   getDoc, 
   query, 
   where, 
-  orderBy 
+  orderBy,
+  limit
 } from 'firebase/firestore'
 
 const PRODUCTS_COLLECTION = 'products'
@@ -20,10 +21,29 @@ const PRODUCTS_COLLECTION = 'products'
  * @returns {Promise<string>} ID del producto creado
  */
 export const createProduct = async (productData) => {
-  const isShop = productData.businessType === 'shop'
+  try {
+    // Validar que el comercioId existe
+    if (!productData.comercioId) {
+      throw new Error('comercioId es requerido')
+    }
+    
+    // Validar que el comercio existe
+    const { getComercio } = await import('./comercios')
+    const comercio = await getComercio(productData.comercioId)
+    if (!comercio) {
+      console.error('Comercio no encontrado:', productData.comercioId)
+      throw new Error('El comercio especificado no existe')
+    }
+  } catch (error) {
+    console.error('Error validating comercio:', error)
+    throw error
+  }
+
   const productRef = await addDoc(collection(db, PRODUCTS_COLLECTION), {
     ...productData,
-    isPublished: isShop, // Shop products auto-publish, restaurants need approval
+    // Todos los productos requieren aprobación según el plan
+    isPublished: false,
+    status: 'pendiente',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     isActive: true
@@ -75,76 +95,90 @@ export const getProduct = async (productId) => {
 
 /**
  * Obtiene todos los productos activos
- * @param {string} [businessType] - Filtrar por tipo de negocio ('shop' o 'restaurant')
- * @param {string} [businessId] - Filtrar por ID de negocio específico
+ * @param {string} [tipoComercio] - Filtrar por tipo de comercio ('tienda' o 'restaurante')
+ * @param {string} [comercioId] - Filtrar por ID de comercio específico
+ * @param {boolean} [soloPublicados] - Si true, solo productos publicados
  * @returns {Promise<Array>} Lista de productos
  */
-export const getProducts = async (businessType = null, businessId = null) => {
-  // Start with a simple query to avoid complex index requirements
-  let q = query(
-    collection(db, PRODUCTS_COLLECTION),
-    where('isActive', '==', true)
-  )
+export const getProducts = async (tipoComercio = null, comercioId = null, soloPublicados = false) => {
+  try {
+    // Start with a simple query to avoid complex index requirements
+    let q = query(
+      collection(db, PRODUCTS_COLLECTION),
+      where('isActive', '==', true)
+    )
 
-  // Add businessType filter if specified
-  if (businessType) {
-    q = query(q, where('businessType', '==', businessType))
+    // Add comercioId filter if specified
+    if (comercioId) {
+      q = query(q, where('comercioId', '==', comercioId))
+    }
+
+    // Add published filter if specified
+    if (soloPublicados) {
+      q = query(q, where('isPublished', '==', true))
+    }
+
+    const querySnapshot = await getDocs(q)
+    let products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    
+    // Filter by tipoComercio in JavaScript (to avoid complex Firestore queries)
+    if (tipoComercio) {
+      const { getComercios } = await import('./comercios')
+      const comercios = await getComercios({ tipo: tipoComercio })
+      const comercioIds = comercios.map(c => c.id)
+      products = products.filter(p => comercioIds.includes(p.comercioId))
+    }
+    
+    // Sort in JavaScript to avoid Firestore index requirements
+    return products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  } catch (error) {
+    console.error('Error fetching products:', error)
+    throw new Error('Error al cargar los productos')
   }
-
-  // Add businessId filter if specified
-  if (businessId) {
-    q = query(q, where('businessId', '==', businessId))
-  }
-
-  const querySnapshot = await getDocs(q)
-  const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-  
-  // Sort in JavaScript to avoid Firestore index requirements
-  return products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 }
 
 /**
- * Obtiene productos de shop
- * @returns {Promise<Array>} Lista de productos de shop
+ * Obtiene productos de tiendas
+ * @returns {Promise<Array>} Lista de productos de tiendas
  */
-export const getShopProducts = async () => {
-  return await getProducts('shop')
+export const getTiendaProducts = async () => {
+  return await getProducts('tienda', null, true)
 }
 
 /**
  * Obtiene productos de restaurantes
  * @returns {Promise<Array>} Lista de productos de restaurantes
  */
-export const getRestaurantProducts = async () => {
-  return await getProducts('restaurant')
+export const getRestauranteProducts = async () => {
+  return await getProducts('restaurante', null, true)
 }
 
 /**
  * Busca productos por nombre
  * @param {string} searchTerm - Término de búsqueda
- * @param {string} [businessType] - Filtrar por tipo de negocio
+ * @param {string} [tipoComercio] - Filtrar por tipo de comercio
  * @returns {Promise<Array>} Lista de productos que coinciden
  */
-export const searchProducts = async (searchTerm, businessType = null) => {
-  const allProducts = await getProducts(businessType)
+export const searchProducts = async (searchTerm, tipoComercio = null) => {
+  const allProducts = await getProducts(tipoComercio, null, true)
   const term = searchTerm.toLowerCase()
   
   return allProducts.filter(product => 
-    product.name.toLowerCase().includes(term) ||
-    product.description.toLowerCase().includes(term) ||
-    product.category.toLowerCase().includes(term)
+    product.nombre.toLowerCase().includes(term) ||
+    product.descripcion.toLowerCase().includes(term) ||
+    product.categoria.toLowerCase().includes(term)
   )
 }
 
 /**
  * Obtiene productos por categoría
  * @param {string} category - Categoría a filtrar
- * @param {string} [businessType] - Tipo de negocio
+ * @param {string} [tipoComercio] - Tipo de comercio
  * @returns {Promise<Array>} Lista de productos de la categoría
  */
-export const getProductsByCategory = async (category, businessType = null) => {
-  const allProducts = await getProducts(businessType)
-  return allProducts.filter(product => product.category === category)
+export const getProductsByCategory = async (category, tipoComercio = null) => {
+  const allProducts = await getProducts(tipoComercio, null, true)
+  return allProducts.filter(product => product.categoria === category)
 }
 
 /**
@@ -156,16 +190,24 @@ export const getProductStats = async () => {
   
   const stats = {
     total: allProducts.length,
-    shop: allProducts.filter(p => p.businessType === 'shop').length,
-    restaurant: allProducts.filter(p => p.businessType === 'restaurant').length,
-    active: allProducts.filter(p => p.isActive).length,
-    categories: {}
+    tienda: allProducts.filter(p => {
+      // Necesitamos verificar el tipo del comercio
+      return p.comercioId // Se filtrará por tipo de comercio en el frontend
+    }).length,
+    restaurante: allProducts.filter(p => {
+      // Se filtrará por tipo de comercio en el frontend
+      return p.comercioId
+    }).length,
+    activos: allProducts.filter(p => p.isActive).length,
+    publicados: allProducts.filter(p => p.isPublished).length,
+    pendientes: allProducts.filter(p => p.status === 'pendiente').length,
+    categorias: {}
   }
 
   // Contar por categorías
   allProducts.forEach(product => {
-    const category = product.category
-    stats.categories[category] = (stats.categories[category] || 0) + 1
+    const categoria = product.categoria
+    stats.categorias[categoria] = (stats.categorias[categoria] || 0) + 1
   })
 
   return stats
@@ -177,14 +219,21 @@ export const getProductStats = async () => {
  * @param {string} approvedBy - ID del admin que aprueba
  * @returns {Promise<void>}
  */
-export const approveProduct = async (productId, approvedBy) => {
-  const productRef = doc(db, PRODUCTS_COLLECTION, productId)
-  await updateDoc(productRef, {
-    isPublished: true,
-    approvedAt: new Date().toISOString(),
-    approvedBy: approvedBy,
-    updatedAt: new Date().toISOString()
-  })
+export const approveProduct = async (productId, approvedBy = null) => {
+  try {
+    const productRef = doc(db, PRODUCTS_COLLECTION, productId)
+    await updateDoc(productRef, {
+      isPublished: true,
+      status: 'aprobado',
+      approvedAt: new Date().toISOString(),
+      approvedBy: approvedBy,
+      updatedAt: new Date().toISOString()
+    })
+    console.log('Producto aprobado:', productId)
+  } catch (error) {
+    console.error('Error approving product:', error)
+    throw new Error('Error al aprobar el producto')
+  }
 }
 
 /**
@@ -194,15 +243,46 @@ export const approveProduct = async (productId, approvedBy) => {
  * @param {string} reason - Razón del rechazo
  * @returns {Promise<void>}
  */
-export const rejectProduct = async (productId, rejectedBy, reason) => {
-  const productRef = doc(db, PRODUCTS_COLLECTION, productId)
-  await updateDoc(productRef, {
-    isPublished: false,
-    rejectedAt: new Date().toISOString(),
-    rejectedBy: rejectedBy,
-    rejectionReason: reason,
-    updatedAt: new Date().toISOString()
-  })
+export const rejectProduct = async (productId, reason, rejectedBy = null) => {
+  try {
+    const productRef = doc(db, PRODUCTS_COLLECTION, productId)
+    await updateDoc(productRef, {
+      isPublished: false,
+      status: 'rechazado',
+      rejectedAt: new Date().toISOString(),
+      rejectedBy: rejectedBy,
+      rejectionReason: reason,
+      updatedAt: new Date().toISOString()
+    })
+    console.log('Producto rechazado:', productId, 'Razón:', reason)
+  } catch (error) {
+    console.error('Error rejecting product:', error)
+    throw new Error('Error al rechazar el producto')
+  }
+}
+
+/**
+ * Obtiene productos de un comercio específico
+ * @param {string} comercioId - ID del comercio
+ * @returns {Promise<Array>} Lista de productos del comercio
+ */
+export const getProductsByComercio = async (comercioId) => {
+  try {
+    const q = query(
+      collection(db, PRODUCTS_COLLECTION),
+      where('comercioId', '==', comercioId),
+      where('isActive', '==', true)
+    )
+
+    const querySnapshot = await getDocs(q)
+    const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    
+    // Sort in JavaScript to avoid Firestore index requirements
+    return products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  } catch (error) {
+    console.error('Error fetching products by comercio:', error)
+    throw new Error('Error al obtener productos del comercio')
+  }
 }
 
 /**
@@ -212,7 +292,7 @@ export const rejectProduct = async (productId, rejectedBy, reason) => {
 export const getPendingProducts = async () => {
   const q = query(
     collection(db, PRODUCTS_COLLECTION),
-    where('isPublished', '==', false),
+    where('status', '==', 'pendiente'),
     where('isActive', '==', true)
   )
 
@@ -222,3 +302,96 @@ export const getPendingProducts = async () => {
   // Sort in JavaScript to avoid Firestore index requirements
   return products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 }
+
+/**
+ * Genera un SKU único para un producto
+ * @param {string} comercioId - ID del comercio
+ * @param {string} categoria - Categoría del producto
+ * @returns {Promise<string>} SKU generado
+ */
+export const generateSKU = async (comercioId, categoria) => {
+  // Si no hay categoría, usar 'general'
+  const categoriaFinal = categoria || 'general'
+  
+  try {
+    // Obtener todos los productos del comercio (sin filtros complejos para evitar índices)
+    const q = query(
+      collection(db, PRODUCTS_COLLECTION),
+      where('comercioId', '==', comercioId)
+    )
+    
+    const querySnapshot = await getDocs(q)
+    let lastNumber = '000'
+    
+    // Buscar el último SKU en JavaScript
+    querySnapshot.docs.forEach(doc => {
+      const product = doc.data()
+      if (product.sku && product.categoria === categoriaFinal) {
+        const skuParts = product.sku.split('-')
+        if (skuParts.length >= 3) {
+          const currentNumber = parseInt(skuParts[2])
+          if (currentNumber > parseInt(lastNumber)) {
+            lastNumber = skuParts[2]
+          }
+        }
+      }
+    })
+    
+    // Generar siguiente número
+    const nextNumber = (parseInt(lastNumber) + 1).toString().padStart(3, '0')
+    
+    // Crear prefijos
+    const comercioPrefix = comercioId.substring(0, 10).toUpperCase()
+    const categoryPrefix = categoriaFinal.substring(0, 3).toUpperCase()
+    
+    return `${comercioPrefix}-${categoryPrefix}-${nextNumber}`
+    
+  } catch (error) {
+    console.error('Error generating SKU:', error)
+    // Fallback: usar timestamp
+    const timestamp = Date.now().toString().slice(-6)
+    const comercioPrefix = comercioId.substring(0, 10).toUpperCase()
+    const categoryPrefix = categoriaFinal.substring(0, 3).toUpperCase()
+    return `${comercioPrefix}-${categoryPrefix}-${timestamp}`
+  }
+}
+
+/**
+ * Genera un SKU para una variante de producto
+ * @param {string} productSKU - SKU del producto principal
+ * @param {string} variantName - Nombre de la variante
+ * @returns {string} SKU de la variante
+ */
+export const generateVariantSKU = (productSKU, variantName) => {
+  // Tomar las primeras 3 letras del nombre de la variante
+  const variantPrefix = variantName.substring(0, 3).toUpperCase()
+  return `${productSKU}-${variantPrefix}`
+}
+
+
+/**
+ * Obtiene productos por estado
+ * @param {string} status - Estado del producto
+ * @returns {Promise<Array>} Lista de productos con el estado especificado
+ */
+export const getProductsByStatus = async (status) => {
+  try {
+    const q = query(
+      collection(db, PRODUCTS_COLLECTION),
+      where('status', '==', status),
+      where('isActive', '==', true)
+    )
+    
+    const querySnapshot = await getDocs(q)
+    const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    
+    // Sort in JavaScript to avoid Firestore index requirements
+    return products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  } catch (error) {
+    console.error(`Error fetching products by status ${status}:`, error)
+    throw new Error(`Error al cargar los productos con estado ${status}`)
+  }
+}
+
+
+

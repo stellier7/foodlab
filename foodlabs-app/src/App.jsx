@@ -25,6 +25,26 @@ const ProtectedRoute = ({ children }) => {
   return children
 }
 
+// Componente para rutas protegidas de admin
+const ProtectedAdminRoute = ({ children }) => {
+  const { user, isAuthenticated, isAdmin } = useAuthStore()
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" replace />
+  }
+  
+  if (!isAdmin()) {
+    // Si es comercio, redirigir a su panel
+    if (user?.role === 'business' && user?.comercioId) {
+      return <Navigate to={`/comercio/${user.comercioId}`} replace />
+    }
+    // Si es otro rol, redirigir al login
+    return <Navigate to="/admin/login" replace />
+  }
+  
+  return children
+}
+
 // Componente interno para manejar las rutas
 const AppContent = () => {
   const { detectCurrencyByLocation, manualLocation, hasAskedLocation, setManualLocation, setHasAskedLocation } = useAppStore()
@@ -77,24 +97,17 @@ const AppContent = () => {
           <Route path="/fitlab" element={<FitLabsPage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/sportsshop" element={<Navigate to="/shop" replace />} />
-          <Route path="/restaurant/:restaurantName" element={<RestaurantDetailPage />} />
+          <Route path="/tienda/:slug" element={<RestaurantDetailPage />} />
+          <Route path="/restaurante/:slug" element={<RestaurantDetailPage />} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                <AdminRouter />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
             path="/admin/*" 
             element={
-              <ProtectedRoute>
+              <ProtectedAdminRoute>
                 <AdminRouter />
-              </ProtectedRoute>
+              </ProtectedAdminRoute>
             } 
           />
           

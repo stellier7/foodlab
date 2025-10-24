@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Heart, MoreVertical, Star, Clock, Truck, Plus, User, Leaf, Sprout, Fish, Heart as FitIcon, X } from 'lucide-react'
 import { useAppStore } from '../stores/useAppStore'
+import { getComercioBySlug } from '../services/comercios'
 import ProductModal from '../components/ProductModal'
 
 // Label configuration
@@ -14,19 +15,22 @@ const LABEL_CONFIG = {
 
 const RestaurantDetailPage = () => {
   const { 
-    restaurants, 
+    restaurants,
+    tiendas,
     fetchProducts, 
     products, 
     productsLoading, 
-    productsError,
-    getProductsByBusiness 
+    productsError
   } = useAppStore()
-  const { restaurantName } = useParams()
+  const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('menu')
+  const [comercio, setComercio] = useState(null)
+  const [isLoadingComercio, setIsLoadingComercio] = useState(true)
+  const [comercioError, setComercioError] = useState(null)
 
   // Detectar si viene de FitLab con filtros
   const searchParams = new URLSearchParams(location.search)
@@ -35,21 +39,61 @@ const RestaurantDetailPage = () => {
   const filterLabels = filterLabelsParam ? filterLabelsParam.split(',') : []
   const isFitMode = filterMode === 'fit'
 
-  // Find restaurant by slug/name
-  const restaurant = restaurants.find(r => 
-    r.slug === restaurantName || 
-    r.name.toLowerCase().replace(/\s+/g, '-') === restaurantName
-  )
+  // Detectar tipo de comercio
+  const isRestaurant = comercio?.tipo === 'restaurante'
+  const isShop = comercio?.tipo === 'tienda'
+  
+  // Para compatibilidad con el código existente
+  const restaurant = comercio
+
+  // Detect business type from URL path
+  const businessType = location.pathname.includes('/tienda/') ? 'tienda' : 'restaurante'
+
+  // Cargar comercio directamente desde Firestore usando slug
+  useEffect(() => {
+    const loadComercio = async () => {
+      console.log('🔍 RestaurantDetailPage - Cargando comercio con slug:', slug, 'tipo:', businessType)
+      if (!slug) {
+        console.log('❌ No hay slug')
+        return
+      }
+      
+      try {
+        setIsLoadingComercio(true)
+        setComercioError(null)
+        
+        console.log('📡 Cargando comercio por slug...')
+        const comercioData = await getComercioBySlug(slug, businessType)
+        console.log('📄 Datos del comercio obtenidos:', comercioData)
+        
+        if (!comercioData) {
+          console.log('❌ Comercio no encontrado')
+          setComercioError('Comercio no encontrado')
+          return
+        }
+        
+        console.log('✅ Comercio cargado exitosamente')
+        setComercio(comercioData)
+      } catch (error) {
+        console.error('❌ Error loading comercio:', error)
+        setComercioError('Error al cargar el comercio: ' + error.message)
+      } finally {
+        setIsLoadingComercio(false)
+      }
+    }
+    
+    loadComercio()
+  }, [slug, businessType])
 
   // Cargar productos del restaurante desde Firestore
   useEffect(() => {
     if (restaurant) {
-      fetchProducts('restaurant', restaurant.id)
+      fetchProducts('comercio', restaurant.id)
     }
   }, [restaurant, fetchProducts])
 
   // Obtener productos de Firestore para este restaurante
-  const firestoreProducts = restaurant ? getProductsByBusiness(restaurant.id) : []
+  const firestoreProducts = products || []
   
   // Combinar productos de Firestore con productos hardcoded como fallback
   const combinedMenuCategories = useMemo(() => {
@@ -96,19 +140,9 @@ const RestaurantDetailPage = () => {
   
   // Función para quitar filtro
   const clearFitFilter = () => {
-    const slug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, '-')
-    navigate(`/restaurant/${slug}`)
+    navigate(`/comercio/${restaurant.id}`)
   }
 
-  useEffect(() => {
-    if (!restaurant) {
-      navigate('/')
-    }
-  }, [restaurant, navigate])
-
-  if (!restaurant) {
-    return <div>Restaurant not found</div>
-  }
 
   const openProductModal = (product) => {
     setSelectedProduct(product)
@@ -120,8 +154,59 @@ const RestaurantDetailPage = () => {
     setSelectedProduct(null)
   }
 
+
+  // Estado de carga del comercio
+  if (isLoadingComercio) {
+    return (
+      <div style={{ 
+        padding: '48px 16px', 
+        textAlign: 'center',
+        color: '#6b7280'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid #e5e7eb',
+          borderTop: '3px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 16px'
+        }}></div>
+        <p>Cargando comercio...</p>
+      </div>
+    )
+  }
+
+  // Error al cargar comercio
+  if (comercioError || !comercio) {
+    return (
+      <div style={{ 
+        padding: '48px 16px', 
+        textAlign: 'center',
+        color: '#6b7280'
+      }}>
+        <p>{comercioError || 'Comercio no encontrado'}</p>
+        <button
+          onClick={() => navigate('/shop')}
+          style={{
+            marginTop: '16px',
+            padding: '8px 16px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
+        >
+          Volver a Shop
+        </button>
+      </div>
+    )
+  }
+
+  // Función para obtener el banner de estado (solo se ejecuta si el comercio existe)
   const getStatusBanner = () => {
-    if (restaurant.isOpen) {
+    if (restaurant?.isOpen) {
       return {
         text: `Abre a las ${restaurant.openingTime} hs`,
         color: '#10b981',
@@ -139,7 +224,7 @@ const RestaurantDetailPage = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-      {/* Restaurant Header */}
+      {/* Restaurant Navigation */}
       <div style={{
         background: 'white',
         paddingTop: 'env(safe-area-inset-top)',
@@ -249,20 +334,22 @@ const RestaurantDetailPage = () => {
                   Leer opiniones
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Clock size={14} style={{ color: '#6b7280' }} />
-                  <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                    {restaurant.deliveryTime}
-                  </span>
+              {isRestaurant && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={14} style={{ color: '#6b7280' }} />
+                    <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                      {restaurant.deliveryTime || '30-40 min'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Truck size={14} style={{ color: '#6b7280' }} />
+                    <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                      {restaurant.deliveryFee === 0 ? 'Envío gratis' : `L ${restaurant.deliveryFee || '50'} envío`}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Truck size={14} style={{ color: '#6b7280' }} />
-                  <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                    {restaurant.deliveryFee === 0 ? 'Envío gratis' : `L ${restaurant.deliveryFee} envío`}
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -423,6 +510,42 @@ const RestaurantDetailPage = () => {
             >
               Reintentar
             </button>
+          </div>
+        )}
+        
+        {!productsLoading && !productsError && filteredMenuCategories?.length === 0 && (
+          <div style={{ 
+            textAlign: 'center',
+            padding: '48px 16px',
+            color: '#6b7280'
+          }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              backgroundColor: '#f3f4f6',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px'
+            }}>
+              <span style={{ fontSize: '32px' }}>📦</span>
+            </div>
+            <h3 style={{
+              fontSize: '18px',
+              fontWeight: '600',
+              color: '#111827',
+              marginBottom: '8px'
+            }}>
+              No hay productos disponibles
+            </h3>
+            <p style={{
+              fontSize: '14px',
+              color: '#6b7280',
+              marginBottom: '0'
+            }}>
+              Este comercio aún no tiene productos en su catálogo.
+            </p>
           </div>
         )}
         

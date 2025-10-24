@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useAppStore } from '../stores/useAppStore'
 import { useOrdersStore } from '../stores/useOrdersStore'
 import { useWalletStore } from '../stores/useWalletStore'
-import { processOrder } from '../services/payment'
+// import { processOrder } from '../services/payment' // Disabled for now
 import { PAYMENT_CONFIG } from '../config/payments'
 
 const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
@@ -55,14 +55,13 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   const calculateTotal = () => {
     const subtotal = total
     const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
-    const commission = subtotal * PAYMENT_CONFIG.commissions.default.orderFee
+    const commission = subtotal * PAYMENT_CONFIG.commissions.default.customerFee
     return subtotal + deliveryFee + commission
   }
   
-  // Check if user has sufficient balance
+  // Check if user has sufficient balance - DISABLED
   const hasSufficientBalance = () => {
-    if (!isAuthenticated) return true // Guests don't use wallet
-    return balance >= calculateTotal()
+    return true // Always allow checkout
   }
 
   // Validate form
@@ -75,10 +74,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       setError('La dirección es requerida para delivery')
       return false
     }
-    if (isAuthenticated && !hasSufficientBalance()) {
-      setError('Saldo insuficiente. Por favor recarga tu cuenta.')
-      return false
-    }
+    // Saldo validation disabled
     return true
   }
 
@@ -95,6 +91,22 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       const platformFee = total * 0.075 // 7.5% platform fee
       const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
       
+      // Agrupar items por comercio
+      const itemsByComercio = cartItems.reduce((acc, item) => {
+        const key = item.comercioId || 'general'
+        if (!acc[key]) {
+          acc[key] = {
+            comercioId: item.comercioId || 'general',
+            nombre: item.comercioName || 'Comercio',
+            subtotal: 0,
+            items: []
+          }
+        }
+        acc[key].items.push(item)
+        acc[key].subtotal += (item.precio_HNL || item.price || 0) * item.quantity
+        return acc
+      }, {})
+      
       const orderData = {
         customer: {
           name: formData.name,
@@ -102,8 +114,16 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           userId: null,
           isGuest: true
         },
-        items: cartItems,
-        business: { id: 'foodlab', name: 'FoodLab' },
+        items: cartItems.map(item => ({
+          id: item.id,
+          nombre: item.name,
+          precio_HNL: item.precio_HNL || item.price || 0,
+          quantity: item.quantity,
+          comercioId: item.comercioId,
+          comercioNombre: item.comercioName,
+          variante: item.selectedVariant || null
+        })),
+        comercios: Object.values(itemsByComercio),
         pricing: {
           subtotal: total,
           platformFee: platformFee,
@@ -112,10 +132,17 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           discount: 0,
           total: finalTotal
         },
-        status: 'pending',
+        status: 'pendiente',  // Siempre pendiente al crear
         notes: formData.notes,
         deliveryMethod: deliveryMethod,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        history: [{
+          action: 'created',
+          timestamp: new Date().toISOString(),
+          user: 'guest',
+          note: 'Orden creada por cliente'
+        }]
       }
       
       await addOrder(orderData)
@@ -145,7 +172,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     try {
       // Create order for authenticated user
       const finalTotal = calculateTotal()
-      const commission = total * PAYMENT_CONFIG.commissions.default.orderFee
+      const commission = total * PAYMENT_CONFIG.commissions.default.customerFee
       const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
       
       const orderData = {
@@ -174,11 +201,11 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
       // Add order to database
       const orderRef = await addOrder(orderData)
       
-      // Process payment with wallet
-      await processOrder(orderRef.id, user.uid, 'foodlab', finalTotal)
+      // Payment processing disabled - will be handled via WhatsApp transfer
+      // await processOrder(orderRef.id, user.uid, 'foodlab', finalTotal)
       
-      // Refresh wallet balance
-      await fetchBalance(user.uid)
+      // Refresh wallet balance (optional)
+      // await fetchBalance(user.uid)
       
       // Generate WhatsApp message with user's first name
       const firstName = user.firstName || formData.name.split(' ')[0]
@@ -248,46 +275,62 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
   const generateWhatsAppMessage = (customerName, items, subtotal, notes) => {
     const finalTotal = calculateTotal()
     const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
-    const commission = subtotal * PAYMENT_CONFIG.commissions.default.orderFee
+    const commission = subtotal * PAYMENT_CONFIG.commissions.default.customerFee
     
-    let message = `¡Hola! Soy ${customerName} y quiero hacer un pedido:\n\n`
+    // Agrupar items por comercio
+    const itemsByComercio = items.reduce((acc, item) => {
+      const key = item.comercioId || 'general'
+      if (!acc[key]) {
+        acc[key] = {
+          nombre: item.comercioName || 'Comercio',
+          items: []
+        }
+      }
+      acc[key].items.push(item)
+      return acc
+    }, {})
     
-    items.forEach(item => {
-      const itemPrice = getPriceForCurrency(item)
-      let itemName = item.name
+    let message = `🛍️ *NUEVO PEDIDO - FoodLabs*\n\n`
+    message += `👤 *Cliente:* ${customerName}\n`
+    message += `📍 *Dirección:* ${formData.address}\n\n`
+    
+    // Por cada comercio
+    Object.entries(itemsByComercio).forEach(([comercioId, data]) => {
+      message += `\n🏪 *${data.nombre}*\n`
+      message += `━━━━━━━━━━━━━━━━\n`
       
-      // Add variant info if available
-      if (item.selectedVariant) {
-        // Find variant name from the product data
-        const variantInfo = item.selectedVariant === 'black' ? 'Negro' : 
-                           item.selectedVariant === 'bicolor' ? 'Bi-Color' : 
-                           item.selectedVariant
-        itemName += ` (${variantInfo})`
-      }
+      data.items.forEach(item => {
+        const itemPrice = item.precio_HNL || item.price || 0
+        let itemName = item.name
+        
+        // Add variant info if available
+        if (item.selectedVariant) {
+          const variantInfo = item.selectedVariant === 'black' ? 'Negro' : 
+                             item.selectedVariant === 'bicolor' ? 'Bi-Color' : 
+                             item.selectedVariant
+          itemName += ` (${variantInfo})`
+        }
+        
+        message += `• ${item.quantity}x ${itemName}\n`
+        message += `  L ${itemPrice.toFixed(2)} c/u = L ${(itemPrice * item.quantity).toFixed(2)}\n`
+      })
       
-      // Add size info if available
-      if (item.selectedSize) {
-        itemName += ` - Talla ${item.selectedSize}`
-      }
-      
-      message += `• ${itemName} x${item.quantity} - L${(itemPrice * item.quantity).toFixed(2)}\n`
+      const subtotal = data.items.reduce((sum, item) => 
+        sum + ((item.precio_HNL || item.price || 0) * item.quantity), 0
+      )
+      message += `\n*Subtotal ${data.nombre}:* L ${subtotal.toFixed(2)}\n`
     })
     
-    message += `\n💰 Subtotal: L${subtotal.toFixed(2)}`
-    message += `\n🏢 FoodLab: L${commission.toFixed(2)} ${PAYMENT_CONFIG.ui.showTaxDisclaimer ? PAYMENT_CONFIG.ui.taxDisclaimerText : ''}`
-    
-    if (deliveryMethod === 'delivery') {
-      message += `\n🚗 Delivery: L${deliveryFee.toFixed(2)}`
-      message += `\n📍 Dirección: ${formData.address}`
-    } else {
-      message += `\n🏪 Take Out (recoger en tienda)`
-    }
-    
-    message += `\n\n💵 Total: L${finalTotal.toFixed(2)}`
+    message += `\n━━━━━━━━━━━━━━━━\n`
+    message += `💰 *TOTAL:* L ${finalTotal.toFixed(2)}\n`
     
     if (notes) {
-      message += `\n\n📝 Notas: ${notes}`
+      message += `\n📝 *Notas:* ${notes}\n`
     }
+    
+    message += `\n⏳ *Estado:* Pendiente de confirmación\n`
+    message += `\n💳 *Método de pago:* Transferencia bancaria\n`
+    message += `\n_Confirmar con cliente y restaurante antes de procesar_`
     
     return message
   }
@@ -608,11 +651,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                   <p className="text-green-900 text-sm font-bold" style={{ margin: 0 }}>
                     Saldo: L{balance.toFixed(2)}
                   </p>
-                  {!hasSufficientBalance() && (
-                    <p className="text-red-600 text-xs" style={{ fontWeight: '500', margin: '2px 0 0 0' }}>
-                      Saldo insuficiente
-                    </p>
-                  )}
+                  {/* Saldo validation disabled */}
                 </div>
               </div>
             </div>
@@ -842,12 +881,12 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
               </div>
               
               {/* Subtotal, Commission, and Delivery Fee */}
-              <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '10px', marginBottom: '10px' }}>
+              <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginBottom: '12px' }}>
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center',
-                  marginBottom: '6px' 
+                  marginBottom: '8px' 
                 }}>
                   <span style={{ fontWeight: '500', color: '#6b7280', fontSize: '14px' }}>Subtotal</span>
                   <span style={{ 
@@ -864,10 +903,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center',
-                  marginBottom: '6px' 
+                  marginBottom: '8px' 
                 }}>
                   <span style={{ fontWeight: '500', color: '#6b7280', fontSize: '14px' }}>
-                    FoodLab {(total * PAYMENT_CONFIG.commissions.default.orderFee).toFixed(2)} {PAYMENT_CONFIG.ui.showTaxDisclaimer ? PAYMENT_CONFIG.ui.taxDisclaimerText : ''}
+                    Comisión (15%)
                   </span>
                   <span style={{ 
                     fontWeight: '600', 
@@ -876,7 +915,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                     textAlign: 'right',
                     minWidth: '80px'
                   }}>
-                    L{(total * PAYMENT_CONFIG.commissions.default.orderFee).toFixed(2)}
+                    L{(total * PAYMENT_CONFIG.commissions.default.customerFee).toFixed(2)}
                   </span>
                 </div>
                 {deliveryMethod === 'delivery' && (
@@ -884,7 +923,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                     display: 'flex', 
                     justifyContent: 'space-between', 
                     alignItems: 'center',
-                    marginBottom: '6px' 
+                    marginBottom: '8px' 
                   }}>
                     <span style={{ fontWeight: '500', color: '#6b7280', fontSize: '14px' }}>Entrega a domicilio</span>
                     <span style={{ 
@@ -906,15 +945,19 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  paddingTop: '10px',
-                  borderTop: '2px solid #e5e7eb'
+                  paddingTop: '12px',
+                  borderTop: '2px solid #e5e7eb',
+                  background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.05) 0%, rgba(234, 88, 12, 0.02) 100%)',
+                  margin: '0 -16px',
+                  padding: '12px 16px',
+                  borderRadius: '0 0 12px 12px'
                 }}
               >
-                <span style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Total</span>
+                <span style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>Total</span>
                 <span 
                   style={{ 
-                    fontSize: '20px',
-                    fontWeight: '700',
+                    fontSize: '22px',
+                    fontWeight: '800',
                     color: '#f97316',
                     textAlign: 'right',
                     minWidth: '100px'

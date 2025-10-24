@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useOrdersStore } from '../stores/useOrdersStore'
+import { getProductStats, getPendingProducts } from '../services/products'
 import StatsCards, { QuickStats, OrderStatusStats } from '../components/admin/StatsCards'
 import StatusBadge, { StatusSummary } from '../components/admin/StatusBadge'
 import { 
@@ -37,6 +38,9 @@ const AdminPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPeriod, setSelectedPeriod] = useState('today')
   const [showNotifications, setShowNotifications] = useState(false)
+  const [productStats, setProductStats] = useState({ pending: 0, approved: 0, rejected: 0, total: 0 })
+  const [pendingProducts, setPendingProducts] = useState([])
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
 
   // Verificar autenticación
   useEffect(() => {
@@ -56,6 +60,27 @@ const AdminPage = () => {
   useEffect(() => {
     calculateStats()
   }, [calculateStats])
+
+  // Cargar estadísticas de productos
+  useEffect(() => {
+    const loadProductStats = async () => {
+      try {
+        setIsLoadingProducts(true)
+        const [stats, pending] = await Promise.all([
+          getProductStats(),
+          getPendingProducts()
+        ])
+        setProductStats(stats)
+        setPendingProducts(pending.slice(0, 5)) // Solo los primeros 5
+      } catch (error) {
+        console.error('Error loading product stats:', error)
+      } finally {
+        setIsLoadingProducts(false)
+      }
+    }
+
+    loadProductStats()
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -86,6 +111,9 @@ const AdminPage = () => {
         break
       case 'customers':
         navigate('/admin/analytics')
+        break
+      case 'pending-products':
+        navigate('/admin/products')
         break
       default:
         break
@@ -327,6 +355,155 @@ const AdminPage = () => {
         {/* Stats Cards */}
         <StatsCards period={selectedPeriod} onCardClick={handleCardClick} />
 
+        {/* Pending Products Card */}
+        <div style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '20px'
+          }}>
+            <div>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '700',
+                color: '#111827',
+                margin: '0 0 4px 0'
+              }}>
+                Productos Pendientes
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: '#6b7280',
+                margin: 0
+              }}>
+                {productStats.pending} productos esperando aprobación
+              </p>
+            </div>
+            <button
+              onClick={() => handleCardClick('pending-products')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                backgroundColor: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Eye size={16} />
+              Ver Todos
+            </button>
+          </div>
+
+          {isLoadingProducts ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                border: '3px solid #e5e7eb',
+                borderTop: '3px solid #3b82f6',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto'
+              }}></div>
+            </div>
+          ) : pendingProducts.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+              <p style={{ margin: 0 }}>No hay productos pendientes</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {pendingProducts.map((product) => (
+                <div
+                  key={product.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px',
+                    backgroundColor: '#fef3c7',
+                    borderRadius: '8px',
+                    border: '1px solid #fbbf24'
+                  }}
+                >
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '6px',
+                    overflow: 'hidden',
+                    backgroundColor: '#f3f4f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    {product.imagenes && product.imagenes.length > 0 ? (
+                      <img
+                        src={product.imagenes[0]}
+                        alt={product.nombre}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <span style={{ color: '#9ca3af', fontSize: '16px' }}>📦</span>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#111827',
+                      margin: '0 0 2px 0',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {product.nombre}
+                    </h4>
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      margin: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {product.categoria} • L {product.precio_HNL?.toFixed(2) || '0.00'}
+                    </p>
+                  </div>
+                  <span style={{
+                    padding: '4px 8px',
+                    backgroundColor: '#f59e0b',
+                    color: 'white',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: '500'
+                  }}>
+                    Pendiente
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Period Selector */}
         <div style={{
           display: 'flex',
@@ -560,6 +737,14 @@ const AdminPage = () => {
           </div>
         </div>
       </main>
+      
+      {/* CSS for animations */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

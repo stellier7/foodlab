@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { uploadImage, validateImageFile, generateProductImagePath } from '../../services/storage'
+import { uploadProductImage } from '../../services/storage'
 import { X, Upload, Image as ImageIcon, AlertCircle, ZoomIn, Move } from 'lucide-react'
 
 const ImageUploader = ({ 
   onImageUploaded, 
   currentImage = null, 
+  comercioId = null,
   productId = null, 
   variantId = null,
   type = 'main',
@@ -26,9 +27,13 @@ const ImageUploader = ({
     if (!file) return
 
     // Validar archivo
-    const validation = validateImageFile(file)
-    if (!validation.valid) {
-      setError(validation.error)
+    if (!file.type.startsWith('image/')) {
+      setError('El archivo debe ser una imagen')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+      setError('La imagen es demasiado grande. Máximo 10MB')
       return
     }
 
@@ -40,20 +45,23 @@ const ImageUploader = ({
       const previewUrl = URL.createObjectURL(file)
       setPreview(previewUrl)
 
-      // Generar path único
-      const imagePath = productId 
-        ? generateProductImagePath(productId, type, variantId)
-        : `temp/${Date.now()}_${file.name}`
+      // Si no hay comercioId, solo mostrar preview (para comercios nuevos)
+      if (!comercioId) {
+        console.log('No hay comercioId, solo mostrando preview')
+        // Llamar callback con la preview URL para que ComercioModal pueda usarla
+        onImageUploaded(previewUrl)
+        return
+      }
 
-      // Subir imagen
-      const imageUrl = await uploadImage(file, imagePath)
+      // Subir imagen usando el nuevo servicio
+      const imageUrl = await uploadProductImage(file, comercioId, productId, variantId)
       
       // Llamar callback con la URL
       onImageUploaded(imageUrl)
       
     } catch (error) {
       console.error('Error uploading image:', error)
-      setError('Error al subir la imagen. Intenta de nuevo.')
+      setError(error.message || 'Error al subir la imagen. Intenta de nuevo.')
       setPreview(null)
     } finally {
       setIsUploading(false)
@@ -331,7 +339,8 @@ const ImageUploader = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp"
+        accept="image/*"
+        capture="environment"
         onChange={handleFileSelect}
         style={{ display: 'none' }}
         disabled={isUploading}
@@ -355,7 +364,7 @@ const ImageUploader = ({
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }

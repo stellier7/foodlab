@@ -10,8 +10,7 @@ const RestaurantList = ({ filteredRestaurants }) => {
   const restaurants = filteredRestaurants || storeRestaurants
 
   const handleRestaurantClick = (restaurant) => {
-    const slug = restaurant.slug || restaurant.name.toLowerCase().replace(/\s+/g, '-')
-    navigate(`/restaurant/${slug}`)
+    navigate(`/restaurante/${restaurant.slug}`, { state: { from: 'foodlabs' } })
   }
 
   if (isLoading) {

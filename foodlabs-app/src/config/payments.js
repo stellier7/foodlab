@@ -1,7 +1,8 @@
 export const PAYMENT_CONFIG = {
   commissions: {
     default: {
-      orderFee: 0.12,    // 12% comisión al pedido
+      orderFee: 0.12,    // 12% comisión al pedido (para deducir a comercios)
+      customerFee: 0.15, // 15% fee que ve el cliente
       payoutFee: 0.15    // 15% comisión al payout
     },
     byRestaurant: {

@@ -1,30 +1,133 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useAppStore } from '../stores/useAppStore'
+import { getActiveComercios } from '../services/comercios'
+import { getProductsByComercio } from '../services/products'
 import RestaurantList from '../components/RestaurantList'
-import { MapPin, Star } from 'lucide-react'
+import DietaryLabels from '../components/DietaryLabels'
+import { MapPin, Star, Package, Utensils } from 'lucide-react'
 
 const FoodLabsPage = () => {
-  const { setLoading, setRestaurants, restaurants, location } = useAppStore()
+  const { 
+    setLoading, 
+    location, 
+    isLoading,
+    error
+  } = useAppStore()
 
-  // Helper para procesar productos - SIN CONVERSIONES USD
-  const processProducts = (menuCategories) => {
-    return menuCategories.map(category => ({
-      ...category,
-      items: category.items.map(item => {
-        // Los precios ya están en Lempiras, solo agregar metadata
-        const precioHNL = item.precio_HNL || item.basePrice || item.price
+  const [restaurantes, setRestaurantes] = useState([])
+  const [isLoadingRestaurants, setIsLoadingRestaurants] = useState(true)
+  const [restaurantsError, setRestaurantsError] = useState(null)
+
+  // Cargar restaurantes activos
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      try {
+        setIsLoadingRestaurants(true)
+        setRestaurantsError(null)
         
-        return {
-          ...item,
-          precio_HNL: precioHNL,  // Precio en Lempiras (no conversión)
-          price: precioHNL,        // Usar el mismo valor (ya está en HNL)
-          currency: 'HNL'          // Metadata de moneda
-        }
-      })
-    }))
-  }
+        // Obtener solo restaurantes activos
+        const comercios = await getActiveComercios('restaurante')
+        console.log(`🏪 Comercios activos encontrados:`, comercios.length)
+        console.log(`📋 Lista de comercios:`, comercios.map(c => ({ id: c.id, nombre: c.nombre, tipo: c.tipo, estado: c.estado })))
+        
+        // Obtener productos para cada restaurante
+        const restaurantesConProductos = await Promise.all(
+          comercios.map(async (comercio) => {
+            try {
+              console.log(`🔄 Cargando productos para ${comercio.nombre}...`)
+              const productos = await getProductsByComercio(comercio.id)
+              console.log(`📦 Productos encontrados para ${comercio.nombre}:`, productos.length)
+              
+              // Solo productos aprobados y publicados
+              const productosAprobados = productos.filter(p => {
+                const isApproved = p.status === 'aprobado' && p.isPublished
+                console.log(`🔍 Producto ${p.nombre}: status=${p.status}, isPublished=${p.isPublished}, aprobado=${isApproved}`)
+                return isApproved
+              })
+              
+              console.log(`✅ Productos aprobados para ${comercio.nombre}:`, productosAprobados.length)
+              
+              // Mapear comercio a la estructura esperada por RestaurantList
+              const restauranteData = {
+                id: comercio.id,
+                name: comercio.nombre,
+                slug: comercio.id,
+                image: comercio.imagenes?.[0] || '/images/placeholder-restaurant.jpg',
+                category: comercio.categoria || 'Restaurante',
+                rating: comercio.rating || 4.5,
+                deliveryTime: comercio.tiempoEntrega || '30-45 min',
+                deliveryFee: comercio.costoEnvio || 0,
+                isPrime: comercio.isPrime || false,
+                menuCategories: [
+                  {
+                    name: 'Menú Principal',
+                    items: productosAprobados.map(producto => ({
+                      id: producto.id,
+                      name: producto.nombre,
+                      description: producto.descripcion,
+                      price: producto.precio_HNL || producto.precio,
+                      precio_HNL: producto.precio_HNL || producto.precio,
+                      currency: producto.moneda || 'HNL',
+                      image: producto.imagenes?.[0] || null,
+                      dietaryLabels: producto.etiquetasDietarias || [],
+                      category: producto.categoria,
+                      isAvailable: producto.estaActivo,
+                      stock: producto.stock
+                    }))
+                  }
+                ],
+                productCount: productosAprobados.length,
+                allProducts: productosAprobados
+              }
+              
+              console.log(`🏪 Datos finales para ${comercio.nombre}:`, {
+                id: restauranteData.id,
+                name: restauranteData.name,
+                productCount: restauranteData.productCount,
+                menuItems: restauranteData.menuCategories[0]?.items.length || 0
+              })
+              
+              return restauranteData
+            } catch (error) {
+              console.error(`❌ Error loading products for ${comercio.nombre}:`, error)
+              return {
+                id: comercio.id,
+                name: comercio.nombre,
+                slug: comercio.id,
+                image: comercio.imagenes?.[0] || '/images/placeholder-restaurant.jpg',
+                category: comercio.categoria || 'Restaurante',
+                rating: comercio.rating || 4.5,
+                deliveryTime: comercio.tiempoEntrega || '30-45 min',
+                deliveryFee: comercio.costoEnvio || 0,
+                isPrime: comercio.isPrime || false,
+                menuCategories: [],
+                productCount: 0,
+                allProducts: []
+              }
+            }
+          })
+        )
+        
+        console.log(`🎯 Restaurantes finales con productos:`, restaurantesConProductos.length)
+        console.log(`📊 Datos finales:`, restaurantesConProductos.map(r => ({ 
+          name: r.name, 
+          productCount: r.productCount,
+          menuItems: r.menuCategories[0]?.items.length || 0 
+        })))
+        
+        setRestaurantes(restaurantesConProductos)
+      } catch (error) {
+        console.error('Error loading restaurants:', error)
+        setRestaurantsError('Error al cargar los restaurantes')
+      } finally {
+        setIsLoadingRestaurants(false)
+      }
+    }
 
-  // Datos de ejemplo para desarrollo
+    loadRestaurants()
+  }, [])
+
+  // Datos de ejemplo para desarrollo (backup)
   const mockRestaurants = [
     {
       id: 'foodlab-tgu',
@@ -368,39 +471,67 @@ const FoodLabsPage = () => {
     }
   ]
 
-  useEffect(() => {
-    // Simular carga de datos
-    setLoading(true)
-    setTimeout(() => {
-      // Procesar restaurantes para agregar precios con override
-      const processedRestaurants = mockRestaurants.map(restaurant => ({
-        ...restaurant,
-        menuCategories: restaurant.menuCategories ? processProducts(restaurant.menuCategories) : []
-      }))
-      setRestaurants(processedRestaurants)
-      setLoading(false)
-    }, 1000)
-  }, [setLoading, setRestaurants])
 
   // Filtrar restaurantes por ciudad si hay ubicación seleccionada
   const filteredRestaurants = useMemo(() => {
-    if (!restaurants || restaurants.length === 0) {
+    if (!restaurantes || restaurantes.length === 0) {
       return []
     }
     
-    // Filtrar solo restaurantes (no tiendas de Shop)
-    let foodRestaurants = restaurants.filter(r => 
-      r.type === 'restaurant' || !r.type  // Compatibilidad: si no tiene type, asume restaurant
-    )
-    
     // Si no hay ubicación, mostrar todos los restaurantes
-    if (!location || !location.cityName) {
-      return foodRestaurants
+    if (!location || !location.city) {
+      return restaurantes
     }
     
-    // Filtrar por ciudad
-    return foodRestaurants.filter(r => r.city === location.cityName)
-  }, [restaurants, location])
+    // Filtrar por ciudad usando el nuevo sistema de ubicación
+    const filtered = restaurantes.filter(restaurant => {
+      const comercioLocation = restaurant.location
+      if (!comercioLocation || !comercioLocation.city) {
+        return false // No mostrar comercios sin ubicación
+      }
+      
+      // Comparar por código de ciudad (ej: 'TGU', 'SPS')
+      return comercioLocation.city === location.city
+    })
+    
+    console.log(`🔍 Filtrado por ciudad ${location.city}:`, filtered.length, 'de', restaurantes.length)
+    return filtered
+  }, [restaurantes, location])
+
+  if (isLoadingRestaurants) {
+    return (
+      <main style={{ paddingBottom: '80px' }}>
+        <div style={{ padding: '40px', textAlign: 'center' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid #e5e7eb',
+            borderTop: '3px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p style={{ color: '#6b7280' }}>Cargando restaurantes...</p>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </main>
+    )
+  }
+
+  if (restaurantsError) {
+    return (
+      <main style={{ paddingBottom: '80px' }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>
+          <p>Error al cargar los restaurantes: {restaurantsError}</p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main style={{ paddingBottom: '80px' }}>

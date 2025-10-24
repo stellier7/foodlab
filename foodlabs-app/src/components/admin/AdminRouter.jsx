@@ -1,8 +1,11 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import AdminPage from '../../pages/AdminPage'
 import AdminProductsPage from '../../pages/admin/AdminProductsPage'
+import AdminComerciosPage from '../../pages/admin/AdminComerciosPage'
+import AdminComercioProductsPage from '../../pages/admin/AdminComercioProductsPage'
+import AdminUsersPage from '../../pages/admin/AdminUsersPage'
 import { 
   Home, 
   Package, 
@@ -11,16 +14,28 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Building2,
+  Users
 } from 'lucide-react'
 
 const AdminRouter = () => {
   const location = useLocation()
-  const { user, logout } = useAuthStore()
+  const navigate = useNavigate()
+  const { user, logout, isAdmin } = useAuthStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  // Verificar que el usuario sea admin
+  useEffect(() => {
+    if (!isAdmin()) {
+      navigate('/admin/login', { replace: true })
+    }
+  }, [isAdmin, navigate])
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
+    { name: 'Usuarios', href: '/admin/users', icon: Users },
+    { name: 'Comercios', href: '/admin/comercios', icon: Building2 },
     { name: 'Productos', href: '/admin/products', icon: Package },
     { name: 'Pedidos', href: '/admin/orders', icon: ShoppingBag },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
@@ -270,6 +285,9 @@ const AdminRouter = () => {
         <div style={{ padding: '24px' }}>
           <Routes>
             <Route path="/" element={<AdminPage />} />
+            <Route path="/users" element={<AdminUsersPage />} />
+            <Route path="/comercios" element={<AdminComerciosPage />} />
+            <Route path="/comercios/:id/productos" element={<AdminComercioProductsPage />} />
             <Route path="/products" element={<AdminProductsPage />} />
             <Route path="/orders" element={<div style={{ padding: '40px', textAlign: 'center' }}>Orders Page (Coming Soon)</div>} />
             <Route path="/analytics" element={<div style={{ padding: '40px', textAlign: 'center' }}>Analytics Page (Coming Soon)</div>} />

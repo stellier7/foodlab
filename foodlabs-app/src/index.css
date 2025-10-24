@@ -524,3 +524,36 @@ html {
 *:not(.fade-in):not(.slide-in-bottom):not(.slide-in-right):not(.fade-in-scale) {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
 }
+
+/* ============================================
+   COMERCIO COMPONENTS CSS
+   ============================================ */
+
+/* Mobile overlay for comercio router */
+@media (min-width: 768px) {
+  .mobile-overlay {
+    display: none !important;
+  }
+}
+
+/* Comercio sidebar responsive */
+@media (min-width: 768px) {
+  .comercio-sidebar {
+    transform: translateX(0) !important;
+    position: fixed !important;
+  }
+  
+  .comercio-main-content {
+    margin-left: 280px !important;
+  }
+  
+  .mobile-menu-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+}

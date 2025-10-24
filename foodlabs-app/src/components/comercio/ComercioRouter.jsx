@@ -20,6 +20,7 @@ import ComercioProductsPage from '../../pages/comercio/ComercioProductsPage'
 import ComercioOrdersPage from '../../pages/comercio/ComercioOrdersPage'
 import ComercioFinancesPage from '../../pages/comercio/ComercioFinancesPage'
 import ComercioProfilePage from '../../pages/comercio/ComercioProfilePage'
+import ComercioChangePasswordPage from '../../pages/comercio/ComercioChangePasswordPage'
 
 const ComercioRouter = () => {
   const { businessId } = useParams()
@@ -43,28 +44,28 @@ const ComercioRouter = () => {
       label: 'Productos',
       icon: Package,
       path: `/comercio/${businessId}/productos`,
-      color: '#f97316'
+      color: '#3b82f6'
     },
     {
       id: 'pedidos',
       label: 'Pedidos',
       icon: ShoppingCart,
       path: `/comercio/${businessId}/pedidos`,
-      color: '#10b981'
+      color: '#3b82f6'
     },
     {
       id: 'finanzas',
       label: 'Finanzas',
       icon: TrendingUp,
       path: `/comercio/${businessId}/finanzas`,
-      color: '#8b5cf6'
+      color: '#3b82f6'
     },
     {
       id: 'perfil',
       label: 'Perfil',
       icon: Settings,
       path: `/comercio/${businessId}/perfil`,
-      color: '#6b7280'
+      color: '#3b82f6'
     }
   ]
 
@@ -118,36 +119,32 @@ const ComercioRouter = () => {
             right: 0,
             bottom: 0,
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 5,
-            '@media (min-width: 768px)': {
-              display: 'none'
-            }
+            zIndex: 5
           }}
+          className="mobile-overlay"
         />
       )}
       
       {/* Sidebar */}
-      <div style={{
-        width: '280px',
-        backgroundColor: 'white',
-        borderRight: '1px solid #e2e8f0',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        height: '100vh',
-        zIndex: 10,
-        transform: isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform 0.3s ease',
-        '@media (min-width: 768px)': {
-          transform: 'translateX(0)',
-          position: 'fixed'
-        }
-      }}>
+      <div 
+        className="comercio-sidebar"
+        style={{
+          width: '280px',
+          backgroundColor: 'white',
+          borderRight: '1px solid #e2e8f0',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'fixed',
+          height: '100vh',
+          zIndex: 10,
+          transform: isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s ease'
+        }}>
         {/* Header */}
         <div style={{
           padding: '24px',
           borderBottom: '1px solid #e2e8f0',
-          background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)'
+          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <div style={{
@@ -293,16 +290,15 @@ const ComercioRouter = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{
-        flex: 1,
-        marginLeft: '0',
-        display: 'flex',
-        flexDirection: 'column',
-        '@media (min-width: 768px)': {
-          marginLeft: '280px'
-        }
-      }}>
+        {/* Main Content */}
+      <div 
+        className="comercio-main-content"
+        style={{
+          flex: 1,
+          marginLeft: '0',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
         {/* Top Bar */}
         <div style={{
           height: '64px',
@@ -320,7 +316,7 @@ const ComercioRouter = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="tap-effect"
+              className="tap-effect mobile-menu-btn"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -330,10 +326,7 @@ const ComercioRouter = () => {
                 borderRadius: '8px',
                 border: '1px solid #e2e8f0',
                 background: 'white',
-                cursor: 'pointer',
-                '@media (min-width: 768px)': {
-                  display: 'none'
-                }
+                cursor: 'pointer'
               }}
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -399,6 +392,7 @@ const ComercioRouter = () => {
             <Route path="/pedidos" element={<ComercioOrdersPage />} />
             <Route path="/finanzas" element={<ComercioFinancesPage />} />
             <Route path="/perfil" element={<ComercioProfilePage />} />
+            <Route path="/change-password" element={<ComercioChangePasswordPage />} />
           </Routes>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { inventoryService } from '../services/firestore'
 import { useAuthStore } from './useAuthStore'
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../services/products'
+import { getComercios, createComercio, updateComercio, deleteComercio } from '../services/comercios'
 
 // ========================================
 // CONFIGURACIÓN GLOBAL - Sistema de Ubicaciones
@@ -55,10 +56,14 @@ const EXCHANGE_RATES = {
 export const useAppStore = create(
   persist(
     (set, get) => ({
+      // Constantes del sistema
+      LOCATIONS,
+      
       // Estado de restaurantes
-      restaurants: [],
-      selectedRestaurant: null,
-      shopBusinesses: [],  // Tiendas que aparecen en Shop
+      comercios: [],
+      selectedComercio: null,
+      restaurantes: [],  // Comercios tipo restaurante
+      tiendas: [],       // Comercios tipo tienda
       
       // Estado del carrito
       cart: [],
@@ -97,28 +102,29 @@ export const useAppStore = create(
       productsLoading: false,
       productsError: null,
       
-      // Acciones para restaurantes
-      setRestaurants: (restaurants) => set({ restaurants }),
-      setSelectedRestaurant: (restaurant) => set({ selectedRestaurant: restaurant }),
-      setShopBusinesses: (shopBusinesses) => set({ shopBusinesses }),
+      // Acciones para comercios
+      setComercios: (comercios) => set({ comercios }),
+      setSelectedComercio: (comercio) => set({ selectedComercio: comercio }),
+      setRestaurantes: (restaurantes) => set({ restaurantes }),
+      setTiendas: (tiendas) => set({ tiendas }),
       
       // Acciones para el carrito
-      addToCart: (item, restaurantId) => {
+      addToCart: (item, comercioId) => {
         const cart = get().cart
-        const restaurants = get().restaurants
-        const restaurant = restaurants.find(r => r.id === restaurantId)
+        const comercios = get().comercios
+        const comercio = comercios.find(c => c.id === comercioId)
         
         // Crear una clave única para las variantes del producto
         const variantKey = `${item.id}-${item.selectedSize || 'default'}-${item.withCombo || false}`
         
         const existingItem = cart.find(
-          cartItem => cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId
+          cartItem => cartItem.variantKey === variantKey && cartItem.comercioId === comercioId
         )
         
         if (existingItem) {
           set({
             cart: cart.map(cartItem =>
-              cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId
+              cartItem.variantKey === variantKey && cartItem.comercioId === comercioId
                 ? { ...cartItem, quantity: cartItem.quantity + 1 }
                 : cartItem
             )
@@ -129,8 +135,8 @@ export const useAppStore = create(
               ...item,
               variantKey,
               quantity: 1, 
-              restaurantId,
-              restaurantName: restaurant?.name || 'Restaurante'
+              comercioId,
+              comercioName: comercio?.nombre || 'Comercio'
             }]
           })
         }
@@ -138,16 +144,16 @@ export const useAppStore = create(
         get().calculateCartTotal()
       },
       
-      removeFromCart: (variantKey, restaurantId) => {
+      removeFromCart: (variantKey, comercioId) => {
         const cart = get().cart
         const existingItem = cart.find(
-          cartItem => cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId
+          cartItem => cartItem.variantKey === variantKey && cartItem.comercioId === comercioId
         )
         
         if (existingItem && existingItem.quantity > 1) {
           set({
             cart: cart.map(cartItem =>
-              cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId
+              cartItem.variantKey === variantKey && cartItem.comercioId === comercioId
                 ? { ...cartItem, quantity: cartItem.quantity - 1 }
                 : cartItem
             )
@@ -155,7 +161,7 @@ export const useAppStore = create(
         } else {
           set({
             cart: cart.filter(
-              cartItem => !(cartItem.variantKey === variantKey && cartItem.restaurantId === restaurantId)
+              cartItem => !(cartItem.variantKey === variantKey && cartItem.comercioId === comercioId)
             )
           })
         }
@@ -457,7 +463,7 @@ export const useAppStore = create(
       
       // Función para calcular fees
       calculateFees: (subtotal) => {
-        const platformFee = subtotal * 0.075 // 7.5% fee de plataforma
+        const platformFee = subtotal * 0.15 // 15% fee de plataforma
         const serviceFee = 0 // Removido
         const deliveryFee = 0 // Por ahora 0
         const totalFees = platformFee + serviceFee + deliveryFee
@@ -529,19 +535,83 @@ export const useAppStore = create(
         }
       },
       
-      getProductsByBusiness: (businessId) => {
+      getProductsByComercio: (comercioId) => {
         const products = get().products
-        return products.filter(product => product.businessId === businessId)
+        return products.filter(product => product.comercioId === comercioId)
       },
       
-      getShopProducts: () => {
+      getTiendaProducts: () => {
         const products = get().products
-        return products.filter(product => product.businessType === 'shop' && product.isActive)
+        return products.filter(product => product.comercioId && product.isActive)
       },
       
-      getRestaurantProducts: () => {
+      getRestauranteProducts: () => {
         const products = get().products
-        return products.filter(product => product.businessType === 'restaurant' && product.isActive)
+        return products.filter(product => product.comercioId && product.isActive)
+      },
+
+      // Funciones para comercios
+      fetchComercios: async () => {
+        set({ isLoading: true, error: null })
+        try {
+          const comerciosData = await getComercios()
+          const restaurantes = comerciosData.filter(c => c.tipo === 'restaurante' && c.estado === 'activo')
+          const tiendas = comerciosData.filter(c => c.tipo === 'tienda' && c.estado === 'activo')
+          
+          set({ 
+            comercios: comerciosData,
+            restaurantes,
+            tiendas,
+            isLoading: false,
+            error: null
+          })
+        } catch (error) {
+          console.error('Error fetching comercios:', error)
+          set({ error: error.message, isLoading: false })
+        }
+      },
+
+      createComercio: async (comercioData) => {
+        set({ isLoading: true, error: null })
+        try {
+          const comercioId = await createComercio(comercioData)
+          // Refresh comercios list
+          await get().fetchComercios()
+          set({ isLoading: false, error: null })
+          return comercioId
+        } catch (error) {
+          console.error('Error creating comercio:', error)
+          set({ error: error.message, isLoading: false })
+          throw error
+        }
+      },
+
+      updateComercio: async (comercioId, updateData) => {
+        set({ isLoading: true, error: null })
+        try {
+          await updateComercio(comercioId, updateData)
+          // Refresh comercios list
+          await get().fetchComercios()
+          set({ isLoading: false, error: null })
+        } catch (error) {
+          console.error('Error updating comercio:', error)
+          set({ error: error.message, isLoading: false })
+          throw error
+        }
+      },
+
+      deleteComercio: async (comercioId) => {
+        set({ isLoading: true, error: null })
+        try {
+          await deleteComercio(comercioId)
+          // Refresh comercios list
+          await get().fetchComercios()
+          set({ isLoading: false, error: null })
+        } catch (error) {
+          console.error('Error deleting comercio:', error)
+          set({ error: error.message, isLoading: false })
+          throw error
+        }
       }
     }),
     {
