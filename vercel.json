@@ -1,6 +1,12 @@
 {
   "buildCommand": "cd foodlabs-app && npm install && npm run build",
   "outputDirectory": "foodlabs-app/dist",
-  "installCommand": "cd foodlabs-app && npm install"
+  "installCommand": "cd foodlabs-app && npm install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
 
