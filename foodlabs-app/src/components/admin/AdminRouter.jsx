@@ -6,6 +6,7 @@ import AdminProductsPage from '../../pages/admin/AdminProductsPage'
 import AdminComerciosPage from '../../pages/admin/AdminComerciosPage'
 import AdminComercioProductsPage from '../../pages/admin/AdminComercioProductsPage'
 import AdminUsersPage from '../../pages/admin/AdminUsersPage'
+import NotificationsPanel from './NotificationsPanel'
 import { 
   Home, 
   Package, 
@@ -16,7 +17,8 @@ import {
   Menu,
   X,
   Building2,
-  Users
+  Users,
+  Bell
 } from 'lucide-react'
 
 const AdminRouter = () => {
@@ -34,6 +36,7 @@ const AdminRouter = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
+    { name: 'Notificaciones', href: '/admin/notifications', icon: Bell },
     { name: 'Usuarios', href: '/admin/users', icon: Users },
     { name: 'Comercios', href: '/admin/comercios', icon: Building2 },
     { name: 'Productos', href: '/admin/products', icon: Package },
@@ -285,6 +288,7 @@ const AdminRouter = () => {
         <div style={{ padding: '24px' }}>
           <Routes>
             <Route path="/" element={<AdminPage />} />
+            <Route path="/notifications" element={<NotificationsPanel />} />
             <Route path="/users" element={<AdminUsersPage />} />
             <Route path="/comercios" element={<AdminComerciosPage />} />
             <Route path="/comercios/:id/productos" element={<AdminComercioProductsPage />} />

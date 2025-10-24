@@ -59,6 +59,50 @@ export const createProduct = async (productData) => {
  */
 export const updateProduct = async (productId, updateData) => {
   const productRef = doc(db, PRODUCTS_COLLECTION, productId)
+  
+  // Detectar qué campos cambiaron para crear notificación
+  const productSnap = await getDoc(productRef)
+  const currentData = productSnap.data()
+  const changes = []
+  
+  // Detectar cambios específicos
+  if (updateData.precio_HNL && updateData.precio_HNL !== currentData.precio_HNL) {
+    changes.push(`Precio: L${currentData.precio_HNL} → L${updateData.precio_HNL}`)
+  }
+  if (updateData.nombre && updateData.nombre !== currentData.nombre) {
+    changes.push(`Nombre: "${currentData.nombre}" → "${updateData.nombre}"`)
+  }
+  if (updateData.descripcion && updateData.descripcion !== currentData.descripcion) {
+    changes.push('Descripción actualizada')
+  }
+  if (updateData.imagenes && JSON.stringify(updateData.imagenes) !== JSON.stringify(currentData.imagenes)) {
+    changes.push('Imágenes actualizadas')
+  }
+  if (updateData.stock !== undefined && updateData.stock !== currentData.stock) {
+    changes.push(`Stock: ${currentData.stock} → ${updateData.stock}`)
+  }
+  
+  // Si hay cambios, crear notificación
+  if (changes.length > 0) {
+    const notificationData = {
+      type: 'product_change',
+      productId: productId,
+      productName: updateData.nombre || currentData.nombre,
+      comercioId: currentData.comercioId,
+      changes: changes,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      message: `Cambios en producto "${updateData.nombre || currentData.nombre}": ${changes.join(', ')}`
+    }
+    
+    // Crear notificación en la colección de notificaciones
+    await addDoc(collection(db, 'notifications'), notificationData)
+    
+    // Marcar producto como pendiente de aprobación
+    updateData.status = 'pendiente'
+    updateData.isPublished = false
+  }
+  
   await updateDoc(productRef, {
     ...updateData,
     updatedAt: new Date().toISOString()
