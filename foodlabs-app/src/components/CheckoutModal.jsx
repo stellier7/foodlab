@@ -137,7 +137,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           discount: 0,
           total: finalTotal
         },
-        status: 'pendiente',
+        status: 'pending',
         notes: formData.notes || '',
         deliveryMethod: deliveryMethod,
         createdAt: new Date().toISOString(),
