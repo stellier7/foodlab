@@ -109,7 +109,7 @@ const ProductModal = ({ product, isOpen, onClose, restaurantId = 'sportsshop' })
   }
 
   const handleShare = async () => {
-    const productUrl = `${window.location.origin}/sportsshop?product=${product.id}`
+    const productUrl = `${window.location.origin}/shop?product=${product.id}`
     const shareText = `¡Mira este producto: ${product.name} por ${getCurrencySymbol()}${getPriceForCurrency(product).toFixed(2)}!`
     
     if (navigator.share) {
