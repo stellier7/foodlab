@@ -88,7 +88,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
     try {
       // Create order for guest
       const finalTotal = calculateTotal()
-      const platformFee = total * 0.075 // 7.5% platform fee
+      const platformFee = total * PAYMENT_CONFIG.commissions.default.customerFee // 15% platform fee
       const deliveryFee = deliveryMethod === 'delivery' ? DELIVERY_FEE : 0
       
       // Agrupar items por comercio
@@ -114,13 +114,13 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           isGuest: true
         },
         items: cartItems.map(item => ({
-          id: item.id,
-          nombre: item.name,
+          id: item.id || '',
+          nombre: item.name || '',
           precio_HNL: item.precio_HNL || item.price || 0,
-          quantity: item.quantity,
-          comercioId: item.comercioId,
-          comercioNombre: item.comercioName,
-          variante: item.selectedVariant || null
+          quantity: item.quantity || 1,
+          ...(item.comercioId && { comercioId: item.comercioId }),
+          ...(item.comercioName && { comercioNombre: item.comercioName }),
+          ...(item.selectedVariant && { variante: item.selectedVariant })
         })),
         comercios: Object.values(itemsByComercio),
         pricing: {
@@ -131,8 +131,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, total }) => {
           discount: 0,
           total: finalTotal
         },
-        status: 'pendiente',  // Siempre pendiente al crear
-        notes: formData.notes,
+        status: 'pendiente',
+        notes: formData.notes || '',
         deliveryMethod: deliveryMethod,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
